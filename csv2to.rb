@@ -1,7 +1,7 @@
 # csv2to
 
 # 20061122
-# 0.0.8
+# 0.0.9
 
 # Description: Take a CSV file with a column containing email addresses and grab the email addresses, outputting a comma delimted to string of those addresses.  
 
@@ -39,6 +39,10 @@
 # 18. #columns= now accepts an array, which is preferable since the column order is implicit in the order in which it is provided to the function, rather than so laboriously making it explicit with hashes.  
 # 7/8
 # 19. #columns= now accepts hashes again.  
+# 8/9
+# 20. #columns= now accepts what I really wanted and that was a simple list, which becomes an array; without any asterisks either!?...  It still accepts hashes and arrays as well.  
+# 21. I changed all references to to_s to to_sym, but that wasn't working so I changed it back.  The keys as symbols, as per Todo#7 will have to wait!  
+# 22. I tested putting a comma into the test.csv and it worked fine.  I haven't fully tested all the different sorts of CSV, but I'm pretty sure it will work OK.  And it is *very* tolerant of different CSV formats.  Even to the extent of each line being different!  It also will cope will with variable gaps between commas.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
@@ -52,13 +56,14 @@
 # 2. In CSVFile#from_csv I couldn't decide whether to use the column name or the column position to find the required data item, so I just decided to cope with both!  
 
 # Todo: 
-# 1. Have some means of defining constraints and raising errors as per the more custom/specific stuff in nearest.rb in class Address in the method from_csv which actually did the reading of each line part.  
-# 2. Create a subclass of String called CSVLine and create the splitter method on that.  I want to try to keep this small, so I don't know if I want to go creating a class for this and a class for that...  
+# *1. Have some means of defining constraints and raising errors as per the more custom/specific stuff in nearest.rb in class Address in the method from_csv which actually did the reading of each line part.  
+# *2. Create a subclass of String called CSVLine and create the splitter method on that.  I want to try to keep this small, so I don't know if I want to go creating a class for this and a class for that...  
 # 3. Default to returning something (a hash or an array) if there is no header line and if no column names are given via the columns attr_writer.  
-# 4. Make #columns= be able to cope with receiving an array (as well as a hash) with the positions of the array being the the positions in the CSV file.  
+# 4. Make #columns= be able to cope with receiving an array (as well as a hash) with the positions of the array being the the positions in the CSV file.  Done as of 0.0.7.  But I stopped playing with this about now (0.0.9).  
 # 5. This is pretty inefficient as it calls #from_csv for every field desired.  Better would be for it to do this all at once.  I'll wait until I spin this off methinks.  For now just get it working OK.  
-# 6. The String#csv_split stuff could be neater?...    
+# 6. The String#csv_split stuff could be neater?...  
 # 7. Switch (back?) to using symbols as the key for the column hashes.  
+# 8. Have a stricter policy with respect to what formats to accept, since this is very accepting.  See Change#22 in the 0 series.  
 
 class String
   
@@ -80,8 +85,8 @@ class String
         return result.collect{|e| e.gsub(/'/, '')}
       when :none
         return result
-    end # case
-  end # def
+    end # case quote
+  end # def csv_split
   
 end
 
@@ -113,7 +118,7 @@ class CSVFile
       @lines << h
     end
   end
-
+  
   def columns=(column_order)
     pp column_order #debug
     case column_order
@@ -130,7 +135,7 @@ class CSVFile
           i += 1
         end
     end # case column_order
-    pp @columns
+    pp @columns #debug
   end
   
   def columns
@@ -178,8 +183,16 @@ if __FILE__ == $0
   csv_file.read(:name, :website, :email, :phone)
   #pp csv_file.lines
   
-  #csv_file = CSVFile.new('test.csv')
-  #csv_file.read(:email, :phone)
+  csv_file.columns = 'name', 'address', 'phone', 'email', 'website'
+  csv_file.read(:name, :website, :email, :phone)
   #pp csv_file.lines
+  
+  csv_file.columns = :name, :address, :phone, :email, :website
+  csv_file.read(:name, :website, :email, :phone)
+  #pp csv_file.lines
+  
+  csv_file = CSVFile.new('test.csv')
+  csv_file.read(:name, :website, :email, :phone, :address)
+  pp csv_file.lines
   
 end

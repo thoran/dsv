@@ -2,3 +2,42 @@
 {"name"=>0, "website"=>4, "phone"=>2, "address"=>1, "email"=>3}
 ["name", "address", "phone", "email", "website"]
 {"name"=>0, "website"=>4, "phone"=>2, "address"=>1, "email"=>3}
+["name", "address", "phone", "email", "website"]
+{"name"=>0, "website"=>4, "phone"=>2, "address"=>1, "email"=>3}
+[:name, :address, :phone, :email, :website]
+{"name"=>0, "website"=>4, "phone"=>2, "address"=>1, "email"=>3}
+[{:website=>"http://www.zoomorphix.com.au",
+  :name=>"Zoomorphix Systems",
+  :email=>"jbaker@zoomorphix.com.au",
+  :address=>"Suite 407/ 737 Burwood Rd, Hawthorn VIC 3122",
+  :phone=>"(03) 9804 0544"},
+ {:website=>"http://www.digitaltree.com.au",
+  :name=>"Digital Tree Pty. Ltd.",
+  :email=>"info@digitaltree.com.au",
+  :address=>"90 Moray St South Melbourne VIC 3205",
+  :phone=>"(03) 9682 0968"},
+ {:website=>"http://www.mintec.com.au",
+  :name=>"Mintec Systems",
+  :email=>"mpratt@mintec.com.au",
+  :address=>"82 Jolimont St East Melbourne VIC 3002",
+  :phone=>"(03) 9660 5500"},
+ {:website=>"http://www.redgum.com.au",
+  :name=>"Redgum Technologies",
+  :email=>"redgum@redgumtech.com.au",
+  :address=>"420 Victoria St Brunswick VIC 3056",
+  :phone=>"(03) 9017 8113"},
+ {:website=>nil,
+  :name=>"Axiom Intelligence",
+  :email=>nil,
+  :address=>"Lvl 40/ 140 William St Melbourne VIC 3000",
+  :phone=>"1300 737 078,,"},
+ {:website=>nil,
+  :name=>"Redgum Technologies Pty Ltd",
+  :email=>nil,
+  :address=>"420 Victoria St Brunswick VIC 3056",
+  :phone=>"(03) 9017 8113,,"},
+ {:website=>nil,
+  :name=>"Software Design & Enhancement",
+  :email=>nil,
+  :address=>"173 Roden St West Melbourne VIC 3003",
+  :phone=>"(03) 9329 9944,,"}]
