@@ -1,7 +1,7 @@
 # csv2to
 
 # 20061122
-# 0.0.6
+# 0.0.7
 
 # Description: Take a CSV file with a column containing email addresses and grab the email addresses, outputting a comma delimted to string of those addresses.  
 
@@ -35,6 +35,8 @@
 # 16. Removed attr_writer :columns and replaced it with def columns= so as to control the internal representation of the columns instance variable better.  This is so as to cope with being able to define column hash keys using either symbols or strings.  It will also come in handy if I make the parameter to #columns= be able to be an array somehow...  See Todo#4.  
 # 5/6
 # 17. Added a quote variable and a case statement to String#csv_split so as to remove Bug#3.  
+# 6/7
+# 18. #columns= now accepts an array, which is preferable since the column order is implicit in the order in which it is provided to the function, rather than so laboriously making it explicit with hashes.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
@@ -53,6 +55,7 @@
 # 3. Default to returning something (a hash or an array) if there is no header line and if no column names are given via the columns attr_writer.  
 # 4. Make #columns= be able to cope with receiving an array (as well as a hash) with the positions of the array being the the positions in the CSV file.  
 # 5. This is pretty inefficient as it calls #from_csv for every field desired.  Better would be for it to do this all at once.  I'll wait until I spin this off methinks.  For now just get it working OK.  
+# 6. The String#csv_split stuff could be neater?...    
 
 class String
   
@@ -108,12 +111,14 @@ class CSVFile
     end
   end
 
-  def columns=(columns_layout)
-    #pp columns_layout #debug
+  def columns=(column_order)
+    pp column_order #debug
     @columns = {}
-    columns_layout.each do |column_name, column_position|
-      #pp column_name #debug
-      @columns[column_name.to_s] = column_position
+    i = 0
+    column_order.each do |column|
+      pp column #debug
+      @columns[column.to_s] = i
+      i += 1
     end
   end
   
@@ -153,7 +158,12 @@ if __FILE__ == $0
   require 'pp'
   
   csv_file = CSVFile.new('test.csv', false)
-  csv_file.columns = {:name => 0, :address => 1, :phone => 2, :email => 3, :website => 4}
+  
+  csv_file.columns=([:name, :address, :phone, :email, :website])
+  csv_file.read(:name, :website, :email, :phone)
+  pp csv_file.lines
+  
+  csv_file.columns=(['name', 'address', 'phone', 'email', 'website'])
   csv_file.read(:name, :website, :email, :phone)
   pp csv_file.lines
   
