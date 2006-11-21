@@ -1,7 +1,7 @@
 # csv2to
 
 # 20061122
-# 0.0.13
+# 0.0.14
 
 # Description: Take a CSV file with a column containing email addresses and grab the email addresses, outputting a comma delimted to string of those addresses.  
 
@@ -57,11 +57,15 @@
 # 12/13
 # 31. Simplified #read further for when there are no column names.  
 # 32. Modified #columns= to use the (i += 1) thingy.  
+# 13/14
+# 33. Simplified #read even further by replacing the full @columns by just the key when loading up the desired_columns variable.  (Started this in 0.0.13, but decided to tread lightly!)  
+# 34. A redundant return was removed from String#csv_split.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
 # 2. This won't as yet cope with commas within a quoted CSV file.  (Of course having quotes is pointless otherwise!)  Done as of 0.0.5.  
 # 3. It doesn't strip leading or trailing quotes now!  I thought it was time to iterate, so I'll fix this in 0.0.6.  Done as of 0.0.6.  
+# 4. If I input that there are no headers, don't supply any field to positional mappings and yet still want to select on the basis of a column name, it doesn't crash but gives me garbage.  
 
 # History: Significantly derived from the CSV reading stuff in nearest.rb.  It was overly general there, but not general enough.  This is more general.  I'll spin this off soon...  
 
@@ -78,7 +82,7 @@
 # *6. The String#csv_split stuff could be neater?...  It just got messier as of 0.0.11!  But it is slightly more accurate though...  
 # *7. Switch (back?) to using symbols as the key for the column hashes.  I might wait until I spin this off before revisiting.  As far as the interface to this library/class goes, it is irrelevant.  
 # *8. Have a stricter policy with respect to what formats to accept, since this is very accepting.  See Change#22 in the 0 series.  
-# *9. Consider reorganising the #read loop since it is doing two branches per loop.  The option would be to have the loop in a separate method and to call it from inside each of the four options, which would be OK, so long as the loop is in the method called and is not called from the loop, since that would be more inefficient.  
+# 9. Consider reorganising the #read loop since it is doing two branches per loop.  The option would be to have the loop in a separate method and to call it from inside each of the four options, which would be OK, so long as the loop is in the method called and is not called from the loop, since that would be more inefficient.  Done as of 0.0.14.  I've preloaded some variables to be of the same format so that there is only one conditional inside the loop now.  Extra code by way of a repeated loop might produce slightly faster times, but I won't worry about it for now.  
 # *10. Take note of and then restore the current line number for when #first_line is called.  If lineno worked, perhaps?  
 
 class String
@@ -98,7 +102,6 @@ class String
       when :double
         result[0] = result[0].sub(/^"/, '')
         result[result.size - 1] = result[result.size - 1].sub(/"$/, '')
-        return result
       when :single
         result[0] = result[0].sub(/^'/, '')
         result[result.size - 1] = result[result.size - 1].sub(/'$/, '')
@@ -135,11 +138,8 @@ class CSVFile
       h = {}
       if @columns # Am I selecting by column name?
         desired_columns.each do |column|
-          if column.is_a?(Array) # then select by column name, which in the first element...  
-            h[column[0]] = from_csv(line, column[0])
-          else # select by column name which is
-            h[column] = from_csv(line, column)
-          end
+          #pp column #debug
+          h[column] = from_csv(line, column)
         end
       else # Select by column position.  
         desired_columns.each do |column|
@@ -184,7 +184,7 @@ class CSVFile
     return_value = @file_handle.gets
     @file_handle.rewind
     return_value
-end
+  end
   
   def from_csv(line, column)
     case column
@@ -216,6 +216,7 @@ if __FILE__ == $0
   csv_file.read(3)
   pp csv_file.lines
   
+  # Semi-buggy bit here.  Will anyone really be silly enough to do this?  Of course they are!  Me included probably...  
   csv_file = CSVFile.new('test.csv', false)
   csv_file.read(:email)
   pp csv_file.lines

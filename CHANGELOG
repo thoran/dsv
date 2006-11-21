@@ -2,6 +2,12 @@
 
 ## 20061122
 
+0.0.14
+
+1. Simplified #read even further by replacing the full @columns by just the key when loading up the desired_columns variable.  (Started this in 0.0.13, but decided to tread lightly!)
+2. A redundant return was removed from String#csv_split.
+
+
 0.0.13
 
 1. Simplified #read further for when there are no column names.
