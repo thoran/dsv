@@ -2,6 +2,18 @@
 
 ## 20061122
 
+0.0.5
+
+1. Changed @headers and #headers to @columns and #columns.
+2. Had to change columns in #read to desired_columns to accommodate Change#10.
+3. Added columns as an attribute writer, so as when there isn't a header line, that same information can be programmatically 'dropped in'.  CSVFile should still be able to work even if there is no header line and no columns specified in this way.  I've added this as Todo#3.
+4. Created String#csv_split, so as it will solve Bug#2.  I was going to create this initially as a method in CSVFile, but wanted to stay really OO by having this message be able to be sent to strings.  See Todo#2 for (possibly) a better way.
+5. Swapped out the inline CSV splitting stuff in #columns and #from_csv for the new String#csv_split method.  So much cleaner!
+6. Added a chomp into String#csv_split, since the last element still had the linefeed attached.
+7. Forgot to change an instance of columns to desired_columns in #read!  Oh, so that's why!
+8. Removed attr_writer :columns and replaced it with def columns= so as to control the internal representation of the columns instance variable better.  This is so as to cope with being able to define column hash keys using either symbols or strings.  It will also come in handy if I make the parameter to #columns= be able to be an array somehow...  See Todo#4.
+
+
 0.0.4
 
 1. Changed the split parameters throughout to use a more sophisticated regex which removes any trailing spaces after a comma and consequently removed the gsubs which makes for simpler code.
