@@ -2,6 +2,11 @@
 
 ## 20061122
 
+0.0.8: #columns= now accepts hashes again.
+
+1. #columns= now accepts hashes again.
+
+
 0.0.7: #columns= now accepts an array, which is preferable since the column order is implicit in the order in which it is provided to the function, rather than so laboriously making it explicit with hashes.
 
 1. #columns= now accepts an array, which is preferable since the column order is implicit in the order in which it is provided to the function, rather than so laboriously making it explicit with hashes.

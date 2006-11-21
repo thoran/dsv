@@ -1,7 +1,7 @@
 # csv2to
 
 # 20061122
-# 0.0.7
+# 0.0.8
 
 # Description: Take a CSV file with a column containing email addresses and grab the email addresses, outputting a comma delimted to string of those addresses.  
 
@@ -37,6 +37,8 @@
 # 17. Added a quote variable and a case statement to String#csv_split so as to remove Bug#3.  
 # 6/7
 # 18. #columns= now accepts an array, which is preferable since the column order is implicit in the order in which it is provided to the function, rather than so laboriously making it explicit with hashes.  
+# 7/8
+# 19. #columns= now accepts hashes again.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
@@ -56,6 +58,7 @@
 # 4. Make #columns= be able to cope with receiving an array (as well as a hash) with the positions of the array being the the positions in the CSV file.  
 # 5. This is pretty inefficient as it calls #from_csv for every field desired.  Better would be for it to do this all at once.  I'll wait until I spin this off methinks.  For now just get it working OK.  
 # 6. The String#csv_split stuff could be neater?...    
+# 7. Switch (back?) to using symbols as the key for the column hashes.  
 
 class String
   
@@ -113,13 +116,21 @@ class CSVFile
 
   def columns=(column_order)
     pp column_order #debug
-    @columns = {}
-    i = 0
-    column_order.each do |column|
-      pp column #debug
-      @columns[column.to_s] = i
-      i += 1
-    end
+    case column_order
+      when Hash
+        @columns = {}
+        column_order.each do |column_name, column_position|
+          @columns[column_name.to_s] = column_position
+        end
+      when Array
+        @columns = {}
+        i = 0
+        column_order.each do |column|
+          @columns[column.to_s] = i
+          i += 1
+        end
+    end # case column_order
+    pp @columns
   end
   
   def columns
@@ -159,13 +170,13 @@ if __FILE__ == $0
   
   csv_file = CSVFile.new('test.csv', false)
   
-  csv_file.columns=([:name, :address, :phone, :email, :website])
+  csv_file.columns = {:name => 0, :address => 1, :phone => 2, :email => 3, :website => 4}
   csv_file.read(:name, :website, :email, :phone)
-  pp csv_file.lines
+  #pp csv_file.lines
   
-  csv_file.columns=(['name', 'address', 'phone', 'email', 'website'])
+  csv_file.columns = ['name', 'address', 'phone', 'email', 'website']
   csv_file.read(:name, :website, :email, :phone)
-  pp csv_file.lines
+  #pp csv_file.lines
   
   #csv_file = CSVFile.new('test.csv')
   #csv_file.read(:email, :phone)
