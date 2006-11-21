@@ -2,6 +2,12 @@
 
 ## 20061122
 
+0.0.2
+
+1. I've changed the interface to read to accept an array as separate parameters rather than as a single parameter now.
+2. So as to still be able to cope with the default of selecting all columns, I've altered the case statement which checks as to whether any columns have been specified (Is columns an empty array?), since Ruby disallows *-style parameters from having defaults.
+
+
 0.0.1
 
 1. ~ csv2to.rb: ~ read()
