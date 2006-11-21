@@ -1,7 +1,7 @@
 # csv2to
 
 # 20061122
-# 0.0.2
+# 0.0.3
 
 # Description: Take a CSV file with a column containing email addresses and grab the email addresses, outputting a comma delimted to string of those addresses.  
 
@@ -16,7 +16,8 @@
 # 1/2
 # 2. I've changed the interface to read to accept an array as separate parameters rather than as a single parameter now.  
 # 3. So as to still be able to cope with the default of selecting all columns, I've altered the case statement which checks as to whether any columns have been specified (Is columns an empty array?), since Ruby disallows *-style parameters from having defaults.  
-
+# 2/3
+# 4. Added a to_s into #from_csv, so as one can call the read method using symbols.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  
@@ -82,7 +83,7 @@ class CSVFile
       when Integer
         line.split(',')[column].gsub(/^ /, '').chomp
       else
-        line.split(',')[@headers[column]].gsub(/^ /, '').chomp
+        line.split(',')[@headers[column.to_s]].gsub(/^ /, '').chomp
     end
   end
   
@@ -91,6 +92,8 @@ end
 if __FILE__ == $0
   require 'pp'
   csv_file = CSVFile.new('test.csv')
-  csv_file.read
+  csv_file.read('email', 'phone')
+  pp csv_file.lines
+  csv_file.read(:email, :phone)
   pp csv_file.lines
 end

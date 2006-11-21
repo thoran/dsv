@@ -2,6 +2,11 @@
 
 ## 20061122
 
+0.0.3: Added a to_s into #from_csv, so as one can call the read method using symbols.
+
+1. Added a to_s into #from_csv, so as one can call the read method using symbols.
+
+
 0.0.2
 
 1. I've changed the interface to read to accept an array as separate parameters rather than as a single parameter now.
