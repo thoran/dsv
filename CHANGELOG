@@ -2,6 +2,13 @@
 
 ## 20061122
 
+0.0.11
+
+1. String#cvs_split now only removes leading and trailing quotes, rather than removing all remaining quotes, and leaves alone any other quotes which are not involved in delimitation.
+2. Removed a bit of debugging stuff.
+3. Removed the columns_defined stuff from #read, since it really wasn't necessary.
+
+
 0.0.10
 
 1. I did that little (i += 1) trick in #columns.  Had to change the initial value to -1 though, of course.

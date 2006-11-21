@@ -1,7 +1,7 @@
 # csv2to
 
 # 20061122
-# 0.0.10
+# 0.0.11
 
 # Description: Take a CSV file with a column containing email addresses and grab the email addresses, outputting a comma delimted to string of those addresses.  
 
@@ -48,6 +48,10 @@
 # 24. CSVFile now copes with unspecified column names.  I've roughly doubled the size of #read however.  It might be more efficient to do the branching elsewhere than inside the the loop there too...  
 # 25. Made #first_line as idempotent as possible, insofar as it does a rewind after it grabs the first line.  Ideally it would take note of the current line number and then restore that.  I'll put that in the todo list...  
 # 26. Stopped using @file_handle.lineno, since it seemed to do nothing and substituted using #rewind and gets instead.  
+# 10/11
+# 27.  String#cvs_split now only removes leading and trailing quotes, rather than removing all remaining quotes, and leaves alone any other quotes which are not involved in delimitation.  
+# 28. Removed a bit of debugging stuff.  
+# 29. Removed the columns_defined stuff from #read, since it really wasn't necessary.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
@@ -63,19 +67,18 @@
 # Todo: 
 # *1. Have some means of defining constraints and raising errors as per the more custom/specific stuff in nearest.rb in class Address in the method from_csv which actually did the reading of each line part.  
 # *2. Create a subclass of String called CSVLine and create the splitter method on that.  I want to try to keep this small, so I don't know if I want to go creating a class for this and a class for that...  
-# 3. Default to returning something (a hash or an array) if there is no header line and if no column names are given via the columns attr_writer.  
+# 3. Default to returning something (a hash or an array) if there is no header line and if no column names are given via the columns attr_writer.  Done as of 0.0.10.  
 # 4. Make #columns= be able to cope with receiving an array (as well as a hash) with the positions of the array being the the positions in the CSV file.  Done as of 0.0.7.  But I stopped playing with this about now (0.0.9).  
-# 5. This is pretty inefficient as it calls #from_csv for every field desired.  Better would be for it to do this all at once.  I'll wait until I spin this off methinks.  For now just get it working OK.  
-# 6. The String#csv_split stuff could be neater?...  
-# 7. Switch (back?) to using symbols as the key for the column hashes.  
-# 8. Have a stricter policy with respect to what formats to accept, since this is very accepting.  See Change#22 in the 0 series.  
-# 9. Consider reorganising the #read loop since it is doing two branches per loop.  The option would be to have the loop in a separate method and to call it from inside each of the four options, which would be OK, so long as the loop is in the method called and is not called from the loop, since that would be more inefficient.  
-# 10. Take note of and then restore the current line number for when #first_line is called.  
+# *5. This is pretty inefficient as it calls #from_csv for every field desired.  Better would be for it to do this all at once.  I'll wait until I spin this off methinks.  For now just get it working OK.  
+# *6. The String#csv_split stuff could be neater?...  It just got messier as of 0.0.11!  But it is slightly more accurate though...  
+# *7. Switch (back?) to using symbols as the key for the column hashes.  I might wait until I spin this off before revisiting.  As far as the interface to this library/class goes, it is irrelevant.  
+# *8. Have a stricter policy with respect to what formats to accept, since this is very accepting.  See Change#22 in the 0 series.  
+# *9. Consider reorganising the #read loop since it is doing two branches per loop.  The option would be to have the loop in a separate method and to call it from inside each of the four options, which would be OK, so long as the loop is in the method called and is not called from the loop, since that would be more inefficient.  
+# *10. Take note of and then restore the current line number for when #first_line is called.  If lineno worked, perhaps?  
 
 class String
   
   def csv_split
-    #puts 'here'
     quote = :double
     result = self.chomp.split(/","\s*/)
     if result == [self.chomp]
@@ -88,12 +91,14 @@ class String
     end # outer if
     case quote
       when :double
-        return result.collect{|e| e.gsub(/"/, '')}
-      when :single
-        return result.collect{|e| e.gsub(/'/, '')}
-      when :none
+        result[0] = result[0].sub(/^"/, '')
+        result[result.size - 1] = result[result.size - 1].sub(/"$/, '')
         return result
-    end # case quote
+      when :single
+        result[0] = result[0].sub(/^'/, '')
+        result[result.size - 1] = result[result.size - 1].sub(/'$/, '')
+      end # case quote
+      result
   end # def csv_split
   
 end
@@ -110,16 +115,11 @@ class CSVFile
   end
   
   def read(*desired_columns)
-    columns_size = first_line.csv_split.size  # Rather than calling columns, which in turn puts a value in the @columns instance variable.  And do this here because it keeps rewinding!  
-    #@header_line ? @file_handle.lineno = 1 : @file_handle.lineno = 0 # This lineno bizzo doesn't seem to work, so out it goes!  
+    columns_size = first_line.csv_split.size
     if @header_line then @file_handle.rewind; @file_handle.gets else @file_handle.rewind end
-    #pp @file_handle.rewind #debug
     @file_handle.each do |line|
-      #pp line #debug
       h = {}
-      #pp @columns #debug
-      @columns ? columns_defined = true : columns_defined = false
-      if columns_defined # Am I selecting by column name?
+      if @columns # Am I selecting by column name?
         case desired_columns
           when [] # Select all columns by default.  
             @columns.each do |column_name, column_position|
@@ -147,7 +147,6 @@ class CSVFile
   end
   
   def columns=(column_order)
-    pp column_order #debug
     case column_order
       when Hash
         @columns = {}
@@ -162,7 +161,6 @@ class CSVFile
           i += 1
         end
     end # case column_order
-    pp @columns #debug
   end
   
   def columns
@@ -186,8 +184,6 @@ class CSVFile
 end
   
   def from_csv(line, column)
-    #pp line, column # debug
-    #pp @columns[column.to_s] #debug
     case column
       when Integer
         line.csv_split[column]
