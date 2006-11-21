@@ -2,6 +2,13 @@
 
 ## 20061122
 
+0.0.1
+
+1. ~ csv2to.rb: ~ read()
+2. ~ csv2to.rb
+3. ~ test.txt
+
+
 0.0.0: + csv2to.rb, test.csv, test.txt
 
 1. ~ csv2to.rb: + require 'pp'

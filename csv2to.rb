@@ -1,12 +1,16 @@
 # csv2to
 
 # 20061122
-# 0.0.0
+# 0.0.1
 
 # Description: Take a CSV file with a column containing email addresses and grab the email addresses, outputting a comma delimted to string of those addresses.  
 
 # Goals for 0.0: 
-# 1. Have it read a CSV file.  
+# 1. Have it read a CSV file.  Done as of 0.0.0.  
+# 2. Have it single out the email column.  Tested as of 0.0.1, but would have worked as of 0.0.0.  
+
+# Bugs: 
+# 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  
 
 # History: Significantly derived from the CSV reading stuff in nearest.rb.  It was overly general there, but not general enough.  This is more general.  I'll spin this off soon...  
 
@@ -29,6 +33,7 @@ class CSVFile
   end
   
   def read(columns = '*')
+    pp columns
     @header_line ? @file_handle.lineno = 1 : @file_handle.lineno = 0
     @file_handle.each do |line|
       h = {}
@@ -77,6 +82,7 @@ end
 if __FILE__ == $0
   require 'pp'
   csv_file = CSVFile.new('test.csv')
-  csv_file.read
+  desired_columns = ['email']
+  csv_file.read(desired_columns)
   pp csv_file.lines
 end
