@@ -1,7 +1,7 @@
 # csv2to
 
 # 20061122
-# 0.0.11
+# 0.0.12
 
 # Description: Take a CSV file with a column containing email addresses and grab the email addresses, outputting a comma delimted to string of those addresses.  
 
@@ -52,6 +52,8 @@
 # 27.  String#cvs_split now only removes leading and trailing quotes, rather than removing all remaining quotes, and leaves alone any other quotes which are not involved in delimitation.  
 # 28. Removed a bit of debugging stuff.  
 # 29. Removed the columns_defined stuff from #read, since it really wasn't necessary.  
+# 11/12
+# 30. Tried to simplify #read some by not having an extra case statement and by combining desired_columns and @columns some.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
@@ -97,8 +99,8 @@ class String
       when :single
         result[0] = result[0].sub(/^'/, '')
         result[result.size - 1] = result[result.size - 1].sub(/'$/, '')
-      end # case quote
-      result
+    end # case quote
+    result
   end # def csv_split
   
 end
@@ -117,18 +119,17 @@ class CSVFile
   def read(*desired_columns)
     columns_size = first_line.csv_split.size
     if @header_line then @file_handle.rewind; @file_handle.gets else @file_handle.rewind end
+    desired_columns = @columns if desired_columns == []
+    #pp desired_columns #debug
     @file_handle.each do |line|
       h = {}
       if @columns # Am I selecting by column name?
-        case desired_columns
-          when [] # Select all columns by default.  
-            @columns.each do |column_name, column_position|
-              h[column_name] = from_csv(line, column_position)
-            end
+        desired_columns.each do |column|
+          if column.is_a?(Array)
+            h[column[0]] = from_csv(line, column[0])
           else
-            desired_columns.each do |column|
-              h[column] = from_csv(line, column)
-            end
+            h[column] = from_csv(line, column)
+          end
         end
       else # Select by column position.  Further I'll assume that there is no header line.  
         case desired_columns
@@ -198,10 +199,10 @@ if __FILE__ == $0
   require 'pp'
   
   csv_file = CSVFile.new('test.csv')
-  csv_file.read
+  csv_file.read(:email)
   pp csv_file.lines
   
-  csv_file = CSVFile.new('test.csv', false)
+  csv_file = CSVFile.new('test.csv')
   csv_file.read
   pp csv_file.lines
   

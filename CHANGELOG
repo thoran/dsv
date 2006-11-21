@@ -2,6 +2,11 @@
 
 ## 20061122
 
+0.0.12: Tried to simplify #read some by not having an extra case statement and by combining desired_columns and @columns some.
+
+1. Tried to simplify #read some by not having an extra case statement and by combining desired_columns and @columns some.
+
+
 0.0.11
 
 1. String#cvs_split now only removes leading and trailing quotes, rather than removing all remaining quotes, and leaves alone any other quotes which are not involved in delimitation.
