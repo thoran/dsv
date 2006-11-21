@@ -1,7 +1,7 @@
 # csv2to
 
 # 20061122
-# 0.0.14
+# 0.0.15
 
 # Description: Take a CSV file with a column containing email addresses and grab the email addresses, outputting a comma delimted to string of those addresses.  
 
@@ -60,6 +60,8 @@
 # 13/14
 # 33. Simplified #read even further by replacing the full @columns by just the key when loading up the desired_columns variable.  (Started this in 0.0.13, but decided to tread lightly!)  
 # 34. A redundant return was removed from String#csv_split.  
+# 14/15
+# 35. Removed any remaining debugging stuff, since I'm reasonably happy with this for a 0.0 final version.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
@@ -132,13 +134,10 @@ class CSVFile
         desired_columns = 0..(number_of_columns - 1)
       end
     end
-    pp '@columns: ', @columns
-    pp 'desired_columns: ', desired_columns
     @file_handle.each do |line|
       h = {}
       if @columns # Am I selecting by column name?
         desired_columns.each do |column|
-          #pp column #debug
           h[column] = from_csv(line, column)
         end
       else # Select by column position.  
