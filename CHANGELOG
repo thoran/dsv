@@ -1,0 +1,16 @@
+# CHANGELOG
+
+## 20061122
+
+0.0.0: + csv2to.rb, test.csv, test.txt
+
+1. ~ csv2to.rb: + require 'pp'
+2. ~ csv2to.rb: + class CSVFile
+3. ~ csv2to.rb: + initialize()
+4. ~ csv2to.rb: + read()
+5. ~ csv2to.rb: + first_line()
+6. ~ csv2to.rb: + headers()
+7. ~ csv2to.rb: + from_csv()
+8. + csv2to.rb
+9. + test.csv
+10. + test.txt
