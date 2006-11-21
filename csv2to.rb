@@ -1,7 +1,7 @@
 # csv2to
 
 # 20061122
-# 0.0.9
+# 0.0.10
 
 # Description: Take a CSV file with a column containing email addresses and grab the email addresses, outputting a comma delimted to string of those addresses.  
 
@@ -43,6 +43,11 @@
 # 20. #columns= now accepts what I really wanted and that was a simple list, which becomes an array; without any asterisks either!?...  It still accepts hashes and arrays as well.  
 # 21. I changed all references to to_s to to_sym, but that wasn't working so I changed it back.  The keys as symbols, as per Todo#7 will have to wait!  
 # 22. I tested putting a comma into the test.csv and it worked fine.  I haven't fully tested all the different sorts of CSV, but I'm pretty sure it will work OK.  And it is *very* tolerant of different CSV formats.  Even to the extent of each line being different!  It also will cope will with variable gaps between commas.  
+# 9/10
+# 23. I did that little (i += 1) trick in #columns.  Had to change the initial value to -1 though, of course.  
+# 24. CSVFile now copes with unspecified column names.  I've roughly doubled the size of #read however.  It might be more efficient to do the branching elsewhere than inside the the loop there too...  
+# 25. Made #first_line as idempotent as possible, insofar as it does a rewind after it grabs the first line.  Ideally it would take note of the current line number and then restore that.  I'll put that in the todo list...  
+# 26. Stopped using @file_handle.lineno, since it seemed to do nothing and substituted using #rewind and gets instead.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
@@ -64,10 +69,13 @@
 # 6. The String#csv_split stuff could be neater?...  
 # 7. Switch (back?) to using symbols as the key for the column hashes.  
 # 8. Have a stricter policy with respect to what formats to accept, since this is very accepting.  See Change#22 in the 0 series.  
+# 9. Consider reorganising the #read loop since it is doing two branches per loop.  The option would be to have the loop in a separate method and to call it from inside each of the four options, which would be OK, so long as the loop is in the method called and is not called from the loop, since that would be more inefficient.  
+# 10. Take note of and then restore the current line number for when #first_line is called.  
 
 class String
   
   def csv_split
+    #puts 'here'
     quote = :double
     result = self.chomp.split(/","\s*/)
     if result == [self.chomp]
@@ -102,18 +110,37 @@ class CSVFile
   end
   
   def read(*desired_columns)
-    @header_line ? @file_handle.lineno = 1 : @file_handle.lineno = 0
+    columns_size = first_line.csv_split.size  # Rather than calling columns, which in turn puts a value in the @columns instance variable.  And do this here because it keeps rewinding!  
+    #@header_line ? @file_handle.lineno = 1 : @file_handle.lineno = 0 # This lineno bizzo doesn't seem to work, so out it goes!  
+    if @header_line then @file_handle.rewind; @file_handle.gets else @file_handle.rewind end
+    #pp @file_handle.rewind #debug
     @file_handle.each do |line|
+      #pp line #debug
       h = {}
-      case desired_columns
-        when [] # In other words, default to selecting all columns.  
-          @columns.each do |column_name, column_position|
-            h[column_name] = from_csv(line, column_position)
-          end
-        else
-          desired_columns.each do |column|
-            h[column] = from_csv(line, column)
-          end
+      #pp @columns #debug
+      @columns ? columns_defined = true : columns_defined = false
+      if columns_defined # Am I selecting by column name?
+        case desired_columns
+          when [] # Select all columns by default.  
+            @columns.each do |column_name, column_position|
+              h[column_name] = from_csv(line, column_position)
+            end
+          else
+            desired_columns.each do |column|
+              h[column] = from_csv(line, column)
+            end
+        end
+      else # Select by column position.  Further I'll assume that there is no header line.  
+        case desired_columns
+          when [] # Select all columns by default.  
+            0.upto(columns_size - 1) do |column_position|
+              h[column_position] = from_csv(line, column_position)
+            end
+          else
+            desired_columns.each do |column|
+              h[column.to_i] = from_csv(line, column.to_i)
+            end
+        end
       end
       @lines << h
     end
@@ -141,10 +168,9 @@ class CSVFile
   def columns
     @columns ||= (
       h = {}
-      i = 0
+      i = -1
       first_line.csv_split.each do |key|
-        h[key.gsub(/ /, '_').chomp] = i
-        i += 1
+        h[key.gsub(/ /, '_').chomp] = (i += 1)
       end
       h
     )
@@ -154,8 +180,10 @@ class CSVFile
   
   def first_line
     @file_handle.rewind
-    @file_handle.gets
-  end
+    return_value = @file_handle.gets
+    @file_handle.rewind
+    return_value
+end
   
   def from_csv(line, column)
     #pp line, column # debug
@@ -173,26 +201,12 @@ end
 if __FILE__ == $0
   require 'pp'
   
-  csv_file = CSVFile.new('test.csv', false)
-  
-  csv_file.columns = {:name => 0, :address => 1, :phone => 2, :email => 3, :website => 4}
-  csv_file.read(:name, :website, :email, :phone)
-  #pp csv_file.lines
-  
-  csv_file.columns = ['name', 'address', 'phone', 'email', 'website']
-  csv_file.read(:name, :website, :email, :phone)
-  #pp csv_file.lines
-  
-  csv_file.columns = 'name', 'address', 'phone', 'email', 'website'
-  csv_file.read(:name, :website, :email, :phone)
-  #pp csv_file.lines
-  
-  csv_file.columns = :name, :address, :phone, :email, :website
-  csv_file.read(:name, :website, :email, :phone)
-  #pp csv_file.lines
-  
   csv_file = CSVFile.new('test.csv')
-  csv_file.read(:name, :website, :email, :phone, :address)
+  csv_file.read
+  pp csv_file.lines
+  
+  csv_file = CSVFile.new('test.csv', false)
+  csv_file.read
   pp csv_file.lines
   
 end

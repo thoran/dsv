@@ -2,6 +2,14 @@
 
 ## 20061122
 
+0.0.10
+
+1. I did that little (i += 1) trick in #columns.  Had to change the initial value to -1 though, of course.
+2. CSVFile now copes with unspecified column names.  I've roughly doubled the size of #read however.  It might be more efficient to do the branching elsewhere than inside the the loop there too...
+3. Made #first_line as idempotent as possible, insofar as it does a rewind after it grabs the first line.  Ideally it would take note of the current line number and then restore that.  I'll put that in the todo list...
+4. Stopped using @file_handle.lineno, since it seemed to do nothing and substituted using #rewind and gets instead.
+
+
 0.0.9
 
 1. #columns= now accepts what I really wanted and that was a simple list, which becomes an array; without any asterisks either!?...  It still accepts hashes and arrays as well.
