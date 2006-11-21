@@ -2,6 +2,15 @@
 
 ## 20061122
 
+0.0.4
+
+1. Changed the split parameters throughout to use a more sophisticated regex which removes any trailing spaces after a comma and consequently removed the gsubs which makes for simpler code.
+2. Added a gsub to the same splitter lines to cope with quoted CSV files.  It doesn't cope with commas between quotes however!  See Bugs#2.
+3. Added a collect to the splitter in #headers, since I'm operating on the whole array here.
+4. Added a variable field in to #from_csv to cope with the test for whether to apply a gsub, since some fields are empty.
+5. Changed the modification of a header from compressing the name by removing spaces and instead replacing spaces with underscores.
+
+
 0.0.3: Added a to_s into #from_csv, so as one can call the read method using symbols.
 
 1. Added a to_s into #from_csv, so as one can call the read method using symbols.

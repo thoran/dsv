@@ -1,7 +1,7 @@
 # csv2to
 
 # 20061122
-# 0.0.3
+# 0.0.4
 
 # Description: Take a CSV file with a column containing email addresses and grab the email addresses, outputting a comma delimted to string of those addresses.  
 
@@ -18,9 +18,16 @@
 # 3. So as to still be able to cope with the default of selecting all columns, I've altered the case statement which checks as to whether any columns have been specified (Is columns an empty array?), since Ruby disallows *-style parameters from having defaults.  
 # 2/3
 # 4. Added a to_s into #from_csv, so as one can call the read method using symbols.  
+# 3/4
+# 5. Changed the split parameters throughout to use a more sophisticated regex which removes any trailing spaces after a comma and consequently removed the gsubs which makes for simpler code.  
+# 6. Added a gsub to the same splitter lines to cope with quoted CSV files.  It doesn't cope with commas between quotes however!  See Bugs#2.  
+# 7. Added a collect to the splitter in #headers, since I'm operating on the whole array here.  
+# 8. Added a variable field in to #from_csv to cope with the test for whether to apply a gsub, since some fields are empty.  
+# 9. Changed the modification of a header from compressing the name by removing spaces and instead replacing spaces with underscores.  
 
 # Bugs: 
-# 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  
+# 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4
+# 2. This won't as yet cope with commas within a quoted CSV file.  (Of course having quotes is pointless otherwise!)  
 
 # History: Significantly derived from the CSV reading stuff in nearest.rb.  It was overly general there, but not general enough.  This is more general.  I'll spin this off soon...  
 
@@ -70,8 +77,8 @@ class CSVFile
     @headers ||= (
       h = {}
       i = 0
-      first_line.split(',').each do |key|
-        h[key.gsub(/ /, '').chomp] = i
+      first_line.split(/,\s*/).collect{|field| field.gsub(/"/, '')}.each do |key|
+        h[key.gsub(/ /, '_').chomp] = i
         i += 1
       end
       h
@@ -81,9 +88,11 @@ class CSVFile
   def from_csv(line, column)
     case column
       when Integer
-        line.split(',')[column].gsub(/^ /, '').chomp
+        field = line.split(/,\s*/)[column]
+        field.gsub(/"/, '').chomp if field
       else
-        line.split(',')[@headers[column.to_s]].gsub(/^ /, '').chomp
+        field = line.split(/,\s*/)[@headers[column.to_s]]
+        field.gsub(/"/, '').chomp if field
     end
   end
   
@@ -92,8 +101,6 @@ end
 if __FILE__ == $0
   require 'pp'
   csv_file = CSVFile.new('test.csv')
-  csv_file.read('email', 'phone')
-  pp csv_file.lines
   csv_file.read(:email, :phone)
   pp csv_file.lines
 end

@@ -1,16 +1,8 @@
-["email", "phone"]
-[{"phone"=>"\"(03) 9804 0544\"", "email"=>"\"jbaker@zoomorphix.com.au\""},
- {"phone"=>"\"(03) 9682 0968\"", "email"=>"\"info@digitaltree.com.au\""},
- {"phone"=>"\"(03) 9660 5500\"", "email"=>"\"mpratt@mintec.com.au\""},
- {"phone"=>"\"(03) 9017 8113\"", "email"=>"\"redgum@redgumtech.com.au\""},
- {"phone"=>"\"1300 737 078\"", "email"=>""},
- {"phone"=>"\"(03) 9017 8113\"", "email"=>""},
- {"phone"=>"\"(03) 9329 9944\"", "email"=>""}]
 [:email, :phone]
-[{"phone"=>"\"(03) 9804 0544\"", "email"=>"\"jbaker@zoomorphix.com.au\""},
- {"phone"=>"\"(03) 9682 0968\"", "email"=>"\"info@digitaltree.com.au\""},
- {"phone"=>"\"(03) 9660 5500\"", "email"=>"\"mpratt@mintec.com.au\""},
- {"phone"=>"\"(03) 9017 8113\"", "email"=>"\"redgum@redgumtech.com.au\""},
- {"phone"=>"\"1300 737 078\"", "email"=>""},
- {"phone"=>"\"(03) 9017 8113\"", "email"=>""},
- {"phone"=>"\"(03) 9329 9944\"", "email"=>""}]
+[{:email=>"jbaker@zoomorphix.com.au", :phone=>"(03) 9804 0544"},
+ {:email=>"info@digitaltree.com.au", :phone=>"(03) 9682 0968"},
+ {:email=>"mpratt@mintec.com.au", :phone=>"(03) 9660 5500"},
+ {:email=>"redgum@redgumtech.com.au", :phone=>"(03) 9017 8113"},
+ {:email=>nil, :phone=>"1300 737 078"},
+ {:email=>nil, :phone=>"(03) 9017 8113"},
+ {:email=>nil, :phone=>"(03) 9329 9944"}]
