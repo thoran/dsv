@@ -1,3 +1,7 @@
+"@columns: "
+{"name"=>0, "website"=>4, "phone"=>2, "address"=>1, "email"=>3}
+"desired_columns: "
+[:email]
 [{:email=>"jbaker@zoomorphix.com.au"},
  {:email=>"info@digitaltree.com.au"},
  {:email=>"mpratt@mintec.com.au"},
@@ -5,6 +9,10 @@
  {:email=>nil},
  {:email=>nil},
  {:email=>nil}]
+"@columns: "
+{"name"=>0, "website"=>4, "phone"=>2, "address"=>1, "email"=>3}
+"desired_columns: "
+["name", "website", "phone", "address", "email"]
 [{"name"=>"Zoomorphix Systems",
   "website"=>"http://www.zoomorphix.com.au",
   "phone"=>"(03) 9804 0544",
@@ -40,3 +48,67 @@
   "phone"=>"(03) 9329 9944\",,",
   "address"=>"173 Roden St West Melbourne VIC 3003",
   "email"=>nil}]
+"@columns: "
+nil
+"desired_columns: "
+0..4
+[{0=>"name", 1=>"address", 2=>"phone", 3=>"email", 4=>"website"},
+ {0=>"Zoomorphix Systems",
+  1=>"Suite 407/ 737 Burwood Rd, Hawthorn VIC 3122",
+  2=>"(03) 9804 0544",
+  3=>"jbaker@zoomorphix.com.au",
+  4=>"http://www.zoomorphix.com.au"},
+ {0=>"Digital Tree Pty. Ltd.",
+  1=>"90 Moray St South Melbourne VIC 3205",
+  2=>"(03) 9682 0968",
+  3=>"info@digitaltree.com.au",
+  4=>"http://www.digitaltree.com.au"},
+ {0=>"Mintec Systems",
+  1=>"82 Jolimont St East Melbourne VIC 3002",
+  2=>"(03) 9660 5500",
+  3=>"mpratt@mintec.com.au",
+  4=>"http://www.mintec.com.au"},
+ {0=>"Redgum Technologies",
+  1=>"420 Victoria St Brunswick VIC 3056",
+  2=>"(03) 9017 8113",
+  3=>"redgum@redgumtech.com.au",
+  4=>"http://www.redgum.com.au"},
+ {0=>"Axiom Intelligence",
+  1=>"Lvl 40/ 140 William St Melbourne VIC 3000",
+  2=>"1300 737 078\",,",
+  3=>nil,
+  4=>nil},
+ {0=>"Redgum Technologies Pty Ltd",
+  1=>"420 Victoria St Brunswick VIC 3056",
+  2=>"(03) 9017 8113\",,",
+  3=>nil,
+  4=>nil},
+ {0=>"Software Design & Enhancement",
+  1=>"173 Roden St West Melbourne VIC 3003",
+  2=>"(03) 9329 9944\",,",
+  3=>nil,
+  4=>nil}]
+"@columns: "
+nil
+"desired_columns: "
+[3]
+[{3=>"email"},
+ {3=>"jbaker@zoomorphix.com.au"},
+ {3=>"info@digitaltree.com.au"},
+ {3=>"mpratt@mintec.com.au"},
+ {3=>"redgum@redgumtech.com.au"},
+ {3=>nil},
+ {3=>nil},
+ {3=>nil}]
+"@columns: "
+nil
+"desired_columns: "
+[:email]
+[{12713=>nil},
+ {12713=>nil},
+ {12713=>nil},
+ {12713=>nil},
+ {12713=>nil},
+ {12713=>nil},
+ {12713=>nil},
+ {12713=>nil}]

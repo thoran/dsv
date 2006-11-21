@@ -2,6 +2,12 @@
 
 ## 20061122
 
+0.0.13
+
+1. Simplified #read further for when there are no column names.
+2. Modified #columns= to use the (i += 1) thingy.
+
+
 0.0.12: Tried to simplify #read some by not having an extra case statement and by combining desired_columns and @columns some.
 
 1. Tried to simplify #read some by not having an extra case statement and by combining desired_columns and @columns some.
