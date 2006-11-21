@@ -1,187 +1,29 @@
-{:name=>0, :address=>1, :phone=>2, :website=>4, :email=>3}
-:name
-:address
-:phone
-:website
-:email
-result.size: 5
-result: ["name", "address", "phone", "email", "website"]
-result.size: 5
-result: ["name", "address", "phone", "email", "website"]
-result.size: 5
-result: ["name", "address", "phone", "email", "website"]
-result.size: 5
-result: ["name", "address", "phone", "email", "website"]
-result.size: 5
-result: ["\"Zoomorphix Systems",
- "Suite 407/ 737 Burwood Rd Hawthorn VIC 3122",
- "(03) 9804 0544",
- "jbaker@zoomorphix.com.au",
- "http://www.zoomorphix.com.au\""]
-result.size: 5
-result: ["\"Zoomorphix Systems",
- "Suite 407/ 737 Burwood Rd Hawthorn VIC 3122",
- "(03) 9804 0544",
- "jbaker@zoomorphix.com.au",
- "http://www.zoomorphix.com.au\""]
-result.size: 5
-result: ["\"Zoomorphix Systems",
- "Suite 407/ 737 Burwood Rd Hawthorn VIC 3122",
- "(03) 9804 0544",
- "jbaker@zoomorphix.com.au",
- "http://www.zoomorphix.com.au\""]
-result.size: 5
-result: ["\"Zoomorphix Systems",
- "Suite 407/ 737 Burwood Rd Hawthorn VIC 3122",
- "(03) 9804 0544",
- "jbaker@zoomorphix.com.au",
- "http://www.zoomorphix.com.au\""]
-result.size: 5
-result: ["\"Digital Tree Pty. Ltd.",
- "90 Moray St South Melbourne VIC 3205",
- "(03) 9682 0968",
- "info@digitaltree.com.au",
- "http://www.digitaltree.com.au\""]
-result.size: 5
-result: ["\"Digital Tree Pty. Ltd.",
- "90 Moray St South Melbourne VIC 3205",
- "(03) 9682 0968",
- "info@digitaltree.com.au",
- "http://www.digitaltree.com.au\""]
-result.size: 5
-result: ["\"Digital Tree Pty. Ltd.",
- "90 Moray St South Melbourne VIC 3205",
- "(03) 9682 0968",
- "info@digitaltree.com.au",
- "http://www.digitaltree.com.au\""]
-result.size: 5
-result: ["\"Digital Tree Pty. Ltd.",
- "90 Moray St South Melbourne VIC 3205",
- "(03) 9682 0968",
- "info@digitaltree.com.au",
- "http://www.digitaltree.com.au\""]
-result.size: 5
-result: ["\"Mintec Systems",
- "82 Jolimont St East Melbourne VIC 3002",
- "(03) 9660 5500",
- "mpratt@mintec.com.au",
- "http://www.mintec.com.au\""]
-result.size: 5
-result: ["\"Mintec Systems",
- "82 Jolimont St East Melbourne VIC 3002",
- "(03) 9660 5500",
- "mpratt@mintec.com.au",
- "http://www.mintec.com.au\""]
-result.size: 5
-result: ["\"Mintec Systems",
- "82 Jolimont St East Melbourne VIC 3002",
- "(03) 9660 5500",
- "mpratt@mintec.com.au",
- "http://www.mintec.com.au\""]
-result.size: 5
-result: ["\"Mintec Systems",
- "82 Jolimont St East Melbourne VIC 3002",
- "(03) 9660 5500",
- "mpratt@mintec.com.au",
- "http://www.mintec.com.au\""]
-result.size: 5
-result: ["\"Redgum Technologies",
- "420 Victoria St Brunswick VIC 3056",
- "(03) 9017 8113",
- "redgum@redgumtech.com.au",
- "http://www.redgum.com.au\""]
-result.size: 5
-result: ["\"Redgum Technologies",
- "420 Victoria St Brunswick VIC 3056",
- "(03) 9017 8113",
- "redgum@redgumtech.com.au",
- "http://www.redgum.com.au\""]
-result.size: 5
-result: ["\"Redgum Technologies",
- "420 Victoria St Brunswick VIC 3056",
- "(03) 9017 8113",
- "redgum@redgumtech.com.au",
- "http://www.redgum.com.au\""]
-result.size: 5
-result: ["\"Redgum Technologies",
- "420 Victoria St Brunswick VIC 3056",
- "(03) 9017 8113",
- "redgum@redgumtech.com.au",
- "http://www.redgum.com.au\""]
-result.size: 3
-result: ["\"Axiom Intelligence",
- "Lvl 40/ 140 William St Melbourne VIC 3000",
- "1300 737 078\",,"]
-result.size: 3
-result: ["\"Axiom Intelligence",
- "Lvl 40/ 140 William St Melbourne VIC 3000",
- "1300 737 078\",,"]
-result.size: 3
-result: ["\"Axiom Intelligence",
- "Lvl 40/ 140 William St Melbourne VIC 3000",
- "1300 737 078\",,"]
-result.size: 3
-result: ["\"Axiom Intelligence",
- "Lvl 40/ 140 William St Melbourne VIC 3000",
- "1300 737 078\",,"]
-result.size: 3
-result: ["\"Redgum Technologies Pty Ltd",
- "420 Victoria St Brunswick VIC 3056",
- "(03) 9017 8113\",,"]
-result.size: 3
-result: ["\"Redgum Technologies Pty Ltd",
- "420 Victoria St Brunswick VIC 3056",
- "(03) 9017 8113\",,"]
-result.size: 3
-result: ["\"Redgum Technologies Pty Ltd",
- "420 Victoria St Brunswick VIC 3056",
- "(03) 9017 8113\",,"]
-result.size: 3
-result: ["\"Redgum Technologies Pty Ltd",
- "420 Victoria St Brunswick VIC 3056",
- "(03) 9017 8113\",,"]
-result.size: 3
-result: ["\"Software Design & Enhancement",
- "173 Roden St West Melbourne VIC 3003",
- "(03) 9329 9944\",,"]
-result.size: 3
-result: ["\"Software Design & Enhancement",
- "173 Roden St West Melbourne VIC 3003",
- "(03) 9329 9944\",,"]
-result.size: 3
-result: ["\"Software Design & Enhancement",
- "173 Roden St West Melbourne VIC 3003",
- "(03) 9329 9944\",,"]
-result.size: 3
-result: ["\"Software Design & Enhancement",
- "173 Roden St West Melbourne VIC 3003",
- "(03) 9329 9944\",,"]
-[{:name=>"name", :phone=>"phone", :email=>"email", :website=>"website"},
- {:name=>"\"Zoomorphix Systems",
-  :phone=>"(03) 9804 0544",
+[{:name=>"name", :email=>"email", :phone=>"phone", :website=>"website"},
+ {:name=>"Zoomorphix Systems",
   :email=>"jbaker@zoomorphix.com.au",
-  :website=>"http://www.zoomorphix.com.au\""},
- {:name=>"\"Digital Tree Pty. Ltd.",
-  :phone=>"(03) 9682 0968",
+  :phone=>"(03) 9804 0544",
+  :website=>"http://www.zoomorphix.com.au"},
+ {:name=>"Digital Tree Pty. Ltd.",
   :email=>"info@digitaltree.com.au",
-  :website=>"http://www.digitaltree.com.au\""},
- {:name=>"\"Mintec Systems",
-  :phone=>"(03) 9660 5500",
+  :phone=>"(03) 9682 0968",
+  :website=>"http://www.digitaltree.com.au"},
+ {:name=>"Mintec Systems",
   :email=>"mpratt@mintec.com.au",
-  :website=>"http://www.mintec.com.au\""},
- {:name=>"\"Redgum Technologies",
-  :phone=>"(03) 9017 8113",
+  :phone=>"(03) 9660 5500",
+  :website=>"http://www.mintec.com.au"},
+ {:name=>"Redgum Technologies",
   :email=>"redgum@redgumtech.com.au",
-  :website=>"http://www.redgum.com.au\""},
- {:name=>"\"Axiom Intelligence",
-  :phone=>"1300 737 078\",,",
+  :phone=>"(03) 9017 8113",
+  :website=>"http://www.redgum.com.au"},
+ {:name=>"Axiom Intelligence",
   :email=>nil,
+  :phone=>"1300 737 078,,",
   :website=>nil},
- {:name=>"\"Redgum Technologies Pty Ltd",
-  :phone=>"(03) 9017 8113\",,",
+ {:name=>"Redgum Technologies Pty Ltd",
   :email=>nil,
+  :phone=>"(03) 9017 8113,,",
   :website=>nil},
- {:name=>"\"Software Design & Enhancement",
-  :phone=>"(03) 9329 9944\",,",
+ {:name=>"Software Design & Enhancement",
   :email=>nil,
+  :phone=>"(03) 9329 9944,,",
   :website=>nil}]

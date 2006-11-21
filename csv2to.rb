@@ -1,7 +1,7 @@
 # csv2to
 
 # 20061122
-# 0.0.5 (The CSVFile stuff is getting sufficiently good and the interfaces are changing enough that this could just about be 0.5!)  
+# 0.0.6
 
 # Description: Take a CSV file with a column containing email addresses and grab the email addresses, outputting a comma delimted to string of those addresses.  
 
@@ -33,11 +33,13 @@
 # 14. Added a chomp into String#csv_split, since the last element still had the linefeed attached.  
 # 15. Forgot to change an instance of columns to desired_columns in #read!  Oh, so that's why!  
 # 16. Removed attr_writer :columns and replaced it with def columns= so as to control the internal representation of the columns instance variable better.  This is so as to cope with being able to define column hash keys using either symbols or strings.  It will also come in handy if I make the parameter to #columns= be able to be an array somehow...  See Todo#4.  
+# 5/6
+# 17. Added a quote variable and a case statement to String#csv_split so as to remove Bug#3.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
 # 2. This won't as yet cope with commas within a quoted CSV file.  (Of course having quotes is pointless otherwise!)  Done as of 0.0.5.  
-# 3. It doesn't strip leading or trailing quotes now!  I thought it was time to iterate, so I'll fix this in 0.0.6.  
+# 3. It doesn't strip leading or trailing quotes now!  I thought it was time to iterate, so I'll fix this in 0.0.6.  Done as of 0.0.6.  
 
 # History: Significantly derived from the CSV reading stuff in nearest.rb.  It was overly general there, but not general enough.  This is more general.  I'll spin this off soon...  
 
@@ -55,18 +57,25 @@
 class String
   
   def csv_split
+    quote = :double
     result = self.chomp.split(/","\s*/)
     if result == [self.chomp]
+      quote = :single
       result = self.chomp.split(/','\s*/) # Singly quoted CSV files are essentially unheard of, but who knows?  
       if result == [self.chomp]
+        quote = :none
         result = self.chomp.split(/,\s*/)
-      end
-    end
-    puts 'result.size: ' + result.size.to_s #debug
-    print 'result: ' #debug
-    pp result #debug
-    return result
-  end
+      end # inner if
+    end # outer if
+    case quote
+      when :double
+        return result.collect{|e| e.gsub(/"/, '')}
+      when :single
+        return result.collect{|e| e.gsub(/'/, '')}
+      when :none
+        return result
+    end # case
+  end # def
   
 end
 
@@ -100,10 +109,10 @@ class CSVFile
   end
 
   def columns=(columns_layout)
-    pp columns_layout #debug
+    #pp columns_layout #debug
     @columns = {}
     columns_layout.each do |column_name, column_position|
-      pp column_name #debug
+      #pp column_name #debug
       @columns[column_name.to_s] = column_position
     end
   end
