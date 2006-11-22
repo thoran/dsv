@@ -2,6 +2,13 @@
 
 ## 20061123
 
+0.1.1
+
+1. Added an additional conditional to String#csv_split, so as to close Todo#12; which I just put in---the asterisk is off already!
+2. Fixed an unencountered problem with String#csv_split, which would have caused some headaches for sure: the regexes had the spaces after the second quote, when they should have been between the command the second quote.  Another 'Doh!'.
+3. Took out the quote = :none line from String#csv_split since this isn't needed.
+
+
 0.1.0
 
 1. /csv2to/csv_file.rb/

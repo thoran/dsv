@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061123
-# 0.1.0
+# 0.1.1
 
 # Description: A CSV file object.  
 
@@ -17,13 +17,21 @@
 # 3. It doesn't strip leading or trailing quotes now!  I thought it was time to iterate, so I'll fix this in 0.0.6.  Done as of 0.0.6.  
 # 4. If I input that there are no headers, don't supply any field to positional mappings and yet still want to select on the basis of a column name, it doesn't crash but gives me garbage.  
 # 5. Still has a trailing comma!  Fixed as of 0.1.1.  
+# 6. If I try to read a field which does not exist it crashes.  It should at least trap such an error, rather than crashing outright.  
 
-# History: Significantly derived from the CSV reading stuff in nearest.rb.  It was overly general there, but not general enough.  This is more general.  I'll spin this off soon...  
+# History: Significantly derived from the CSV reading stuff in nearest.rb.  It was overly general there, but not general enough.  This is more general.  (I just took a look at that at time of spinning this off (0.4.0) and it is so much simpler than this!  The splitter and the input options are far more comprehensive.)
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
 # 2. In CSVFile#from_csv I couldn't decide whether to use the column name or the column position to find the required data item, so I just decided to cope with both!  
 # 3. In CSVFile#column= (and #from_csv) I made it capable of accepting Array and Hash, with keys being String or Symbol.  
+
+# Changes since 0.0: 
+# 0. None in the 0.1.0 version.  
+# 0/1
+# 1. Added an additional conditional to String#csv_split, so as to close Todo#12; which I just put in---the asterisk is off already!  
+# 2. Fixed an unencountered problem with String#csv_split, which would have caused some headaches for sure: the regexes had the spaces after the second quote, when they should have been between the command the second quote.  Another 'Doh!'.  
+# 3. Took out the quote = :none line from String#csv_split since this isn't needed.  
 
 # Todo: 
 # *1. Have some means of defining constraints and raising errors as per the more custom/specific stuff in nearest.rb in class Address in the method from_csv which actually did the reading of each line part.  
@@ -37,19 +45,26 @@
 # 9. Consider reorganising the #read loop since it is doing two branches per loop.  The option would be to have the loop in a separate method and to call it from inside each of the four options, which would be OK, so long as the loop is in the method called and is not called from the loop, since that would be more inefficient.  Done as of 0.0.14.  I've preloaded some variables to be of the same format so that there is only one conditional inside the loop now.  Extra code by way of a repeated loop might produce slightly faster times, but I won't worry about it for now.  
 # *10. Take note of and then restore the current line number for when #first_line is called.  If lineno worked, perhaps?  
 # *11. Write to a CSV file.  
+# 12. Change String#csv_split, so as it will identify if there are no commas as well.  While this seems very unlikely for it to not find any commas at all, it is possible that what is supplied is complete crap and at least the process might halt there.  
+# *13. Get the lineno method working (if possible) because while what I have done is working OK, it is a little inelegant.  
+
+# Ideas: 
+# 1. Subclass CSVFile from File.  I'm not sure what this gets me, but it occurred to me that I have a read method and I was thinking of applying a close to an instance of the CSVFile class, and of course I don't have one.  
 
 class String
   
   def csv_split
     quote = :double
-    result = self.chomp.split(/","\s*/)
+    result = self.chomp.split(/",\s*"/)
     if result == [self.chomp]
       quote = :single
-      result = self.chomp.split(/','\s*/) # Singly quoted CSV files are essentially unheard of, but who knows?  
+      result = self.chomp.split(/',\s*'/) # Singly quoted CSV files are essentially unheard of, but who knows?  
       if result == [self.chomp]
-        quote = :none
         result = self.chomp.split(/,\s*/)
-      end # inner if
+        if result == [self.chomp]
+          raise RuntimeError, "This file doesn't have any commas in it.  Are you sure that this is a CSV file?"
+        end # inner if
+      end # middle if
     end # outer if
     case quote
       when :double
