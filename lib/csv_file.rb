@@ -1,0 +1,148 @@
+# csv_file.rb
+
+# 20061123
+# 0.1.0
+
+# Description: A CSV file object.  
+
+# Discussion: 
+# 1. I'm continuing the number series from csv2to 0.0.15 since while I decided to spin this off between csv2to 0.3.2 and 0.4.0, there were no changes to this part of csv2to since 0.0.15.  
+# 2. All of the History, Bugs, Nice bits, and Todo's are related to this anyway.  
+# 3. Interestingly, none of the testing and usage changes in csv2to during 0.1 through 0.3 required changes to this class beyond already known limitations.  
+# 4. I suggest that 0.1.0 is an accurately low number in so far as how long I spent on it, but not in so far as functionality is concerned.  Because this was being developed at the time for csv2to, then it was the functionality of that which guided the version number changes.  
+
+# Bugs: 
+# 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
+# 2. This won't as yet cope with commas within a quoted CSV file.  (Of course having quotes is pointless otherwise!)  Done as of 0.0.5.  
+# 3. It doesn't strip leading or trailing quotes now!  I thought it was time to iterate, so I'll fix this in 0.0.6.  Done as of 0.0.6.  
+# 4. If I input that there are no headers, don't supply any field to positional mappings and yet still want to select on the basis of a column name, it doesn't crash but gives me garbage.  
+# 5. Still has a trailing comma!  Fixed as of 0.1.1.  
+
+# History: Significantly derived from the CSV reading stuff in nearest.rb.  It was overly general there, but not general enough.  This is more general.  I'll spin this off soon...  
+
+# Nice bits: 
+# 1. In CSVFile#read, the default is to read all columns.  
+# 2. In CSVFile#from_csv I couldn't decide whether to use the column name or the column position to find the required data item, so I just decided to cope with both!  
+# 3. In CSVFile#column= (and #from_csv) I made it capable of accepting Array and Hash, with keys being String or Symbol.  
+
+# Todo: 
+# *1. Have some means of defining constraints and raising errors as per the more custom/specific stuff in nearest.rb in class Address in the method from_csv which actually did the reading of each line part.  
+# *2. Create a subclass of String called CSVLine and create the splitter method on that.  I want to try to keep this small, so I don't know if I want to go creating a class for this and a class for that...  
+# 3. Default to returning something (a hash or an array) if there is no header line and if no column names are given via the columns attr_writer.  Done as of 0.0.10.  
+# 4. Make #columns= be able to cope with receiving an array (as well as a hash) with the positions of the array being the the positions in the CSV file.  Done as of 0.0.7.  But I stopped playing with this about now (0.0.9).  
+# *5. This is pretty inefficient as it calls #from_csv for every field desired.  Better would be for it to do this all at once.  I'll wait until I spin this off methinks.  For now just get it working OK.  
+# *6. The String#csv_split stuff could be neater?...  It just got messier as of 0.0.11!  But it is slightly more accurate though...  
+# *7. Switch (back?) to using symbols as the key for the column hashes.  I might wait until I spin this off before revisiting.  As far as the interface to this library/class goes, it is irrelevant.  
+# *8. Have a stricter policy with respect to what formats to accept, since this is very accepting.  See Change#22 in the 0 series.  
+# 9. Consider reorganising the #read loop since it is doing two branches per loop.  The option would be to have the loop in a separate method and to call it from inside each of the four options, which would be OK, so long as the loop is in the method called and is not called from the loop, since that would be more inefficient.  Done as of 0.0.14.  I've preloaded some variables to be of the same format so that there is only one conditional inside the loop now.  Extra code by way of a repeated loop might produce slightly faster times, but I won't worry about it for now.  
+# *10. Take note of and then restore the current line number for when #first_line is called.  If lineno worked, perhaps?  
+# *11. Write to a CSV file.  
+
+class String
+  
+  def csv_split
+    quote = :double
+    result = self.chomp.split(/","\s*/)
+    if result == [self.chomp]
+      quote = :single
+      result = self.chomp.split(/','\s*/) # Singly quoted CSV files are essentially unheard of, but who knows?  
+      if result == [self.chomp]
+        quote = :none
+        result = self.chomp.split(/,\s*/)
+      end # inner if
+    end # outer if
+    case quote
+      when :double
+        result[0] = result[0].sub(/^"/, '')
+        result[result.size - 1] = result[result.size - 1].sub(/"$/, '')
+      when :single
+        result[0] = result[0].sub(/^'/, '')
+        result[result.size - 1] = result[result.size - 1].sub(/'$/, '')
+    end # case quote
+    result
+  end # def csv_split
+  
+end
+
+class CSVFile
+  
+  attr_reader :lines
+  
+  def initialize(filename, header_line = true)
+    @filename, @header_line = File.expand_path(filename), header_line
+    @file_handle = File.open(@filename, 'r')
+    @columns = columns if @header_line
+    @lines = []
+  end
+  
+  def read(*desired_columns)
+    number_of_columns = first_line.csv_split.size
+    if @header_line then @file_handle.rewind; @file_handle.gets else @file_handle.rewind end
+    if desired_columns == [] # Select all columns by default.  
+      if @columns # then select by column name...  
+        desired_columns = @columns.collect {|k, v| k}
+      else # select by column position...  
+        desired_columns = 0..(number_of_columns - 1)
+      end
+    end
+    @file_handle.each do |line|
+      h = {}
+      if @columns # then select by column name...  
+        desired_columns.each do |column|
+          h[column] = from_csv(line, column)
+        end
+      else # select by column position...  
+        desired_columns.each do |column|
+          h[column.to_i] = from_csv(line, column.to_i)
+        end
+      end
+      @lines << h
+    end
+  end
+  
+  def columns=(column_order)
+    case column_order
+      when Hash
+        @columns = {}
+        column_order.each do |column_name, column_position|
+          @columns[column_name.to_s] = column_position
+        end
+      when Array
+        @columns = {}
+        i = -1
+        column_order.each do |column|
+          @columns[column.to_s] = (i += 1)
+        end
+    end # case column_order
+  end
+  
+  def columns
+    @columns ||= (
+      h = {}
+      i = -1
+      first_line.csv_split.each do |key|
+        h[key.gsub(/ /, '_').chomp] = (i += 1)
+      end
+      h
+    )
+  end
+  
+  private
+  
+  def first_line
+    @file_handle.rewind
+    return_value = @file_handle.gets
+    @file_handle.rewind
+    return_value
+  end
+  
+  def from_csv(line, column)
+    case column
+      when Integer
+        line.csv_split[column]
+      else
+        line.csv_split[@columns[column.to_s]]
+    end
+  end
+  
+end

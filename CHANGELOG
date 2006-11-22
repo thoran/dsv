@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 20061123
+
+0.1.0
+
+1. /csv2to/csv_file.rb/
+2. ~ lib/csv_file.rb: - require 'pp'
+3. ~ lib/csv_file.rb: ~ read()
+4. - csv2to.rb
+5. - test.csv
+6. - test.txt
+7. + lib/csv_file.rb
+
+
 ## 20061122
 
 0.0.15: Removed any remaining debugging stuff, since I'm reasonably happy with this for a 0.0 final version.
