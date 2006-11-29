@@ -1,7 +1,7 @@
 # Test CSVFile
 
-# 20061130
-# 0.0.3
+# 20061201
+# 0.3.0 (The previous one (0.0.3) in CSVFile 0.3 should have been 20061201 as well.)  
 
 # History: Derived from the csv2to tester.  
 
@@ -15,10 +15,10 @@
 # 6. Various other output changes to cope with multiple values per line.  Not very extensible at all.  I need CSVFile.write!  
 # 2/3
 # 7. The csv2to program was having trouble with a file created from yellowpages.com.au.  
+# 3/4
+# 8. Removed the require for getoptlong, since unlike csv2to, which is a command, that isn't being used here.  
 
-require 'getoptlong'
 #require 'pp'
-  
 require '../lib/csv_file'
   
 class Array
@@ -37,9 +37,9 @@ class Array
   
 end
 
-output_filename = '3.txt'
+output_filename = '0.csv'
 
-input_filename ||= Dir.glob("*.csv")[1]
+input_filename ||= Dir.glob("*.csv")[0]
 output_filename ||= (
   input_filename.match(/(.*)(\..*$)/)[1] + '.to'
 )

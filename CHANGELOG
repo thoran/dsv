@@ -2,6 +2,12 @@
 
 ## 20061130
 
+0.3.0
+
+1. Modified String#csv_split to cope with two or more commas together (when there is no data in that column or columns) by /result/test_split/ and then applying a gsub to the string/self prior to reapplying the same split as for test_split.  Otherwise I could leave it as is!
+2. Forgot to cope with the fact that result is no longer being generated at the start of csv_split and so when a file has non-quoted columns, then there's nothing there.  I knew that I'd need the quote = :none line again!
+
+
 0.2.2
 
 1. - test/2.txt
