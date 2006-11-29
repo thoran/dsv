@@ -2,6 +2,13 @@
 
 ## 20061130
 
+0.2.1
+
+1. Do some more testing on field selection.
+2. /parse/parse_line/.  Being simply parse implies that it is parsing the whole file.
+3. Added method parse.  This could be superfluous crap, but there it is for now at least.
+
+
 0.2.0
 
 1. /from_csv/parse/.
