@@ -2,6 +2,12 @@
 
 ## 20061130
 
+0.2.2
+
+1. I modified #read so as it would cope with being presented with an Array of desired columns, rather than simply with a list of parameters.
+2. Tested that it would work OK as it should have prior to when I made the modification to #read.  And it does.
+
+
 0.2.1
 
 1. Do some more testing on field selection.

@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061130
-# 0.2.1
+# 0.2.2
 
 # Description: A CSV file object.  
 
@@ -40,6 +40,9 @@
 # 7. Do some more testing on field selection.  
 # 8. /parse/parse_line/.  Being simply parse implies that it is parsing the whole file.  
 # 9. Added method parse.  This could be superfluous crap, but there it is for now at least.  
+# 1/2
+# 10. I modified #read so as it would cope with being presented with an Array of desired columns, rather than simply with a list of parameters.  
+# 11. Tested that it would work OK as it should have prior to when I made the modification to #read.  And it does.  
 
 # Todo: 
 # *1. Have some means of defining constraints and raising errors as per the more custom/specific stuff in nearest.rb in class Address in the method from_csv which actually did the reading of each line part.  
@@ -104,13 +107,26 @@ class CSVFile < File
     number_of_columns = first_line.csv_split.size
     @header_line ? (self.rewind; self.gets) : self.rewind # Start at line 0 or line 1.  #lineno wasn't working when I first wanted this, but I will try #lineno again at some stage.  
     
-    if desired_columns == [] # then select all columns by default...
-      if @columns # then select by column name...  
-        desired_columns = @columns.collect {|k, v| k}
-      else # select by column position...  
-        desired_columns = 0..(number_of_columns - 1)
-      end
-    end
+    case desired_columns[0]
+      when Array
+        if desired_columns[0] == [] # then select all columns by default...
+          if @columns # then select by column name...  
+            desired_columns = @columns.collect {|k, v| k}
+          else # select by column position...  
+            desired_columns = 0..(number_of_columns - 1)
+          end
+        else
+          desired_columns = desired_columns[0]
+        end # outer if
+      else
+        if desired_columns == [] # then select all columns by default...
+          if @columns # then select by column name...  
+            desired_columns = @columns.collect {|k, v| k}
+          else # select by column position...  
+            desired_columns = 0..(number_of_columns - 1)
+          end
+        end # outer if
+    end # case
     
     self.each do |line|
       h = {}
