@@ -1,7 +1,7 @@
 # Test CSVFile
 
 # 20061130
-# 0.0.2
+# 0.0.3
 
 # History: Derived from the csv2to tester.  
 
@@ -13,6 +13,8 @@
 # 1/2
 # 5. Added an array input for the file names so as to test multiples and how it would handle explicit arrays.  Badly as it turned out and as I thought it would.  
 # 6. Various other output changes to cope with multiple values per line.  Not very extensible at all.  I need CSVFile.write!  
+# 2/3
+# 7. The csv2to program was having trouble with a file created from yellowpages.com.au.  
 
 require 'getoptlong'
 #require 'pp'
@@ -35,13 +37,13 @@ class Array
   
 end
 
-output_filename = '2.txt'
+output_filename = '3.txt'
 
-input_filename ||= Dir.glob("*.csv")[0]
+input_filename ||= Dir.glob("*.csv")[1]
 output_filename ||= (
   input_filename.match(/(.*)(\..*$)/)[1] + '.to'
 )
-field_names ||= ['name', 'address']
+field_names ||= ['name', 'email']
 
 csv_file = CSVFile.new(input_filename)
 csv_file.read(field_names)

@@ -4,6 +4,14 @@
 
 0.2.2
 
+1. - test/2.txt
+2. + test/3.txt
+3. + test/windscreens_&_repairs.email.vic.20061109.csv
+4. ~ test/test.rb
+
+
+0.2.2
+
 1. I modified #read so as it would cope with being presented with an Array of desired columns, rather than simply with a list of parameters.
 2. Tested that it would work OK as it should have prior to when I made the modification to #read.  And it does.
 
