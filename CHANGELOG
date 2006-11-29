@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 20061130
+
+0.2.0
+
+1. /from_csv/parse/.
+2. /lines/rows/ only because I'm using the term columns and it seems to fit in with that better---although columns are the column names, not the column values.  I'm not committed to it and may change this back.
+3. Added < File to the CSVFile class definition.
+4. /@file_handle/self/.
+5. I decided to only use the term rows to designate parsed data and so is essentially restricted to @rows and related.
+6. /lines/rows/.  I changed it back again, because lines seems more natural.  Still not sure about this, but so as to accommodat rows, I'm providing a rows method which returns @lines.
+
+
 ## 20061123
 
 0.1.1
