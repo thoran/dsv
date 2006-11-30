@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061201
-# 0.4.4
+# 0.4.5
 
 # Description: A CSV file object.  
 
@@ -40,6 +40,18 @@
 # 3/4
 # 12. Almost added the to_s I suspected was missing to make #each work with symbols, but realised why I didn't immediately need to do so.  
 # 13. Swapped out the def for rows for an alias on lines.  
+# 4/5
+# 14. Finally on to the writing stuff.  Although I think the changes to each method might be of some use...  
+# 15. Swapped read_line and parse_line, for no other reason than consistency.  
+# 16. Added in a couple of compatibility parameters to #init which allow for setting mode and permissions on the call to this method in the File superclass.  
+# 17. Created methods write, write_line, and to_csv which are all to support dumping of data to a CSV file as per Goal#1.  
+# 18. Created a method #lines? to support nicer querying as to whether there is any data read from the CSV file.  
+# 19. Took the debugging and reformatted #each a little.  
+# 20. Added an alias #read? for #lines?.  
+# 21. Added in && ['r', 'r+'].include?(mode) to the line of #initialize which sets the column names, since if a file is not open for reading, then I shouldn't be trying to read from it!  
+# 22. Changed #to_csv, such that it now doesn't try to add files to the collector if that column isn't specified.  Now, by way of using columns and not @columns, whereas before I had this silly if include thing?...  
+# 23. Added format/quote to the #init interface---pushing the standard file paramters yet further up the chain.  I may reorder these, but as they have defaults...?  
+# 24. There's a conflict between my attempted use of File(< IO)#puts and CSVFile#write, since File#puts calls #write and an infinite loop, or till the stack is used up ensues.  It is working at the moment, but only if I don't call write, but use write_line instead (which was the case anyway) and if it is commented out!  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -137,10 +149,10 @@ class CSVFile < File
   
   attr_reader :lines
   
-  def initialize(filename, header_line = true)
-    @filename, @header_line = self.class.expand_path(filename), header_line
-    super(filename)
-    @columns = columns if header_line
+  def initialize(filename, header_line = true, format = :double, mode = 'r', permissions = nil)
+    @filename, @header_line, @quote = self.class.expand_path(filename), header_line, format
+    super(filename, mode, permissions)
+    @columns = columns if header_line && ['r', 'r+'].include?(mode)
     @lines = []
   end
   
@@ -186,28 +198,89 @@ class CSVFile < File
     end
     @lines
   end
-  
   alias_method :parse, :read
+  
+  alias_method :std_write, :write
+  
+  #def write(*columns)
+    #pp self #debug
+  #  self.puts 'blah' #debug
+  #  @lines.each do |line|
+  #    write_line(line, columns)
+  #  end
+  #end
+  
+  def write_line(line, columns = nil)
+    #pp to_csv(line, columns) #debug
+    self.puts(self.to_csv(line, columns)) # Consider creating a CSVLine class so as this line might preferably be line.to_csv.  That would mean that @lines would contain CSVLine objects, so I shouldn't forget to make other changes!  
+  end
+  
+  def to_csv(line, columns = nil) # Consider putting *columns in later, so as to enable the supply of individual parameters as well as an array.  
+    collector = []
+    #pp columns #debug
+    #pp line #debug
+    #pp @columns #debug
+    if columns
+      columns.each do |c|
+        collector << line[c]
+      end
+    else
+      @columns.each do |k, v|
+        collector << line[v]
+      end
+    end
+    #pp collector #debug
+    case @quote.to_sym # Also handles 'double', 'double_qoute', ...
+      when :double, :double_quote, :double_quotes, :double_quoted, :doubly_quoted # No spaces, but no integrity checks.  
+        return (collector[0] = '"' + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + '"'; collector.join('","'))
+      when :strict_double, :strict_double_quote, :strict_double_quotes, :strict_double_quoted, :strict_doubly_quoted
+        return collector.join('",')
+      when :spacey_double, :spacey_double_quote, :spacey_double_quotes, :spacey_double_quoted, :spacey_doubly_quoted
+        return collector.join('", ')
+      when :single, :single_quote, :single_quotes, :single_quoted, :singly_quoted
+        return collector.join("',")
+      when :strict_single, :strict_single_quote, :strict_single_quotes, :strict_single_quoted, :strict_singly_quoted
+        return collector.join("',")
+      when :spacey_single, :spacey_single_quote, :spacey_single_quotes, :spacey_single_quoted, :spacey_singly_quoted
+        return collector.join("', ")
+      when :none, :no_quotes, :not_quoted
+        return collector.join(',')
+      when :strict_none, :strict_no_quote, :strict_not_quoted # I don't know what this does, since there isn't any quoting to play with, I know it simply does integrity checks...  
+        return collector.join(',')
+      when :spacey_none, :spacey_no_quote, :spacey_not_quoted
+        return collector.join(', ')
+    end # case
+  end
   
   alias_method :std_each, :each
   alias_method :std_file_each, :each
   alias_method :file_each, :each
   
   def each(*columns)
-    if @lines[0]
+    if lines? # May have been more efficient to have left this as @lines[0], so do test this later...  
       @lines.each {|line| yield line }
     else
-      if columns
-        read(columns).each {|line| yield(columns.collect {|c| pp line; line[c]}) } # Debug in here.  
+      if columns != []
+        read(columns).each {|line|
+          yield columns.collect {|c| line[c] }
+        }
       else
         read.each {|line| yield line }
       end
     end # outer if
   end
-  
   alias_method :csv_file_each, :each
   alias_method :each_with_line, :each
   alias_method :each_with_columns, :each
+  
+  def lines?
+    @lines[0]
+  end
+  alias_method :read?, :lines?
+  
+  def columns?
+    @columns != nil
+  end
   
   def columns=(column_order)
     case column_order
@@ -247,7 +320,7 @@ class CSVFile < File
     return_value
   end
   
-  def parse_line(line, column)
+  def read_line(line, column)
     case column
       when Integer
         line.csv_split[column]
@@ -256,6 +329,6 @@ class CSVFile < File
     end
   end
   
-  alias_method :read_line, :parse_line
+  alias_method :parse_line, :read_line
   
 end

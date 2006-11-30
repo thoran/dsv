@@ -2,6 +2,21 @@
 
 ## 20061201
 
+0.4.5
+
+1. Finally on to the writing stuff.  Although I think the changes to each method might be of some use...
+2. Swapped read_line and parse_line, for no other reason than consistency.
+3. Added in a couple of compatibility parameters to #init which allow for setting mode and permissions on the call to this method in the File superclass.
+4. Created methods write, write_line, and to_csv which are all to support dumping of data to a CSV file as per Goal#1.
+5. Created a method #lines? to support nicer querying as to whether there is any data read from the CSV file.
+6. Took the debugging and reformatted #each a little.
+7. Added an alias #read? for #lines?.
+8. Added in && ['r', 'r+'].include?(mode) to the line of #initialize which sets the column names, since if a file is not open for reading, then I shouldn't be trying to read from it!
+9. Changed #to_csv, such that it now doesn't try to add files to the collector if that column isn't specified.  Now, by way of using columns and not @columns, whereas before I had this silly if include thing?...
+10. Added format/quote to the #init interface---pushing the standard file paramters yet further up the chain.  I may reorder these, but as they have defaults...?
+11. There's a conflict between my attempted use of File(< IO)#puts and CSVFile#write, since File#puts calls #write and an infinite loop, or till the stack is used up ensues.  It is working at the moment, but only if I don't call write, but use write_line instead (which was the case anyway) and if it is commented out!
+
+
 0.4.4
 
 1. Almost added the to_s I suspected was missing to make #each work with symbols, but realised why I didn't immediately need to do so.

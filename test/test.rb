@@ -1,9 +1,9 @@
 # Test CSVFile
 
 # 20061201
-# 0.4.4
+# 0.4.5
 
-output_filename = '4.csv' # Here so as I don't forget to change this!  
+out_filename = '5.csv' # Here so as I dont' forget to change it!  
 
 # Changes since 0.3: 
 # 1. Commented out the sorting stuff.  
@@ -19,6 +19,14 @@ output_filename = '4.csv' # Here so as I don't forget to change this!
 # 7. Checked to see if #read would handle symbols and it does by virtue of a column.to_s in #parse_line.  
 # 8. Now checking to see if #each will handle symbols (I think it won't and I think I know why...)  And it did!  
 # 9.  However, one has to be consistent.  I can't mix'n'match strings and symbols.  
+# 4/5
+# 10. Removed a lot of the commented out stuff.  
+# 11. Testing writability of CSVFile.  
+# 12. Changed everything from input and output to simply in and out.  
+# 12. Removed the parameters from the in_file.each call.  
+# 13. I'm using write_line on the out_file and the list of columns instead now.  
+# 14. Switched to using CSVFile.new with the new interface for the outfile.  
+# 15.  Added :double into the out_file object creation so as to tell an output file what to do with the lines!  
 
 @debug = true
 #@debug = false
@@ -26,31 +34,20 @@ output_filename = '4.csv' # Here so as I don't forget to change this!
 require 'pp' if @debug
 require '../lib/csv_file'
 
-input_filename = 'internet_web_services.!email&website.vic.20061121.csv'
+in_filename = 'internet_web_services.!email&website.vic.20061121.csv'
 
-
-input_filename ||= Dir.glob("*.csv")[1]
-output_filename ||= (
+in_filename ||= Dir.glob("*.csv")[1]
+out_filename ||= (
   /(.*)(\..*$)/.match(input_filename)[1] + '.to'
 )
-#pp output_filename if @debug
 
-csv_file = CSVFile.new(input_filename)
-#lines = csv_file.read(:name, :address, :phone)
+in_file = CSVFile.new(in_filename)
+out_file = CSVFile.new(out_filename, true, :double, 'w')
 
-#pp lines if @debug
-#exit if @debug
-
-#sorted_lines = lines.sort {|a, b| a['name'] <=> b['name'] }
-#pp sorted_lines if @debug
-
-out_file = File.new(output_filename, 'w')
-
-csv_file.each(:name, :address, :phone) do |name, address, phone|
-  if phone != ''
-    out_file.print name + ', '
-    out_file.print address + ', '
-    out_file.print phone + "\n"
-  end
+in_file.each do |line|
+  #pp line if @debug
+  #if line['phone'] != ''
+    out_file.write_line(line, ['name', 'address', 'phone'])
+  #end
 end
 out_file.close
