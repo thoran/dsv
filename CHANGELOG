@@ -2,6 +2,11 @@
 
 ## 20061201
 
+0.3.5: More testing with other files.  I've found that String#csv_split screws up when a line has nothing but gaps in the columns, like ",,"...",," and never has "," anywhere.
+
+1. More testing with other files.  I've found that String#csv_split screws up when a line has nothing but gaps in the columns, like ",,"...",," and never has "," anywhere.
+
+
 0.3.4: Turned off debugging.
 
 1. Turned off debugging.

@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061201
-# 0.3.4
+# 0.3.5
 
 # Description: A CSV file object.  
 
@@ -23,6 +23,8 @@
 # 8. It's stuffing up for some reason, so I've created $debug and turned all of what was or was going to be #debug into 'if $debug'.  
 # 3/4
 # 9. Turned off debugging.  
+# 4/5
+# 10. More testing with other files.  I've found that String#csv_split screws up when a line has nothing but gaps in the columns, like ",,"...",," and never has "," anywhere.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -57,7 +59,7 @@
 # 5. Still has a trailing comma!  Fixed as of 0.1.1.  
 # 6. If I try to read a field which does not exist it crashes.  It should at least trap such an error, rather than crashing outright.  
 
-$debug = false
+$debug = true
 
 require 'pp' if $debug
 
@@ -81,7 +83,13 @@ class String
     result = ''
     case quote
       when :double
-        result = self.gsub(/,,/, ',"",')
+        # What follows is particularly ugly...  
+        old_result = self.gsub(/,,/, ',"",')
+	      loop do
+          result = old_result.gsub(/,,/, ',"",')
+		      break if result == old_result
+          old_result = result
+		    end
         result = result.chomp.split(/",\s*"/)
         result[0] = result[0].sub(/^"/, '')
         result[result.size - 1] = result[result.size - 1].sub(/"$/, '').sub(/",$/, '') # This last sub is more of a hack than most of the stuff here!  
@@ -140,7 +148,7 @@ class CSVFile < File
     #pp desired_columns if $debug
     
     self.std_each do |line|
-      pp line if $debug
+      #pp line if $debug
       h = {}
       if @columns # then select by column name...  
         desired_columns.each do |column|
@@ -152,7 +160,7 @@ class CSVFile < File
         end
       end
       @lines << h
-      pp @lines if $debug
+      #pp @lines if $debug
     end
   end
   
