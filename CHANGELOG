@@ -2,6 +2,12 @@
 
 ## 20061201
 
+0.3.3
+
+1. Created #each.
+2. It's stuffing up for some reason, so I've created $debug and turned all of what was or was going to be #debug into 'if $debug'.
+
+
 0.3.2: Removed all the debugging output.
 
 1. Removed all the debugging output.

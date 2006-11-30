@@ -1,12 +1,13 @@
 # csv_file.rb
 
 # 20061201
-# 0.3.2
+# 0.3.3
 
 # Description: A CSV file object.  
 
 # Goals for 0.3: 
 # 1. At the very least, fix the parsing bug, which causes something like "item_1","item_2",,"item_4" to fail.  Done as of 0.4.0, but it didn't work entirely correctly until 0.4.1 because while it handled sequences in between OK, it still stuffed up with trailing commos until 0.4.1.  
+# 2. OK, I can't justify a whole minor revision just to fix #csv_split so um, how about doing Idea#2?  Alright then, I shall implement an iterator.  So that rather than calling this object with csv_file.lines.each, it is called with csv_file.each.  
 
 # Changes since 0.2: 
 # 1. Modified String#csv_split to cope with two or more commas together (when there is no data in that column or columns) by /result/test_split/ and then applying a gsub to the string/self prior to reapplying the same split as for test_split.  Otherwise I could leave it as is!  
@@ -17,6 +18,9 @@
 # 5. Oh right.  So, windscreens_&_repairs.email.vic.20061109.csv wasn't the first csv file anymore because I what?  Oh yeah, output 0.csv...  Modified 1.rb test runner accordingly.  
 # 1/2
 # 6. Removed all the debugging output.  
+# 2/3
+# 7. Created #each.  
+# 8. It's stuffing up for some reason, so I've created $debug and turned all of what was or was going to be #debug into 'if $debug'.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -40,7 +44,7 @@
 # 14. Align method names to more closely match those of File.  
 
 # Ideas: 
-# 1. Subclass CSVFile from File.  I'm not sure what this gets me, but it occurred to me that I have a read method and I was thinking of applying a close to an instance of the CSVFile class, and of course I don't have one.  
+# 1. Subclass CSVFile from File.  I'm not sure what this gets me, but it occurred to me that I have a read method and I was thinking of applying a close to an instance of the CSVFile class, and of course I don't have one.  Done as of 0.2.0.  
 # 2. Give CSVFile an each method.  
 
 # Bugs: 
@@ -51,11 +55,14 @@
 # 5. Still has a trailing comma!  Fixed as of 0.1.1.  
 # 6. If I try to read a field which does not exist it crashes.  It should at least trap such an error, rather than crashing outright.  
 
-#require 'pp' #debug
+$debug = true
+
+require 'pp' if $debug
 
 class String
   
   def csv_split
+    pp self if $debug
     quote = :double
     test_split = self.chomp.split(/",\s*"/)
     if test_split == [self.chomp]
@@ -84,6 +91,7 @@ class String
       when :none
         result = self.chomp.split(/,\s*/)
     end # case quote
+    pp result if $debug
     result
   end # def csv_split
   
@@ -103,6 +111,8 @@ class CSVFile < File
   def read(*desired_columns)
     number_of_columns = first_line.csv_split.size
     @header_line ? (self.rewind; self.gets) : self.rewind # Start at line 0 or line 1.  #lineno wasn't working when I first wanted this, but I will try #lineno again at some stage.  
+    
+    #pp @header_line if $debug
     
     case desired_columns[0]
       when Array
@@ -125,7 +135,10 @@ class CSVFile < File
         end # outer if
     end # case
     
-    self.each do |line|
+    #pp desired_columns if $debug
+    
+    self.std_each do |line|
+      pp line if $debug
       h = {}
       if @columns # then select by column name...  
         desired_columns.each do |column|
@@ -137,7 +150,14 @@ class CSVFile < File
         end
       end
       @lines << h
+      pp @lines if $debug
     end
+  end
+  
+  alias_method :std_each, :each
+  
+  def each
+    @lines.each {|line| yield line }
   end
   
   def columns=(column_order)
