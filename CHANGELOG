@@ -2,6 +2,13 @@
 
 ## 20061201
 
+0.3.7
+
+1. Finished the changes required in #csv_split.  I really need to change this stuff though.
+2. In #csv_split changed the value of old_result to simply self.  It was an aesthetics thing, even though it might have been marginally quicker leaving it as it was.
+3. Changed #csv_split again to accommodate the edge case where the line has nothing but commas until the last column.  The scans for quotes would fail under such circumstances as it was.
+
+
 0.3.6: Significantly re-did String#csv_split.
 
 1. Significantly re-did String#csv_split.

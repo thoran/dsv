@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061201
-# 0.3.6
+# 0.3.7
 
 # Description: A CSV file object.  
 
@@ -27,6 +27,10 @@
 # 10. More testing with other files.  I've found that String#csv_split screws up when a line has nothing but gaps in the columns, like ",,"...",," and never has "," anywhere.  
 # 5/6
 # 11. Significantly re-did String#csv_split.  
+# 6/7
+# 12. Finished the changes required in #csv_split.  I really need to change this stuff though.  
+# 13. In #csv_split changed the value of old_result to simply self.  It was an aesthetics thing, even though it might have been marginally quicker leaving it as it was.  
+# 14. Changed #csv_split again to accommodate the edge case where the line has nothing but commas until the last column.  The scans for quotes would fail under such circumstances as it was.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -51,7 +55,7 @@
 
 # Ideas: 
 # 1. Subclass CSVFile from File.  I'm not sure what this gets me, but it occurred to me that I have a read method and I was thinking of applying a close to an instance of the CSVFile class, and of course I don't have one.  Done as of 0.2.0.  
-# 2. Give CSVFile an each method.  
+# 2. Give CSVFile an each method.  Done as of 0.3.3.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
@@ -61,7 +65,7 @@
 # 5. Still has a trailing comma!  Fixed as of 0.1.1.  
 # 6. If I try to read a field which does not exist it crashes.  It should at least trap such an error, rather than crashing outright.  
 
-$debug = true
+$debug = false
 
 require 'pp' if $debug
 
@@ -70,10 +74,11 @@ class String
   def csv_split
     pp self if $debug
     quote = :double
-    double = self.scan(/",/)
+    double = self.scan(/",|,\s"/)
+    pp double if $debug
     unless double[0]
       quote = :single
-      single = self.scan(/',/) # Singly quoted CSV files are essentially unheard of, but who knows?  
+      single = self.scan(/',|,\s'/) # Singly quoted CSV files are essentially unheard of, but who knows?  
       unless single[0]
         quote = :none
         none = self.scan(/,/)
@@ -83,10 +88,11 @@ class String
       end # middle if
     end # outer if
     result = ''
+    pp quote if $debug
     case quote
       when :double
-        # What follows is particularly ugly...  
-        old_result = self.gsub(/,,/, ',"",')
+        # What follows is particularly ugly...  Anyone have a regex book handy?  
+        old_result = self
 	      loop do
           result = old_result.gsub(/,,/, ',"",')
 		      break if result == old_result
@@ -96,6 +102,13 @@ class String
         result[0] = result[0].sub(/^"/, '')
         result[result.size - 1] = result[result.size - 1].sub(/"$/, '').sub(/",$/, '') # This last sub is more of a hack than most of the stuff here!  
       when :single
+        # More ugliness ensues...
+        old_result = self
+	      loop do
+          result = old_result.gsub(/,,/, ",'',")
+		      break if result == old_result
+          old_result = result
+		    end
         result = self.gsub(/,,/, ",'',")
         result = result.chomp.split(/',\s*'/)
         result[0] = result[0].sub(/^'/, '')

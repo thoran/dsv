@@ -1,7 +1,7 @@
 # Test CSVFile
 
 # 20061201
-# 0.3.6
+# 0.3.7
 
 # History: Derived from the csv2to tester.  
 
@@ -23,13 +23,14 @@
 # 10. I had $debug set to false in csv_file.rb and it was over-riding it here, so I'll make this an instance variable to be different.  
 # 5/6
 # 11. Took out a debug line that wasn't necessary.  
+# 6/7
 
 @debug = false
 
 require 'pp' if @debug
 require '../lib/csv_file'
 
-output_filename = '6.csv'
+output_filename = '7.csv'
 input_filename = 'internet_web_services.!email&website.vic.20061121.csv'
 
 input_filename ||= Dir.glob("*.csv")[1]
