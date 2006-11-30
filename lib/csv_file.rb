@@ -1,42 +1,32 @@
 # csv_file.rb
 
 # 20061201
-# 0.3.8
+# 0.4.0
 
 # Description: A CSV file object.  
 
-# Goals for 0.3: 
-# 1. At the very least, fix the parsing bug, which causes something like "item_1","item_2",,"item_4" to fail.  Done as of 0.4.0, but it didn't work entirely correctly until 0.4.1 because while it handled sequences in between OK, it still stuffed up with trailing commas until 0.4.1.  
-# 2. OK, I can't justify a whole minor revision just to fix #csv_split so um, how about doing Idea#2?  Alright then, I shall implement an iterator.  So that rather than calling this object with csv_file.lines.each, it is called with csv_file.each.  Done as of 0.3.3.  
+# Goals for 0.4: 
+# 1. Put one or more of these interfaces onto CSVFile: 
+# input_file = CSVFile.new(input_filename)
+# output_file = CSVFile.new(output_filename, 'w') # Add in read/write options as the second or third parameter, before or after header_line.  
+# 1. 
+# input_file.each do |line|
+#  output_file.write_line('name', 'address', 'phone') if line['phone'] != '' # I need to create the method #write_line.  
+# end
+# output_file.close
+# 2. 
+# output_file.write('name', 'address', 'phone')
+# output_file.close
+# 3. 
+# output_file.each do |line|
+#  line.write('name', 'address', 'phone')
+# end
 
-# Changes since 0.2: 
-# 1. Modified String#csv_split to cope with two or more commas together (when there is no data in that column or columns) by /result/test_split/ and then applying a gsub to the string/self prior to reapplying the same split as for test_split.  Otherwise I could leave it as is!  
-# 2. Forgot to cope with the fact that result is no longer being generated at the start of csv_split and so when a file has non-quoted columns, then there's nothing there.  I knew that I'd need the quote = :none line again!  
-# 0/1
-# 3. It doesn't deal with trailing commas (when the last column, but not last columns I think; only the last column) and inserts that and the last quote into the output...  Either I will simply truncate both end quotes and end quotes and trailing commas, or I'll remove them prior to doing the tidy-up of the first and last columns.  
-# 4. So, for now I've tacked on some more subs in #csv_split.  
-# 5. Oh right.  So, windscreens_&_repairs.email.vic.20061109.csv wasn't the first csv file anymore because I what?  Oh yeah, output 0.csv...  Modified 1.rb test runner accordingly.  
-# 1/2
-# 6. Removed all the debugging output.  
-# 2/3
-# 7. Created #each.  
-# 8. It's stuffing up for some reason, so I've created $debug and turned all of what was or was going to be #debug into 'if $debug'.  
-# 3/4
-# 9. Turned off debugging.  
-# 4/5
-# 10. More testing with other files.  I've found that String#csv_split screws up when a line has nothing but gaps in the columns, like ",,"...",," and never has "," anywhere.  
-# 5/6
-# 11. Significantly re-did String#csv_split.  
-# 6/7
-# 12. Finished the changes required in #csv_split.  I really need to change this stuff though.  
-# 13. In #csv_split changed the value of old_result to simply self.  It was an aesthetics thing, even though it might have been marginally quicker leaving it as it was.  
-# 14. Changed #csv_split again to accommodate the edge case where the line has nothing but commas until the last column.  The scans for quotes would fail under such circumstances as it was.  
-# 7/8
-# 15. #read now returns @lines.  
-# 16. Added a couple more aliases for File#each.  
-# 17. Made CSVFile#each smarter, such that it will now attempt to read the file if it hasn't been read yet.  It only does a default read presently and doesn't take desired columns, which would need to be fed into the each method first.  (I had this in mind, but was waiting for a later version.  It just started to happen!  I was thinking a few hours ago that it would be really sweet to be able to do something like csv_file.each('name', 'address', 'phone') do |name, address, phone|...  I would still want to retain it returning lines however, so I'd have to make sure that by entering parameters it defaulted to returning lines and returning only one value in the yield.  I don't know why Matz doesn't like that stuff!  
-# 18. I just realised that I could rewrite #each such that I can dispense with the @lines: /read; @lines.each do/read.each do/, since read now returns @lines!  Nice.  
-# 19. Created #csv_file_each to accompany #file_each.  
+# Changes since 0.3: 
+# 1. Changed the def to an alias for #csv_file_each.  
+# 2. I thought I did this already (Maybe I forgot?)---in #each: read; @lines.each --> read.each.  Much nicer.  I'm sure I wrote this down as done before (in 0.3.7 or 8)!  
+# 3. Added a conditional into #each for when one or more columns are desired.  
+# 4. Changed all the scans to matches in #csv_split because a non-match returns nil and that's a little cleaner than what scan returns.  And yes, match works both ways: String.match(Regex) as well as Regex.match(String).  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -58,7 +48,7 @@
 # *11. Write to a CSV file.  
 # 12. Change String#csv_split, so as it will identify if there are no commas as well.  While this seems very unlikely for it to not find any commas at all, it is possible that what is supplied is complete crap and at least the process might halt there.  
 # *13. Get the lineno method working (if possible) because while what I have done is working OK, it is a little inelegant.  
-# 14. Align method names to more closely match those of File.  
+# *14. Align method names to more closely match those of File.  
 
 # Ideas: 
 # 1. Subclass CSVFile from File.  I'm not sure what this gets me, but it occurred to me that I have a read method and I was thinking of applying a close to an instance of the CSVFile class, and of course I don't have one.  Done as of 0.2.0.  
@@ -81,15 +71,15 @@ class String
   def csv_split
     pp self if $debug
     quote = :double
-    double = self.scan(/",|,\s"/)
+    double = self.match(/",|,\s"/)
     pp double if $debug
-    unless double[0]
+    unless double
       quote = :single
-      single = self.scan(/',|,\s'/) # Singly quoted CSV files are essentially unheard of, but who knows?  
-      unless single[0]
+      single = self.match(/',|,\s'/) # Singly quoted CSV files are essentially unheard of, but who knows?  
+      unless single
         quote = :none
-        none = self.scan(/,/)
-        unless none[0]
+        none = self.match(/,/)
+        unless none
           raise RuntimeError, "This file doesn't have any commas in it.  Are you sure that this is a CSV file?"
         end # inner if
       end # middle if
@@ -191,17 +181,19 @@ class CSVFile < File
   alias_method :std_file_each, :each
   alias_method :file_each, :each
   
-  def each
-    if @lines[0]
-      @lines.each {|line| yield line }
+  def each(*columns)
+    if columns
+      read(columns).each {|line| yield line }
     else
-      read; @lines.each {|line| yield line }
+      if @lines[0]
+        @lines.each {|line| yield line }
+      else
+        read.each {|line| yield line }
+      end
     end
   end
   
-  def csv_file_each
-    each
-  end
+  alias_method :csv_file_each, :each
   
   def columns=(column_order)
     case column_order

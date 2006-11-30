@@ -2,6 +2,14 @@
 
 ## 20061201
 
+0.4.0
+
+1. Changed the def to an alias for #csv_file_each.
+2. I thought I did this already (Maybe I forgot?)---in #each: read; @lines.each --> read.each.  Much nicer.  I'm sure I wrote this down as done before (in 0.3.7 or 8)!
+3. Added a conditional into #each for when one or more columns are desired.
+4. Changed all the scans to matches in #csv_split because a non-match returns nil and that's a little cleaner than what scan returns.  And yes, match works both ways: String.match(Regex) as well as Regex.match(String).
+
+
 0.3.8
 
 1. #read now returns @lines.
