@@ -1,13 +1,13 @@
 # csv_file.rb
 
 # 20061201
-# 0.3.7
+# 0.3.8
 
 # Description: A CSV file object.  
 
 # Goals for 0.3: 
-# 1. At the very least, fix the parsing bug, which causes something like "item_1","item_2",,"item_4" to fail.  Done as of 0.4.0, but it didn't work entirely correctly until 0.4.1 because while it handled sequences in between OK, it still stuffed up with trailing commos until 0.4.1.  
-# 2. OK, I can't justify a whole minor revision just to fix #csv_split so um, how about doing Idea#2?  Alright then, I shall implement an iterator.  So that rather than calling this object with csv_file.lines.each, it is called with csv_file.each.  
+# 1. At the very least, fix the parsing bug, which causes something like "item_1","item_2",,"item_4" to fail.  Done as of 0.4.0, but it didn't work entirely correctly until 0.4.1 because while it handled sequences in between OK, it still stuffed up with trailing commas until 0.4.1.  
+# 2. OK, I can't justify a whole minor revision just to fix #csv_split so um, how about doing Idea#2?  Alright then, I shall implement an iterator.  So that rather than calling this object with csv_file.lines.each, it is called with csv_file.each.  Done as of 0.3.3.  
 
 # Changes since 0.2: 
 # 1. Modified String#csv_split to cope with two or more commas together (when there is no data in that column or columns) by /result/test_split/ and then applying a gsub to the string/self prior to reapplying the same split as for test_split.  Otherwise I could leave it as is!  
@@ -31,11 +31,18 @@
 # 12. Finished the changes required in #csv_split.  I really need to change this stuff though.  
 # 13. In #csv_split changed the value of old_result to simply self.  It was an aesthetics thing, even though it might have been marginally quicker leaving it as it was.  
 # 14. Changed #csv_split again to accommodate the edge case where the line has nothing but commas until the last column.  The scans for quotes would fail under such circumstances as it was.  
+# 7/8
+# 15. #read now returns @lines.  
+# 16. Added a couple more aliases for File#each.  
+# 17. Made CSVFile#each smarter, such that it will now attempt to read the file if it hasn't been read yet.  It only does a default read presently and doesn't take desired columns, which would need to be fed into the each method first.  (I had this in mind, but was waiting for a later version.  It just started to happen!  I was thinking a few hours ago that it would be really sweet to be able to do something like csv_file.each('name', 'address', 'phone') do |name, address, phone|...  I would still want to retain it returning lines however, so I'd have to make sure that by entering parameters it defaulted to returning lines and returning only one value in the yield.  I don't know why Matz doesn't like that stuff!  
+# 18. I just realised that I could rewrite #each such that I can dispense with the @lines: /read; @lines.each do/read.each do/, since read now returns @lines!  Nice.  
+# 19. Created #csv_file_each to accompany #file_each.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
 # 2. In CSVFile#from_csv I couldn't decide whether to use the column name or the column position to find the required data item, so I just decided to cope with both!  
 # 3. In CSVFile#column= (and #from_csv) I made it capable of accepting Array and Hash, with keys being String or Symbol.  
+# 4. In CSVFile#each, it will read the file if it hasn't been read; and it doesn't need to refer to the instance variable, since the parse file is returned by the read method!  
 
 # Todo: 
 # *1. Have some means of defining constraints and raising errors as per the more custom/specific stuff in nearest.rb in class Address in the method from_csv which actually did the reading of each line part.  
@@ -162,7 +169,7 @@ class CSVFile < File
     
     #pp desired_columns if $debug
     
-    self.std_each do |line|
+    self.std_file_each do |line|
       #pp line if $debug
       h = {}
       if @columns # then select by column name...  
@@ -177,12 +184,23 @@ class CSVFile < File
       @lines << h
       #pp @lines if $debug
     end
+    @lines
   end
   
   alias_method :std_each, :each
+  alias_method :std_file_each, :each
+  alias_method :file_each, :each
   
   def each
-    @lines.each {|line| yield line }
+    if @lines[0]
+      @lines.each {|line| yield line }
+    else
+      read; @lines.each {|line| yield line }
+    end
+  end
+  
+  def csv_file_each
+    each
   end
   
   def columns=(column_order)

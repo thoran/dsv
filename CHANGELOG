@@ -2,6 +2,15 @@
 
 ## 20061201
 
+0.3.8
+
+1. #read now returns @lines.
+2. Added a couple more aliases for File#each.
+3. Made CSVFile#each smarter, such that it will now attempt to read the file if it hasn't been read yet.  It only does a default read presently and doesn't take desired columns, which would need to be fed into the each method first.  (I had this in mind, but was waiting for a later version.  It just started to happen!  I was thinking a few hours ago that it would be really sweet to be able to do something like csv_file.each('name', 'address', 'phone') do |name, address, phone|...  I would still want to retain it returning lines however, so I'd have to make sure that by entering parameters it defaulted to returning lines and returning only one value in the yield.  I don't know why Matz doesn't like that stuff!
+4. I just realised that I could rewrite #each such that I can dispense with the @lines: /read; @lines.each do/read.each do/, since read now returns @lines!  Nice.
+5. Created #csv_file_each to accompany #file_each.
+
+
 0.3.7
 
 1. Finished the changes required in #csv_split.  I really need to change this stuff though.

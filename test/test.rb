@@ -1,7 +1,7 @@
 # Test CSVFile
 
 # 20061201
-# 0.3.7
+# 0.3.8
 
 # History: Derived from the csv2to tester.  
 
@@ -24,25 +24,34 @@
 # 5/6
 # 11. Took out a debug line that wasn't necessary.  
 # 6/7
+# 7/8
+# 12. Having a go at sorting...  
+# 13. Not just yet, meanwhile I changed the behaviour of CSVFile#read such that it returns the lines; and so, I thought I'd use that here...  
 
-@debug = false
+@debug = true
+#@debug = false
 
 require 'pp' if @debug
 require '../lib/csv_file'
 
-output_filename = '7.csv'
 input_filename = 'internet_web_services.!email&website.vic.20061121.csv'
+output_filename = '8.csv'
 
 input_filename ||= Dir.glob("*.csv")[1]
 output_filename ||= (
-  input_filename.match(/(.*)(\..*$)/)[1] + '.to'
+  /(.*)(\..*$)/.match(input_filename)[1] + '.to'
 )
+pp output_filename if @debug
 
 csv_file = CSVFile.new(input_filename)
-csv_file.read('name', 'address', 'phone')
+lines = csv_file.read('name', 'address', 'phone')
+
+pp lines if @debug
+sorted_lines = lines.sort {|a, b| a['name'] <=> b['name'] }
+pp sorted_lines if @debug
 
 out_file = File.new(output_filename, 'w')
-csv_file.each do |line|
+sorted_lines.each do |line|
   if line['phone'] != ''
     out_file.print line['name'] + ', '
     out_file.print line['address'] + ', '
