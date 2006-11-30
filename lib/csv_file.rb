@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061201
-# 0.4.3
+# 0.4.4
 
 # Description: A CSV file object.  
 
@@ -37,6 +37,9 @@
 # 2/3
 # 10. Removed #each_with_columns and (for backwards compatibility?) made it an alias for #each, whilst rolling in the bit of code with generates multiple return values.  
 # 11. The only thing lost by doing this is that it is not longer possible to specify which columns are to be collected and then to have a single line parameter returned to the block.  No great loss methinks.  
+# 3/4
+# 12. Almost added the to_s I suspected was missing to make #each work with symbols, but realised why I didn't immediately need to do so.  
+# 13. Swapped out the def for rows for an alias on lines.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -63,6 +66,7 @@
 # Ideas: 
 # 1. Subclass CSVFile from File.  I'm not sure what this gets me, but it occurred to me that I have a read method and I was thinking of applying a close to an instance of the CSVFile class, and of course I don't have one.  Done as of 0.2.0.  
 # 2. Give CSVFile an each method.  Done as of 0.3.3.  
+# 3. Standardize on either symbols or strings for column names, since presently one has to be consistent.  It would be nicer to be able to mix and match---if possible.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
@@ -194,7 +198,7 @@ class CSVFile < File
       @lines.each {|line| yield line }
     else
       if columns
-        read(columns).each {|line| yield(columns.collect {|c| line[c]}) }
+        read(columns).each {|line| yield(columns.collect {|c| pp line; line[c]}) } # Debug in here.  
       else
         read.each {|line| yield line }
       end
@@ -232,9 +236,7 @@ class CSVFile < File
     )
   end
   
-  def rows
-    @lines
-  end
+  alias_method :rows, :lines
   
   private
   

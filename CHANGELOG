@@ -2,6 +2,12 @@
 
 ## 20061201
 
+0.4.4
+
+1. Almost added the to_s I suspected was missing to make #each work with symbols, but realised why I didn't immediately need to do so.
+2. Swapped out the def for rows for an alias on lines.
+
+
 0.4.3
 
 1. Removed #each_with_columns and (for backwards compatibility?) made it an alias for #each, whilst rolling in the bit of code with generates multiple return values.
