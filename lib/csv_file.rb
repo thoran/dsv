@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061201
-# 0.3.1
+# 0.3.2
 
 # Description: A CSV file object.  
 
@@ -15,6 +15,8 @@
 # 3. It doesn't deal with trailing commas (when the last column, but not last columns I think; only the last column) and inserts that and the last quote into the output...  Either I will simply truncate both end quotes and end quotes and trailing commas, or I'll remove them prior to doing the tidy-up of the first and last columns.  
 # 4. So, for now I've tacked on some more subs in #csv_split.  
 # 5. Oh right.  So, windscreens_&_repairs.email.vic.20061109.csv wasn't the first csv file anymore because I what?  Oh yeah, output 0.csv...  Modified 1.rb test runner accordingly.  
+# 1/2
+# 6. Removed all the debugging output.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -49,12 +51,11 @@
 # 5. Still has a trailing comma!  Fixed as of 0.1.1.  
 # 6. If I try to read a field which does not exist it crashes.  It should at least trap such an error, rather than crashing outright.  
 
-require 'pp' #debug
+#require 'pp' #debug
 
 class String
   
   def csv_split
-    pp self #debug
     quote = :double
     test_split = self.chomp.split(/",\s*"/)
     if test_split == [self.chomp]
@@ -83,7 +84,6 @@ class String
       when :none
         result = self.chomp.split(/,\s*/)
     end # case quote
-    pp result #debug 
     result
   end # def csv_split
   
@@ -96,7 +96,7 @@ class CSVFile < File
   def initialize(filename, header_line = true)
     @filename, @header_line = self.class.expand_path(filename), header_line
     super(filename)
-    pp @columns = columns if header_line
+    @columns = columns if header_line
     @lines = []
   end
   

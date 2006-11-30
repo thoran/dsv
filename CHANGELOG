@@ -2,6 +2,11 @@
 
 ## 20061201
 
+0.3.2: Removed all the debugging output.
+
+1. Removed all the debugging output.
+
+
 0.3.1
 
 1. It doesn't deal with trailing commas (when the last column, but not last columns I think; only the last column) and inserts that and the last quote into the output...  Either I will simply truncate both end quotes and end quotes and trailing commas, or I'll remove them prior to doing the tidy-up of the first and last columns.

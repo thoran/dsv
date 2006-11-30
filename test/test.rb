@@ -1,7 +1,7 @@
 # Test CSVFile
 
 # 20061201
-# 0.3.1
+# 0.3.2
 
 # History: Derived from the csv2to tester.  
 
@@ -10,10 +10,15 @@
 # 0/1
 # 2. Changed the input csv file to the second one.  
 # 3. Change the output csv file to 1.csv.  
+# 1/2
+# 4. Changed the input file to an explicit file name, since I couldn't figure out why it wasn't working...  
+# 5. Change the output csv file to 2.csv.  
+# 6. Removed some debugging.  
 
 #require 'pp'
+
 require '../lib/csv_file'
-  
+
 class Array
   
   alias_method :last!, :pop
@@ -30,11 +35,12 @@ class Array
   
 end
 
-output_filename = '1.csv'
+output_filename = '2.csv'
+input_filename = 'windscreens_&_repairs.email.vic.20061109.csv'
 
 input_filename ||= Dir.glob("*.csv")[1]
 output_filename ||= (
-  input_filename.match(/(.*)(\..*$)/)[1] + '.to'
+  input_filename.match(/(.*)(\..*$)/)[2] + '.to'
 )
 field_names ||= ['name', 'email']
 
@@ -47,7 +53,7 @@ csv_file.lines.each do |line|
   stuff << line if line[field_names[0]] && line[field_names[1]]
 end
 
-require 'pp'; pp stuff #debug
+#require 'pp'; pp stuff #debug
 
 out_file = File.new(output_filename, 'w')
 stuff.each_but_last do |line|
