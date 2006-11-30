@@ -1,9 +1,9 @@
 # Test CSVFile
 
 # 20061201
-# 0.4.5
+# 0.4.6
 
-out_filename = '5.csv' # Here so as I dont' forget to change it!  
+out_filename = '6.csv' # Here so as I dont' forget to change it!  
 
 # Changes since 0.3: 
 # 1. Commented out the sorting stuff.  
@@ -27,6 +27,10 @@ out_filename = '5.csv' # Here so as I dont' forget to change it!
 # 13. I'm using write_line on the out_file and the list of columns instead now.  
 # 14. Switched to using CSVFile.new with the new interface for the outfile.  
 # 15.  Added :double into the out_file object creation so as to tell an output file what to do with the lines!  
+# 5/6
+# 16. Replaced the loop and #write_line to test #write(_csv).  
+# 17. Realised that I need to load the in_file value for lines into the out_file.  
+# 18. I forgot to read the in_file.  Should I consider making the lines method explicit and call read from there?  
 
 @debug = true
 #@debug = false
@@ -44,10 +48,11 @@ out_filename ||= (
 in_file = CSVFile.new(in_filename)
 out_file = CSVFile.new(out_filename, true, :double, 'w')
 
-in_file.each do |line|
-  #pp line if @debug
-  #if line['phone'] != ''
-    out_file.write_line(line, ['name', 'address', 'phone'])
-  #end
-end
+in_file.read
+out_file.lines = in_file.lines
+
+#pp in_file.lines #debug
+#pp out_file.lines # debug?
+
+out_file.write_csv('name', 'address', 'phone')
 out_file.close

@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061201
-# 0.4.5
+# 0.4.6
 
 # Description: A CSV file object.  
 
@@ -52,6 +52,9 @@
 # 22. Changed #to_csv, such that it now doesn't try to add files to the collector if that column isn't specified.  Now, by way of using columns and not @columns, whereas before I had this silly if include thing?...  
 # 23. Added format/quote to the #init interface---pushing the standard file paramters yet further up the chain.  I may reorder these, but as they have defaults...?  
 # 24. There's a conflict between my attempted use of File(< IO)#puts and CSVFile#write, since File#puts calls #write and an infinite loop, or till the stack is used up ensues.  It is working at the moment, but only if I don't call write, but use write_line instead (which was the case anyway) and if it is commented out!  
+# 5/6
+# 25. /#write/#write_csv/.  This is a temporary measure(I think?) until I can figure out to get #write to co-exist with IO#write.  
+# 26. /attr_read :lines/attr_accessor :lines/ for when assigning an out file the in file's values.  This seems pretty cludgy, but we'll go with it for now.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -147,7 +150,7 @@ end
 
 class CSVFile < File
   
-  attr_reader :lines
+  attr_accessor :lines
   
   def initialize(filename, header_line = true, format = :double, mode = 'r', permissions = nil)
     @filename, @header_line, @quote = self.class.expand_path(filename), header_line, format
@@ -202,13 +205,13 @@ class CSVFile < File
   
   alias_method :std_write, :write
   
-  #def write(*columns)
-    #pp self #debug
-  #  self.puts 'blah' #debug
-  #  @lines.each do |line|
-  #    write_line(line, columns)
-  #  end
-  #end
+  def write_csv(*columns)
+    #self.puts 'blah' #debug
+    #pp @lines #debug
+    @lines.each do |line|
+      write_line(line, columns)
+    end
+  end
   
   def write_line(line, columns = nil)
     #pp to_csv(line, columns) #debug

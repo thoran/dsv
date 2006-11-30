@@ -2,6 +2,12 @@
 
 ## 20061201
 
+0.4.6
+
+1. /#write/#write_csv/.  This is a temporary measure(I think?) until I can figure out to get #write to co-exist with IO#write.
+2. /attr_read :lines/attr_accessor :lines/ for when assigning an out file the in file's values.  This seems pretty cludgy, but we'll go with it for now.
+
+
 0.4.5
 
 1. Finally on to the writing stuff.  Although I think the changes to each method might be of some use...
