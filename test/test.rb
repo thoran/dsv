@@ -1,7 +1,7 @@
 # Test CSVFile
 
 # 20061203
-# 0.4.6.2
+# 0.4.6.3
 
 # Changes since 0.3: 
 # 1. Commented out the sorting stuff.  
@@ -33,6 +33,8 @@
 # 19. Testing that (re-)ordering is working OK.  
 # 6.1/6.2
 # 20. Testing that reading a writing to the same file is working OK.  It worked sort-of.  It appended to the file, which I understand would be because the lineno had not been reset...  
+# 6.2/6.3
+# 21. Seeing if I can get it over-write the file, rather than append.  This truncates first!  So, empty file!  
 
 @debug = true
 #@debug = false
@@ -40,13 +42,9 @@
 require 'pp' if @debug
 require '../lib/csv_file'
 
-in_filename = '6.2.csv'
+in_filename = '6.3.csv'
 
-in_file = CSVFile.new(in_filename, true, :double, 'r+')
-#out_file = CSVFile.new(out_filename, true, :double, 'w')
-
+in_file = CSVFile.new(in_filename, true, :double, 'w+')
 in_file.read
-#out_file.lines = in_file.lines
-
 in_file.write_csv('phone', 'address', 'name')
 in_file.close
