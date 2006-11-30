@@ -1,22 +1,15 @@
 # Test CSVFile
 
 # 20061201
-# 0.3.0 (The previous one (0.0.3) in CSVFile 0.3 should have been 20061201 as well.)  
+# 0.3.1
 
 # History: Derived from the csv2to tester.  
 
 # Changes: 
-# 1. Removed the command line option stuff.  
-# 2. Output is line separated instead of comma separated.  
-# 3. Output filename is manually set.  
-# 4. Removed less debugging than this text to tell about it.  
-# 1/2
-# 5. Added an array input for the file names so as to test multiples and how it would handle explicit arrays.  Badly as it turned out and as I thought it would.  
-# 6. Various other output changes to cope with multiple values per line.  Not very extensible at all.  I need CSVFile.write!  
-# 2/3
-# 7. The csv2to program was having trouble with a file created from yellowpages.com.au.  
-# 3/4
-# 8. Removed the require for getoptlong, since unlike csv2to, which is a command, that isn't being used here.  
+# 1. Removed the require for getoptlong, since unlike csv2to, which is a command, that isn't being used here.  
+# 0/1
+# 2. Changed the input csv file to the second one.  
+# 3. Change the output csv file to 1.csv.  
 
 #require 'pp'
 require '../lib/csv_file'
@@ -37,15 +30,15 @@ class Array
   
 end
 
-output_filename = '0.csv'
+output_filename = '1.csv'
 
-input_filename ||= Dir.glob("*.csv")[0]
+input_filename ||= Dir.glob("*.csv")[1]
 output_filename ||= (
   input_filename.match(/(.*)(\..*$)/)[1] + '.to'
 )
 field_names ||= ['name', 'email']
 
-csv_file = CSVFile.new(input_filename)
+csv_file = CSVFile.new(input_filename, true)
 csv_file.read(field_names)
 #csv_file.read('name', 'address')
 

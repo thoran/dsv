@@ -1,16 +1,20 @@
 # csv_file.rb
 
-# 20061130
-# 0.3.0
+# 20061201
+# 0.3.1
 
 # Description: A CSV file object.  
 
 # Goals for 0.3: 
-# 1. At the very least, fix the parsing bug, which causes something like "item_1","item_2",,"item_4" to fail.  
+# 1. At the very least, fix the parsing bug, which causes something like "item_1","item_2",,"item_4" to fail.  Done as of 0.4.0, but it didn't work entirely correctly until 0.4.1 because while it handled sequences in between OK, it still stuffed up with trailing commos until 0.4.1.  
 
 # Changes since 0.2: 
 # 1. Modified String#csv_split to cope with two or more commas together (when there is no data in that column or columns) by /result/test_split/ and then applying a gsub to the string/self prior to reapplying the same split as for test_split.  Otherwise I could leave it as is!  
 # 2. Forgot to cope with the fact that result is no longer being generated at the start of csv_split and so when a file has non-quoted columns, then there's nothing there.  I knew that I'd need the quote = :none line again!  
+# 0/1
+# 3. It doesn't deal with trailing commas (when the last column, but not last columns I think; only the last column) and inserts that and the last quote into the output...  Either I will simply truncate both end quotes and end quotes and trailing commas, or I'll remove them prior to doing the tidy-up of the first and last columns.  
+# 4. So, for now I've tacked on some more subs in #csv_split.  
+# 5. Oh right.  So, windscreens_&_repairs.email.vic.20061109.csv wasn't the first csv file anymore because I what?  Oh yeah, output 0.csv...  Modified 1.rb test runner accordingly.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -45,10 +49,12 @@
 # 5. Still has a trailing comma!  Fixed as of 0.1.1.  
 # 6. If I try to read a field which does not exist it crashes.  It should at least trap such an error, rather than crashing outright.  
 
+require 'pp' #debug
+
 class String
   
   def csv_split
-    require 'pp'
+    pp self #debug
     quote = :double
     test_split = self.chomp.split(/",\s*"/)
     if test_split == [self.chomp]
@@ -68,12 +74,12 @@ class String
         result = self.gsub(/,,/, ',"",')
         result = result.chomp.split(/",\s*"/)
         result[0] = result[0].sub(/^"/, '')
-        result[result.size - 1] = result[result.size - 1].sub(/"$/, '')
+        result[result.size - 1] = result[result.size - 1].sub(/"$/, '').sub(/",$/, '') # This last sub is more of a hack than most of the stuff here!  
       when :single
         result = self.gsub(/,,/, ",'',")
         result = result.chomp.split(/',\s*'/)
         result[0] = result[0].sub(/^'/, '')
-        result[result.size - 1] = result[result.size - 1].sub(/'$/, '')
+        result[result.size - 1] = result[result.size - 1].sub(/'$/, '').sub(/',$/, '') # This last sub is also far more of a hack than most of the stuff here...  
       when :none
         result = self.chomp.split(/,\s*/)
     end # case quote
@@ -90,7 +96,7 @@ class CSVFile < File
   def initialize(filename, header_line = true)
     @filename, @header_line = self.class.expand_path(filename), header_line
     super(filename)
-    @columns = columns if header_line
+    pp @columns = columns if header_line
     @lines = []
   end
   

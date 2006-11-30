@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 20061201
+
+0.3.1
+
+1. It doesn't deal with trailing commas (when the last column, but not last columns I think; only the last column) and inserts that and the last quote into the output...  Either I will simply truncate both end quotes and end quotes and trailing commas, or I'll remove them prior to doing the tidy-up of the first and last columns.
+2. So, for now I've tacked on some more subs in #csv_split.
+3. Oh right.  So, windscreens_&_repairs.email.vic.20061109.csv wasn't the first csv file anymore because I what?  Oh yeah, output 0.csv...  Modified 1.rb test runner accordingly.
+
+
 ## 20061130
 
 0.3.0
