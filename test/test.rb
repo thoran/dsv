@@ -1,9 +1,7 @@
 # Test CSVFile
 
-# 20061201
-# 0.4.6.1
-
-out_filename = '6.1.csv' # Here so as I dont' forget to change it!  
+# 20061203
+# 0.4.6.2
 
 # Changes since 0.3: 
 # 1. Commented out the sorting stuff.  
@@ -33,6 +31,8 @@ out_filename = '6.1.csv' # Here so as I dont' forget to change it!
 # 18. I forgot to read the in_file.  Should I consider making the lines method explicit and call read from there?  
 # 6/6.1 (No changes in lib file.)  
 # 19. Testing that (re-)ordering is working OK.  
+# 6.1/6.2
+# 20. Testing that reading a writing to the same file is working OK.  It worked sort-of.  It appended to the file, which I understand would be because the lineno had not been reset...  
 
 @debug = true
 #@debug = false
@@ -40,21 +40,13 @@ out_filename = '6.1.csv' # Here so as I dont' forget to change it!
 require 'pp' if @debug
 require '../lib/csv_file'
 
-in_filename = 'internet_web_services.!email&website.vic.20061121.csv'
+in_filename = '6.2.csv'
 
-in_filename ||= Dir.glob("*.csv")[1]
-out_filename ||= (
-  /(.*)(\..*$)/.match(input_filename)[1] + '.to'
-)
-
-in_file = CSVFile.new(in_filename)
-out_file = CSVFile.new(out_filename, true, :double, 'w')
+in_file = CSVFile.new(in_filename, true, :double, 'r+')
+#out_file = CSVFile.new(out_filename, true, :double, 'w')
 
 in_file.read
-out_file.lines = in_file.lines
+#out_file.lines = in_file.lines
 
-#pp in_file.lines #debug
-#pp out_file.lines # debug?
-
-out_file.write_csv('phone', 'address', 'name')
-out_file.close
+in_file.write_csv('phone', 'address', 'name')
+in_file.close

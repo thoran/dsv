@@ -4,6 +4,13 @@
 
 0.4.6
 
+1. - test/6.1.csv
+2. + test/6.2.csv
+3. ~ test/test.rb
+
+
+0.4.6
+
 1. - test/6.0.csv
 2. + test/6.1.csv
 3. ~ test/test.rb
