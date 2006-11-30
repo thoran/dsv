@@ -3,11 +3,11 @@
 "name,address,phone,email,website\n"
 ["name", "address", "phone", "email", "website"]
 "\"Optus\",,\"1800 550 318\",,\"http://www.optus.com.au\"\n"
-["\"Optus\"", "", "\"1800 550 318\"", "", "\"http://www.optus.com.au\""]
+["Optus", "", "1800 550 318", "", "http://www.optus.com.au"]
 "\"Optus\",,\"1800 550 318\",,\"http://www.optus.com.au\"\n"
-["\"Optus\"", "", "\"1800 550 318\"", "", "\"http://www.optus.com.au\""]
+["Optus", "", "1800 550 318", "", "http://www.optus.com.au"]
 "\"Optus\",,\"1800 550 318\",,\"http://www.optus.com.au\"\n"
-["\"Optus\"", "", "\"1800 550 318\"", "", "\"http://www.optus.com.au\""]
+["Optus", "", "1800 550 318", "", "http://www.optus.com.au"]
 "\"Komodo CMS Pty Ltd\",\"113 Ferrars St Southbank VIC 3006\",\"(03) 8699 1199\",,\"http://www.komodocms.com/\"\n"
 ["Komodo CMS Pty Ltd",
  "113 Ferrars St Southbank VIC 3006",
@@ -171,23 +171,11 @@
  "",
  "http://www.smart-itc.com.au"]
 "\"Great Webs\",,\"1300 736 226\",,\"http://www.greatwebs.com.au\"\n"
-["\"Great Webs\"",
- "",
- "\"1300 736 226\"",
- "",
- "\"http://www.greatwebs.com.au\""]
+["Great Webs", "", "1300 736 226", "", "http://www.greatwebs.com.au"]
 "\"Great Webs\",,\"1300 736 226\",,\"http://www.greatwebs.com.au\"\n"
-["\"Great Webs\"",
- "",
- "\"1300 736 226\"",
- "",
- "\"http://www.greatwebs.com.au\""]
+["Great Webs", "", "1300 736 226", "", "http://www.greatwebs.com.au"]
 "\"Great Webs\",,\"1300 736 226\",,\"http://www.greatwebs.com.au\"\n"
-["\"Great Webs\"",
- "",
- "\"1300 736 226\"",
- "",
- "\"http://www.greatwebs.com.au\""]
+["Great Webs", "", "1300 736 226", "", "http://www.greatwebs.com.au"]
 "\"Informatic Technologies\",\"119a Seperation St Geelong North VIC 3215\",\"(03) 5277 0177\",,\"http://www.inmatic.com\"\n"
 ["Informatic Technologies",
  "119a Seperation St Geelong North VIC 3215",
@@ -333,23 +321,11 @@
  "",
  "http://www.carringbush.net"]
 "\"Bond & Bond Design\",,\"(03) 5568 2939\",,\"http://www.bond-design.com\"\n"
-["\"Bond & Bond Design\"",
- "",
- "\"(03) 5568 2939\"",
- "",
- "\"http://www.bond-design.com\""]
+["Bond & Bond Design", "", "(03) 5568 2939", "", "http://www.bond-design.com"]
 "\"Bond & Bond Design\",,\"(03) 5568 2939\",,\"http://www.bond-design.com\"\n"
-["\"Bond & Bond Design\"",
- "",
- "\"(03) 5568 2939\"",
- "",
- "\"http://www.bond-design.com\""]
+["Bond & Bond Design", "", "(03) 5568 2939", "", "http://www.bond-design.com"]
 "\"Bond & Bond Design\",,\"(03) 5568 2939\",,\"http://www.bond-design.com\"\n"
-["\"Bond & Bond Design\"",
- "",
- "\"(03) 5568 2939\"",
- "",
- "\"http://www.bond-design.com\""]
+["Bond & Bond Design", "", "(03) 5568 2939", "", "http://www.bond-design.com"]
 "\"Nexacom\",\"60-64 Railway Rd Blackburn VIC 3130\",\"(03) 9878 8511\",,\"http://www.nexacom.com.au\"\n"
 ["Nexacom",
  "60-64 Railway Rd Blackburn VIC 3130",
@@ -513,11 +489,11 @@
  "",
  "http://www.activegraphics.com.au"]
 "\"Apexhost.com\",,,,\"http://www.apexhost.com.au\"\n"
-["\"Apexhost.com\"", "", "", "", "\"http://www.apexhost.com.au\""]
+["Apexhost.com", "", "", "", "http://www.apexhost.com.au"]
 "\"Apexhost.com\",,,,\"http://www.apexhost.com.au\"\n"
-["\"Apexhost.com\"", "", "", "", "\"http://www.apexhost.com.au\""]
+["Apexhost.com", "", "", "", "http://www.apexhost.com.au"]
 "\"Apexhost.com\",,,,\"http://www.apexhost.com.au\"\n"
-["\"Apexhost.com\"", "", "", "", "\"http://www.apexhost.com.au\""]
+["Apexhost.com", "", "", "", "http://www.apexhost.com.au"]
 "\"apStream Pty Ltd\",\"4 Brunswick Pl Fitzroy VIC 3065\",,,\"http://www.apstream.net\"\n"
 ["apStream Pty Ltd",
  "4 Brunswick Pl Fitzroy VIC 3065",
@@ -909,11 +885,11 @@
  "",
  "http://www.istos.com.au"]
 "\"Kojo Interactive\",,,,\"http://www.kojo.com.au\"\n"
-["\"Kojo Interactive\"", "", "", "", "\"http://www.kojo.com.au\""]
+["Kojo Interactive", "", "", "", "http://www.kojo.com.au"]
 "\"Kojo Interactive\",,,,\"http://www.kojo.com.au\"\n"
-["\"Kojo Interactive\"", "", "", "", "\"http://www.kojo.com.au\""]
+["Kojo Interactive", "", "", "", "http://www.kojo.com.au"]
 "\"Kojo Interactive\",,,,\"http://www.kojo.com.au\"\n"
-["\"Kojo Interactive\"", "", "", "", "\"http://www.kojo.com.au\""]
+["Kojo Interactive", "", "", "", "http://www.kojo.com.au"]
 "\"LOGOLAND\",\"PO Box 356 Noble Park VIC 3174\",,,\"http://www.logoland.com.au\"\n"
 ["LOGOLAND",
  "PO Box 356 Noble Park VIC 3174",

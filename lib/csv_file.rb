@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061201
-# 0.3.5
+# 0.3.6
 
 # Description: A CSV file object.  
 
@@ -25,6 +25,8 @@
 # 9. Turned off debugging.  
 # 4/5
 # 10. More testing with other files.  I've found that String#csv_split screws up when a line has nothing but gaps in the columns, like ",,"...",," and never has "," anywhere.  
+# 5/6
+# 11. Significantly re-did String#csv_split.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -68,14 +70,14 @@ class String
   def csv_split
     pp self if $debug
     quote = :double
-    test_split = self.chomp.split(/",\s*"/)
-    if test_split == [self.chomp]
+    double = self.scan(/",/)
+    unless double[0]
       quote = :single
-      test_split = self.chomp.split(/',\s*'/) # Singly quoted CSV files are essentially unheard of, but who knows?  
-      if test_split == [self.chomp]
+      single = self.scan(/',/) # Singly quoted CSV files are essentially unheard of, but who knows?  
+      unless single[0]
         quote = :none
-        test_split = self.chomp.split(/,\s*/)
-        if test_split == [self.chomp]
+        none = self.scan(/,/)
+        unless none[0]
           raise RuntimeError, "This file doesn't have any commas in it.  Are you sure that this is a CSV file?"
         end # inner if
       end # middle if
