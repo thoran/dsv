@@ -2,6 +2,14 @@
 
 ## 20061201
 
+0.4.1
+
+1. Added   alias_method :read_line, :parse_line.
+2. Instead of a def I now have   alias_method :parse, :read.
+3. Added   alias_method :each_with_line, :each.
+4. Created #each_with_columns.  Incomplete as it only handles when columns are defined for now.  Copied from #each.  Time to test...
+
+
 0.4.0
 
 1. Changed the def to an alias for #csv_file_each.

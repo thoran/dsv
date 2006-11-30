@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061201
-# 0.4.0
+# 0.4.1
 
 # Description: A CSV file object.  
 
@@ -27,6 +27,11 @@
 # 2. I thought I did this already (Maybe I forgot?)---in #each: read; @lines.each --> read.each.  Much nicer.  I'm sure I wrote this down as done before (in 0.3.7 or 8)!  
 # 3. Added a conditional into #each for when one or more columns are desired.  
 # 4. Changed all the scans to matches in #csv_split because a non-match returns nil and that's a little cleaner than what scan returns.  And yes, match works both ways: String.match(Regex) as well as Regex.match(String).  
+# 0/1
+# 5. Added   alias_method :read_line, :parse_line.  
+# 6. Instead of a def I now have   alias_method :parse, :read.  
+# 7. Added   alias_method :each_with_line, :each.  
+# 8. Created #each_with_columns.  Incomplete as it only handles when columns are defined for now.  Copied from #each.  Time to test...  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -133,9 +138,7 @@ class CSVFile < File
   def read(*desired_columns)
     number_of_columns = first_line.csv_split.size
     @header_line ? (self.rewind; self.gets) : self.rewind # Start at line 0 or line 1.  #lineno wasn't working when I first wanted this, but I will try #lineno again at some stage.  
-    
     #pp @header_line if $debug
-    
     case desired_columns[0]
       when Array
         if desired_columns[0] == [] # then select all columns by default...
@@ -156,9 +159,7 @@ class CSVFile < File
           end
         end # outer if
     end # case
-    
     #pp desired_columns if $debug
-    
     self.std_file_each do |line|
       #pp line if $debug
       h = {}
@@ -177,6 +178,8 @@ class CSVFile < File
     @lines
   end
   
+  alias_method :parse, :read
+  
   alias_method :std_each, :each
   alias_method :std_file_each, :each
   alias_method :file_each, :each
@@ -194,6 +197,22 @@ class CSVFile < File
   end
   
   alias_method :csv_file_each, :each
+  alias_method :each_with_line, :each
+  
+  def each_with_columns(*columns)
+    if columns
+      eval_able = []
+      columns.each { |c| eval_able << c }
+      eval_string = eval_able.join(', ')
+      read(columns).each { |line| yield eval(eval_string) }
+    else
+      if @lines[0]
+        @lines.each {|line| yield line }
+      else
+        read.each {|line| yield line }
+      end
+    end
+  end
   
   def columns=(column_order)
     case column_order
@@ -226,10 +245,6 @@ class CSVFile < File
     @lines
   end
   
-  def parse(*desired_columns)
-    read(desired_columns)
-  end
-  
   private
   
   def first_line
@@ -247,5 +262,7 @@ class CSVFile < File
         line.csv_split[@columns[column.to_s]]
     end
   end
+  
+  alias_method :read_line, :parse_line
   
 end
