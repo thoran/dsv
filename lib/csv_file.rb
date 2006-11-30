@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061201
-# 0.3.3
+# 0.3.4
 
 # Description: A CSV file object.  
 
@@ -21,6 +21,8 @@
 # 2/3
 # 7. Created #each.  
 # 8. It's stuffing up for some reason, so I've created $debug and turned all of what was or was going to be #debug into 'if $debug'.  
+# 3/4
+# 9. Turned off debugging.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -55,7 +57,7 @@
 # 5. Still has a trailing comma!  Fixed as of 0.1.1.  
 # 6. If I try to read a field which does not exist it crashes.  It should at least trap such an error, rather than crashing outright.  
 
-$debug = true
+$debug = false
 
 require 'pp' if $debug
 

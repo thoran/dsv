@@ -1,7 +1,7 @@
 # Test CSVFile
 
 # 20061201
-# 0.3.3
+# 0.3.4
 
 # History: Derived from the csv2to tester.  
 
@@ -16,6 +16,8 @@
 # 6. Removed some debugging.  
 # 2/3
 # 7. Took out .lines from when iterating over a CSVFile object.  
+# 3/4
+# 8. Using the hash index name rather than the array index when outputting.  Why did I do it that way before at all?  
 
 $debug = false
 
@@ -38,7 +40,7 @@ class Array
   
 end
 
-output_filename = '3.csv'
+output_filename = '4.csv'
 input_filename = 'windscreens_&_repairs.email.vic.20061109.csv'
 
 input_filename ||= Dir.glob("*.csv")[1]
@@ -57,16 +59,16 @@ stuff = []
 
 #csv_file.lines.each do |line|
 csv_file.each do |line|
-  stuff << line if line[field_names[0]] && line[field_names[1]]
+  stuff << line if line['name'] && line['email']
 end
 
 pp stuff if $debug
 
 out_file = File.new(output_filename, 'w')
 stuff.each_but_last do |line|
-  out_file.print line[field_names[0]] + ", "
-  out_file.print line[field_names[1]] + "\n"
+  out_file.print line['name'] + ", "
+  out_file.print line['email'] + "\n"
 end
-out_file.print stuff.last[field_names[0]] + ", "
-out_file.print stuff.last[field_names[1]]
+out_file.print stuff.last['name'] + ", "
+out_file.print stuff.last['email']
 out_file.close
