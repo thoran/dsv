@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061201
-# 0.4.2
+# 0.4.3
 
 # Description: A CSV file object.  
 
@@ -34,6 +34,9 @@
 # 8. Created #each_with_columns.  Incomplete as it only handles when columns are defined for now.  Copied from #each.  Time to test...  
 # 1/2
 # 9. Majorly mangled #each_with_columns (so as to make it work) by collecting each of the supplied parameters and yielding the resulting array.  
+# 2/3
+# 10. Removed #each_with_columns and (for backwards compatibility?) made it an alias for #each, whilst rolling in the bit of code with generates multiple return values.  
+# 11. The only thing lost by doing this is that it is not longer possible to specify which columns are to be collected and then to have a single line parameter returned to the block.  No great loss methinks.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -187,31 +190,20 @@ class CSVFile < File
   alias_method :file_each, :each
   
   def each(*columns)
-    if columns
-      read(columns).each {|line| yield line }
+    if @lines[0]
+      @lines.each {|line| yield line }
     else
-      if @lines[0]
-        @lines.each {|line| yield line }
+      if columns
+        read(columns).each {|line| yield(columns.collect {|c| line[c]}) }
       else
         read.each {|line| yield line }
       end
-    end
+    end # outer if
   end
   
   alias_method :csv_file_each, :each
   alias_method :each_with_line, :each
-  
-  def each_with_columns(*columns)
-    if columns
-      read(columns).each {|line| yield(columns.collect {|c| line[c]}) }
-    else
-      if @lines[0]
-        @lines.each {|line| yield line }
-      else
-        read.each {|line| yield line }
-      end
-    end
-  end
+  alias_method :each_with_columns, :each
   
   def columns=(column_order)
     case column_order

@@ -2,6 +2,12 @@
 
 ## 20061201
 
+0.4.3
+
+1. Removed #each_with_columns and (for backwards compatibility?) made it an alias for #each, whilst rolling in the bit of code with generates multiple return values.
+2. The only thing lost by doing this is that it is not longer possible to specify which columns are to be collected and then to have a single line parameter returned to the block.  No great loss methinks.
+
+
 0.4.2: Majorly mangled #each_with_columns (so as to make it work) by collecting each of the supplied parameters and yielding the resulting array.
 
 1. Majorly mangled #each_with_columns (so as to make it work) by collecting each of the supplied parameters and yielding the resulting array.
