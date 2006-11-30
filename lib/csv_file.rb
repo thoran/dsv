@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20061201
-# 0.4.1
+# 0.4.2
 
 # Description: A CSV file object.  
 
@@ -32,6 +32,8 @@
 # 6. Instead of a def I now have   alias_method :parse, :read.  
 # 7. Added   alias_method :each_with_line, :each.  
 # 8. Created #each_with_columns.  Incomplete as it only handles when columns are defined for now.  Copied from #each.  Time to test...  
+# 1/2
+# 9. Majorly mangled #each_with_columns (so as to make it work) by collecting each of the supplied parameters and yielding the resulting array.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -201,10 +203,7 @@ class CSVFile < File
   
   def each_with_columns(*columns)
     if columns
-      eval_able = []
-      columns.each { |c| eval_able << c }
-      eval_string = eval_able.join(', ')
-      read(columns).each { |line| yield eval(eval_string) }
+      read(columns).each {|line| yield(columns.collect {|c| line[c]}) }
     else
       if @lines[0]
         @lines.each {|line| yield line }

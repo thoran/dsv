@@ -2,6 +2,11 @@
 
 ## 20061201
 
+0.4.2: Majorly mangled #each_with_columns (so as to make it work) by collecting each of the supplied parameters and yielding the resulting array.
+
+1. Majorly mangled #each_with_columns (so as to make it work) by collecting each of the supplied parameters and yielding the resulting array.
+
+
 0.4.1
 
 1. Added   alias_method :read_line, :parse_line.

@@ -1,13 +1,16 @@
 # Test CSVFile
 
 # 20061201
-# 0.4.1
+# 0.4.2
 
 # Changes since 0.3: 
 # 1. Commented out the sorting stuff.  
 # 2. Added in a direct reference to the csv_file for the iterator using the new interface on #each.  
 # 0/1
 # 3. Swapped to using #each_with_columns.  
+# 1/2
+# 4. Fixed a reference to line which shouldn't have been there.  
+# 5. Now using the new on-the-fly block parameters for CSVFile's new method #each_with_columns.  
 
 @debug = true
 #@debug = false
@@ -16,7 +19,7 @@ require 'pp' if @debug
 require '../lib/csv_file'
 
 input_filename = 'internet_web_services.!email&website.vic.20061121.csv'
-output_filename = '1.csv'
+output_filename = '2.csv'
 
 input_filename ||= Dir.glob("*.csv")[1]
 output_filename ||= (
@@ -34,7 +37,7 @@ csv_file = CSVFile.new(input_filename)
 out_file = File.new(output_filename, 'w')
 
 csv_file.each_with_columns('name', 'address', 'phone') do |name, address, phone|
-  if line['phone'] != ''
+  if phone != ''
     out_file.print name + ', '
     out_file.print address + ', '
     out_file.print phone + "\n"
