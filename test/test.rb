@@ -1,9 +1,9 @@
 # Test CSVFile
 
 # 20061201
-# 0.4.6
+# 0.4.6.1
 
-out_filename = '6.csv' # Here so as I dont' forget to change it!  
+out_filename = '6.1.csv' # Here so as I dont' forget to change it!  
 
 # Changes since 0.3: 
 # 1. Commented out the sorting stuff.  
@@ -31,6 +31,8 @@ out_filename = '6.csv' # Here so as I dont' forget to change it!
 # 16. Replaced the loop and #write_line to test #write(_csv).  
 # 17. Realised that I need to load the in_file value for lines into the out_file.  
 # 18. I forgot to read the in_file.  Should I consider making the lines method explicit and call read from there?  
+# 6/6.1 (No changes in lib file.)  
+# 19. Testing that (re-)ordering is working OK.  
 
 @debug = true
 #@debug = false
@@ -54,5 +56,5 @@ out_file.lines = in_file.lines
 #pp in_file.lines #debug
 #pp out_file.lines # debug?
 
-out_file.write_csv('name', 'address', 'phone')
+out_file.write_csv('phone', 'address', 'name')
 out_file.close
