@@ -1,7 +1,7 @@
 # csv_file.rb
 
-# 20061203 (0.4.4 - 6 incorrectly had 20061201)
-# 0.4.7
+# 20061203
+# 0.4.8
 
 # Description: A CSV file object.  
 
@@ -62,6 +62,9 @@
 # 30. I need to do both rewind and overwrite each byte.  Well, at least I'll try this...  
 # 31. Nope---probably doing something wrong.  So now, I'm trying the truncate method...  
 # 32. I didn't realise that truncate doesn't have a no parameters default.  Should it?  
+# 7/8
+# 33. Is the reason that the 'w+' mode wasn't working for overwriting due to the columns not being read?  Up till now I've only had 'r' and 'r+' causing columns to be read...  I'll comment out the rewind and truncate stuff at the end of #read and change that bit in #init to include 'w+' and 'a+' and see what happens.  
+# 34. No it isn't, so I've left in the 'a+' option and taken the 'w+' out since what am I going to read anyway since the superclass call is made prior anyway causing the file to be truncated to zero!  Doh!  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -166,7 +169,7 @@ class CSVFile < File
   def initialize(filename, header_line = true, format = :double, mode = 'r', permissions = nil)
     @filename, @header_line, @quote, @mode = self.class.expand_path(filename), header_line, format, mode
     super(filename, mode, permissions)
-    @columns = columns if header_line && ['r', 'r+'].include?(mode)
+    @columns = columns if header_line && ['r', 'r+', 'a+'].include?(mode)
     @lines = []
   end
   
@@ -210,9 +213,10 @@ class CSVFile < File
       @lines << h
       #pp @lines if $debug
     end
-    rewind if @mode == 'r+'
-    #self.each_byte {putc ''} if @mode == 'r+'
-    truncate(0) if @mode == 'r+'
+    if @mode == 'r+'
+      rewind
+      truncate(0)
+    end
     @lines
   end
   alias_method :parse, :read

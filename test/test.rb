@@ -1,7 +1,7 @@
 # Test CSVFile
 
 # 20061203
-# 0.4.7
+# 0.4.8
 
 # Changes since 0.3: 
 # 1. Commented out the sorting stuff.  
@@ -40,6 +40,8 @@
 # 6.4/7
 # 23. I've made a small change to CSVFile#read, whereby it rewinds as the last thing that it does before returning @lines if the mode is set to 'r+'...  Hopefully now it will over-write...  It does, but doesn't get rid of what is already there!  
 # 24. I've made another small change to CSVFile#read (truncate(0)), so now it works.  
+# 7/8
+# 25. Some more minor changes to be tested about getting 'w+' to work.  I decided it wouldn't and so I thought I'd test 'a+' instead!  It worked, but started on the same line, so I suppose that's as it should be?  Or, should I check that there's two newlines together first and add one if one is missing?  
 
 #@debug = true
 @debug = false
@@ -47,9 +49,9 @@
 require 'pp' if @debug
 require '../lib/csv_file'
 
-in_filename = '7.csv'
+in_filename = '8.csv'
 
-in_file = CSVFile.new(in_filename, true, :double, 'r+')
+in_file = CSVFile.new(in_filename, true, :double, 'a+')
 in_file.read
 in_file.write_csv('name', 'phone')
 in_file.close

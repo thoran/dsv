@@ -2,6 +2,12 @@
 
 ## 20061203
 
+0.4.8
+
+1. Is the reason that the 'w+' mode wasn't working for overwriting due to the columns not being read?  Up till now I've only had 'r' and 'r+' causing columns to be read...  I'll comment out the rewind and truncate stuff at the end of #read and change that bit in #init to include 'w+' and 'a+' and see what happens.
+2. No it isn't, so I've left in the 'a+' option and taken the 'w+' out since what am I going to read anyway since the superclass call is made prior anyway causing the file to be truncated to zero!  Doh!
+
+
 0.4.7
 
 1. I've made a small change to CSVFile#read, whereby it rewinds as the last thing that it does before returning @lines if the mode is set to 'r+'...  Hopefully now it will over-write...
