@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 20061203
+
+0.4.7
+
+1. I've made a small change to CSVFile#read, whereby it rewinds as the last thing that it does before returning @lines if the mode is set to 'r+'...  Hopefully now it will over-write...
+2. Created @mode and read mode into it in #init!  Also changed mode to @mode in #read.
+3. It is simply overwriting the same number of bytes and not lines, so that means that if the number of bytes is shorter than the starting contents, that will overwrite only part of the file, so I'm going to truncate the file at the end of #read now!
+4. I need to do both rewind and overwrite each byte.  Well, at least I'll try this...
+5. Nope---probably doing something wrong.  So now, I'm trying the truncate method...
+6. I didn't realise that truncate doesn't have a no parameters default.  Should it?
+
+
 ## 20061201
 
 0.4.6

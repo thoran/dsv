@@ -1,7 +1,7 @@
 # csv_file.rb
 
-# 20061201
-# 0.4.6
+# 20061203 (0.4.4 - 6 incorrectly had 20061201)
+# 0.4.7
 
 # Description: A CSV file object.  
 
@@ -55,6 +55,13 @@
 # 5/6
 # 25. /#write/#write_csv/.  This is a temporary measure(I think?) until I can figure out to get #write to co-exist with IO#write.  
 # 26. /attr_read :lines/attr_accessor :lines/ for when assigning an out file the in file's values.  This seems pretty cludgy, but we'll go with it for now.  
+# 6/7
+# 27. I've made a small change to CSVFile#read, whereby it rewinds as the last thing that it does before returning @lines if the mode is set to 'r+'...  Hopefully now it will over-write...  
+# 28. Created @mode and read mode into it in #init!  Also changed mode to @mode in #read.  
+# 29. It is simply overwriting the same number of bytes and not lines, so that means that if the number of bytes is shorter than the starting contents, that will overwrite only part of the file, so I'm going to truncate the file at the end of #read now!  
+# 30. I need to do both rewind and overwrite each byte.  Well, at least I'll try this...  
+# 31. Nope---probably doing something wrong.  So now, I'm trying the truncate method...  
+# 32. I didn't realise that truncate doesn't have a no parameters default.  Should it?  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -77,11 +84,15 @@
 # 12. Change String#csv_split, so as it will identify if there are no commas as well.  While this seems very unlikely for it to not find any commas at all, it is possible that what is supplied is complete crap and at least the process might halt there.  
 # *13. Get the lineno method working (if possible) because while what I have done is working OK, it is a little inelegant.  
 # *14. Align method names to more closely match those of File.  
+# 15. Put the option to specify quoting into to_csv and possibly remove it from #init.  
 
 # Ideas: 
 # 1. Subclass CSVFile from File.  I'm not sure what this gets me, but it occurred to me that I have a read method and I was thinking of applying a close to an instance of the CSVFile class, and of course I don't have one.  Done as of 0.2.0.  
 # 2. Give CSVFile an each method.  Done as of 0.3.3.  
 # 3. Standardize on either symbols or strings for column names, since presently one has to be consistent.  It would be nicer to be able to mix and match---if possible.  
+# 4. Have 'rw' as being a mode, since I don't get why this isn't a mode for File.  
+# 5. Automatically detect as to whether there is a header line by taking the first line and comparing the types (alpha, numeric, alpha-numeric, etcetera) with each of the column values with those of the subsequent 2 or 3 or so lines and if there is a correspondence, then assume that there is a header line.  This would mean that the assumption that there is would change and that if the guess was wrong that it would need to be made explict.  
+# 6. Have it #read a file automatically if any of 'r' or 'r+' or 'w+' is given as the mode.  
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
@@ -153,7 +164,7 @@ class CSVFile < File
   attr_accessor :lines
   
   def initialize(filename, header_line = true, format = :double, mode = 'r', permissions = nil)
-    @filename, @header_line, @quote = self.class.expand_path(filename), header_line, format
+    @filename, @header_line, @quote, @mode = self.class.expand_path(filename), header_line, format, mode
     super(filename, mode, permissions)
     @columns = columns if header_line && ['r', 'r+'].include?(mode)
     @lines = []
@@ -199,6 +210,9 @@ class CSVFile < File
       @lines << h
       #pp @lines if $debug
     end
+    rewind if @mode == 'r+'
+    #self.each_byte {putc ''} if @mode == 'r+'
+    truncate(0) if @mode == 'r+'
     @lines
   end
   alias_method :parse, :read
