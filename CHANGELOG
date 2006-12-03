@@ -2,6 +2,17 @@
 
 ## 20061204
 
+0.4.10
+
+1. Now doing the usual bit of a cleanout after a typically frustrating session of coding.
+2. Moved the methods created on Hash to outside CSVFile.
+3. I removed references to @columns, since that is no longer (well never was actually) accessible.  The to_csv method will now output in the hash order, and not the default order.  This is bad...  OrderedHash anyone?
+4. I now have essentially reversed 46, by virtue of the fact that I have the file object available to me and so I can send the columns? and columns messages to that!
+5. Added :quote as an attr for use in Hash#to_csv, since @quote don't work no more...
+6. Now I had to make an @file variable and read the Hash#write parameter file into it for use in Hash#to_csv.  It gets uglier and uglier...
+7. Hash#write had a bug: I forgot to take the first value of the test but of the whole, so only first attribute/column was being sought!
+
+
 0.4.9
 
 1. - test/9a.csv

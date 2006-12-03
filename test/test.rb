@@ -1,7 +1,7 @@
 # Test CSVFile
 
 # 20061203, 4
-# 0.4.9
+# 0.4.10
 
 # Changes since 0.3: 
 # 1. Commented out the sorting stuff.  
@@ -51,6 +51,8 @@
 # i.  Of course the Hash class is not available externally to the CSVFile class unless I'm able to be a bit more explicit with the scoping by some means.  I'll fix this in 0.4.10.  
 # ii. This is working fine.  
 # iii. This is now working after a long while of head scratching and apparently unnecessary changes!...  
+# 9/10
+# 31. Testing the failed i. from 9...  It is working now, but I still think that this is pretty retarded looking and might just trash all of what is concerned with this unless I can get it to work in a way which seems more sensible.  The line somehow has to know which file it is attached to...  
 
 #@debug = true
 @debug = false
@@ -58,31 +60,9 @@
 require 'pp' if @debug
 require '../lib/csv_file'
 
-# i. 
-#filename = '9a.csv'
-#file = CSVFile.new(filename, true, :double, 'r+')
-#file.each do |line|
-#  line.write(file, 'name', 'address')
-#end
-#file.close
-
-# ii. 
-in_filename = 'internet_web_services.!email&website.vic.20061121.csv'
-out_filename = '9b.csv'
-in_file = CSVFile.new(in_filename)
-out_file = CSVFile.new(out_filename, true, :none, 'w')
-in_file.each do |line|
-  out_file.write_line(line, 'name', 'address', 'phone') if line['phone'] != ''
+filename = '10.csv'
+file = CSVFile.new(filename, true, :double, 'r+')
+file.each do |line|
+  line.write(file, 'name', 'address')
 end
-[in_file, out_file].each {|file| file.close}
-
-# iii. 
-in_filename = 'internet_web_services.!email&website.vic.20061121.csv'
-in_file = CSVFile.new(in_filename, true, :single, 'r+')
-in_file.each_with_columns do |name, address, phone, email, website|
-  puts name, phone, email if website != ''
-end
-#in_file.each(:name, :address, :phone, :email, :website) do |name, address, phone, email, website|
-#  puts name, phone, email if website != ''
-#end
-in_file.close
+file.close

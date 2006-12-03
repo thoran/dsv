@@ -1,7 +1,7 @@
 # csv_file.rb
 
-# 20061203, 4
-# 0.4.9
+# 20061204
+# 0.4.10
 
 # Description: A CSV file object.  
 
@@ -24,7 +24,7 @@
 #
 # Yeah, but what does it actually look like?  
 # i. 
-# Done as of 0.4.9 as per the specific requirement of allowing a column list as a parmeter per column, but otherwise as of 0.4.5.  It looks like: 
+# Done as of 0.4.10 as per the specific requirement of allowing a column list as a parameter per column, but otherwise as of 0.4.5.  It looks like: 
 # input_file.each do |line|
 #   output_file.write_line(line, 'name', 'address', 'phone') if line['phone'] != '' # I need to create the method #write_line.  
 # end
@@ -94,6 +94,14 @@
 # 41. I finally finished CSVFile#to_csv with the fixes (derived from the reverse of String#csv_split) for everthing other than my original fix for :doubly_quoted.  Of course I waited until I'd reproduced the code for Hash#to_csv huh!?  Copy, paste...  
 # 42. I didn't need the alias for File#write anymore, so that's been left but commented.  (For when I get CSVFile#write working!)  
 # 43. Added in a method and instance variable @attributes.  I realized that I had forgotten or misinterpreted that @columns was a hash, because the passed in column list is an Array.  So I thought I'd do an array version of the list of column names, hence attributes.  The funny thing was that I didn't have any obvious need for it until I started hunting in frustration for some alternative means to get #each_with_columns working.  So, I've already made use of it there.  
+# 9/10
+# 44. Now doing the usual bit of a cleanout after a typically frustrating session of coding.  
+# 45. Moved the methods created on Hash to outside CSVFile.  
+# 46. I removed references to @columns, since that is no longer (well never was actually) accessible.  The to_csv method will now output in the hash order, and not the default order.  This is bad...  OrderedHash anyone?  
+# 47. I now have essentially reversed 46, by virtue of the fact that I have the file object available to me and so I can send the columns? and columns messages to that!  
+# 48. Added :quote as an attr for use in Hash#to_csv, since @quote don't work no more...  
+# 49. Now I had to make an @file variable and read the Hash#write parameter file into it for use in Hash#to_csv.  It gets uglier and uglier...  
+# 50. Hash#write had a bug: I forgot to take the first value of the test but of the whole, so only first attribute/column was being sought!  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -125,7 +133,6 @@
 # 4. Have 'rw' as being a mode, since I don't get why this isn't a mode for File.  
 # 5. Automatically detect as to whether there is a header line by taking the first line and comparing the types (alpha, numeric, alpha-numeric, etcetera) with each of the column values with those of the subsequent 2 or 3 or so lines and if there is a correspondence, then assume that there is a header line.  This would mean that the assumption that there is would change and that if the guess was wrong that it would need to be made explict.  
 # 6. Have it #read a file automatically if any of 'r' or 'r+' or 'w+' is given as the mode.  
-# 7. 
 
 # Bugs: 
 # 1. The CSV reading stuff doesn't strip off the quotes in each field of the CSV file.  Partially done as of 0.0.4.  See Bug#2!  
@@ -136,14 +143,15 @@
 # 6. If I try to read a field which does not exist it crashes.  It should at least trap such an error, rather than crashing outright.  
 # 7. Header lines are not being written out either as the default, nor even if such is specified.  
 
-$debug_9 = true
+$debug_csv_split = false
+$debug_10 = true
 
-require 'pp' if $debug_9
+require 'pp' if $debug_10
 
 class String
   
   def csv_split
-    pp self if $debug
+    pp self if $debug_csv_split
     quote = :double
     double = self.match(/",|,\s"/)
     pp double if $debug
@@ -159,7 +167,7 @@ class String
       end # middle if
     end # outer if
     result = ''
-    pp quote if $debug
+    pp quote if $debug_csv_split
     case quote
       when :double
         # What follows is particularly ugly...  Anyone have a regex book handy?  
@@ -187,15 +195,87 @@ class String
       when :none
         result = self.chomp.split(/,\s*/)
     end # case quote
-    pp result if $debug
+    pp result if $debug_csv_split
     result
   end # def csv_split
   
-end
+end # class String
+
+class Hash
+  
+  def write(file, *desired_columns) # Passing in the file_handle is a horrible kludge.  Should I subclass Hash for a CSVLine object?  
+    @file = file
+    case desired_columns[0] # If I don't check for this, then by the time to_csv is called it might be possible that the atomic bits are two levels deep.  
+      when Array
+        file.puts(self.to_csv(desired_columns[0]))
+      else
+        file.puts(self.to_csv(desired_columns))
+    end # case
+  end # def write
+  alias_method :write_line, :write
+  alias_method :writeline, :write
+  alias_method :writeln, :write
+  
+  def to_csv(*desired_columns)
+    collector = []
+    case desired_columns[0]
+      when Array
+        if desired_columns[0]
+          desired_columns[0].each do |c| # Here is where re-ordering happens.  
+            collector << self[c]
+          end
+        elsif @file.columns?
+          file.columns.each do |k, v|
+            collector << self[v]
+          end
+        else
+          each do |k, v| # Assuming that the keys remain the same for each line, this should produce the same ordering of columns, but not the same as that entered...  
+            collector << self[v]
+          end
+        end
+      else
+        if desired_columns
+          desired_columns.each do |c|
+            collector << self[c]
+          end
+        elsif @file.columns?
+          file.columns.each do |k, v|
+            collector << self[v]
+          end
+        else
+          each do |k, v|
+            collector << self[v]
+          end
+        end
+    end
+    pp collector if $debug
+    case @file.quote.to_sym # Also handles 'double', 'double_qoute', ...
+      when :double, :double_quote, :double_quotes, :double_quoted, :doubly_quoted # No spaces, but no integrity checks.  
+        return (collector[0] = '"' + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + '"'; collector.join('","'))
+      when :strict_double, :strict_double_quote, :strict_double_quotes, :strict_double_quoted, :strict_doubly_quoted
+        return (collector[0] = '"' + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + '"'; collector.join('","'))
+      when :spacey_double, :spacey_double_quote, :spacey_double_quotes, :spacey_double_quoted, :spacey_doubly_quoted
+        return (collector[0] = '"' + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + '"'; collector.join('", "'))
+      when :single, :single_quote, :single_quotes, :single_quoted, :singly_quoted
+        return (collector[0] = "'" + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + "'"; collector.join("','"))
+      when :strict_single, :strict_single_quote, :strict_single_quotes, :strict_single_quoted, :strict_singly_quoted
+        return (collector[0] = "'" + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + '"'; collector.join("','"))
+      when :spacey_single, :spacey_single_quote, :spacey_single_quotes, :spacey_single_quoted, :spacey_singly_quoted
+        return (collector[0] = "'" + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + "'"; collector.join("', '"))
+      when :none, :no_quotes, :not_quoted
+        return collector.join(',')
+      when :strict_none, :strict_no_quote, :strict_not_quoted # I don't know what this does, since there isn't any quoting to play with, I know it simply does integrity checks...  
+        return collector.join(',')
+      when :spacey_none, :spacey_no_quote, :spacey_not_quoted
+        return collector.join(', ')
+    end # case
+  end # def to_csv
+  
+end # class Hash
 
 class CSVFile < File
   
-  attr_accessor :lines
+  attr_accessor :lines, :quote
   
   def initialize(filename, header_line = true, format = :double, mode = 'r', permissions = nil)
     @filename, @header_line, @quote, @mode = self.class.expand_path(filename), header_line, format, mode
@@ -314,76 +394,6 @@ class CSVFile < File
     end # case
   end
   
-  class Hash # I've defined the to_csv and the write methods which are on Hash within class CSVFile because it contains references to an instance variable which is accessible only from within an instance of CSVFile.  I just hope that I have scoping correct!  
-    
-    def write(file_handle, *desired_columns) # Passing in the file_handle is a horrible kludge.  Should I subclass Hash for a CSVLine object?  
-      case desired_columns # If I don't check for this, then by the time to_csv is called it might be possible that the atomic bits are two levels deep.  
-        when Array
-          file_handle.puts(self.to_csv(desired_columns[0]))
-        else
-          file_handle.puts(self.to_csv(desired_columns))
-      end # case
-    end # def write
-    alias_method :write_line, :write
-    alias_method :writeline, :write
-    alias_method :writeln, :write
-    
-    def to_csv(*desired_columns)
-      collector = []
-      case desired_columns[0]
-        when Array
-          if desired_columns[0]
-            desired_columns[0].each do |c| # Here is where re-ordering happens.  
-              collector << self[c]
-            end
-          elsif columns?
-            @columns.each do |k, v|
-              collector << self[v]
-            end
-          else
-            each do |k, v| # Assuming that the keys remain the same for each line, this should produce the same ordering of columns.  
-              collector << self[v]
-            end
-          end
-        else
-          if desired_columns
-            desired_columns.each do |c|
-              collector << self[c]
-            end
-          elsif columns?
-            @columns.each do |k, v|
-              collector << self[v]
-            end
-          else
-            each do |k, v|
-              collector << self[v]
-            end
-          end
-      end
-      #pp collector if $debug
-      case @quote.to_sym # Also handles 'double', 'double_qoute', ...
-        when :double, :double_quote, :double_quotes, :double_quoted, :doubly_quoted # No spaces, but no integrity checks.  
-          return (collector[0] = '"' + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + '"'; collector.join('","'))
-        when :strict_double, :strict_double_quote, :strict_double_quotes, :strict_double_quoted, :strict_doubly_quoted
-          return (collector[0] = '"' + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + '"'; collector.join('","'))
-        when :spacey_double, :spacey_double_quote, :spacey_double_quotes, :spacey_double_quoted, :spacey_doubly_quoted
-          return (collector[0] = '"' + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + '"'; collector.join('", "'))
-        when :single, :single_quote, :single_quotes, :single_quoted, :singly_quoted
-          return (collector[0] = "'" + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + "'"; collector.join("','"))
-        when :strict_single, :strict_single_quote, :strict_single_quotes, :strict_single_quoted, :strict_singly_quoted
-          return (collector[0] = "'" + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + '"'; collector.join("','"))
-        when :spacey_single, :spacey_single_quote, :spacey_single_quotes, :spacey_single_quoted, :spacey_singly_quoted
-          return (collector[0] = "'" + collector[0]; collector[collector.size - 1] = collector[collector.size - 1] + "'"; collector.join("', '"))
-        when :none, :no_quotes, :not_quoted
-          return collector.join(',')
-        when :strict_none, :strict_no_quote, :strict_not_quoted # I don't know what this does, since there isn't any quoting to play with, I know it simply does integrity checks...  
-          return collector.join(',')
-        when :spacey_none, :spacey_no_quote, :spacey_not_quoted
-          return collector.join(', ')
-      end # case
-    end # def to_csv
-  end # class Hash
-
   alias_method :std_each, :each
   alias_method :std_file_each, :each
   alias_method :file_each, :each
@@ -434,17 +444,9 @@ class CSVFile < File
             }
           end # inner if
         else
-          #pp @columns if $debug_9
-          #pp '1' if $debug_9
           read.each {|line|
-            #pp line if $debug_9
-            #a = [] if $debug_9
-            #a = @columns.collect {|k, v| line[k]} if $debug_9
-            #pp a if $debug_9
-            #pp @attributes.collect {|k,v| line[k]}.size if $debug_9
-            #yield ['a', 'b ', 'c', 'd', 'e'] if $debug_9
-            #yield @columns.collect {|k,v| line[k]} # I really do not understand why this doesn't work.  
-            yield @attributes.collect {|a| line[a]} # For some reason I'd just created this about half an hour or so ago, and for no good reason.  And look here it is!  
+            #yield @columns.collect {|k,v| line[k]} # I really do not understand why this doesn't work.  I'm leaving this here because it is so annoying that I don't get how it works.  
+            yield @attributes.collect {|a| line[a]}
           }
         end # outer if
     end # case
@@ -520,12 +522,6 @@ class CSVFile < File
       when Integer
         line.csv_split[column]
       else
-        #pp line if $debug_9
-        #pp @columns if $debug_9
-        #pp 'column', column if $debug_9
-        #pp line.csv_split if $debug_9
-        #pp @columns[column.to_s] if $debug_9
-        #pp line.csv_split[@columns[column.to_s]] if $debug_9        
         line.csv_split[@columns[column.to_s]]
     end
   end
