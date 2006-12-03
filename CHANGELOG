@@ -4,6 +4,12 @@
 
 0.4.9
 
+1. - test/9a.csv
+2. + test/9b.csv
+
+
+0.4.9
+
 1. #write_csv now copes with arrays being supplied to it, and not array parameter lists.
 2. #write_line also has been swapped to being able to handle parameter lists and not just arrays---the opposite of #write_csv.
 3. Added an alias #csv_write for #write_csv.
