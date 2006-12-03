@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 20061204
+
+0.4.9
+
+1. #write_csv now copes with arrays being supplied to it, and not array parameter lists.
+2. #write_line also has been swapped to being able to handle parameter lists and not just arrays---the opposite of #write_csv.
+3. Added an alias #csv_write for #write_csv.
+4. Added a couple of aliases for #write_line: writeline and writeln.
+5. In order to try and achieve Goal 1.3 I've created the methods write and to_csv on Hash and since they make reference to an instance variable of CSVFile I've placed it into CSVFile.  Much of the code is taken from CSVFile#to_csv.  It was complicated, as is much of this become quite baroque, by virtue of the attempt to handle many inputs.  It will handle for when either an array or a parameter list is supplied, it will handle for when a list of columns is desired or not, it will even handle if there are no columns in the @columns instance variable.  I hope that the scoping for that works because @columns exists in CSVFile which surrounds these extensions to Hash.
+6. I decided that the alias each_with_columns for each was incorrect, so wrote what I thought each_with_columns would really do and that it is return columns for all supplied parameters including not supplied parameters, not just if they are supplied like each does.  I'm not sure if I will leave each to produce anything with columns, whether it calls each_with_columns or not.  This is also rather complicated, and again by virtue of the inputs and contexts being able to be handled as being quite diverse.  It copes with arrays and paramters lists as inputs and with whether any columns were supplied at all, as well as with whether there are any lines in the csv file buffer, @lines.
+7. I finally finished CSVFile#to_csv with the fixes (derived from the reverse of String#csv_split) for everthing other than my original fix for :doubly_quoted.  Of course I waited until I'd reproduced the code for Hash#to_csv huh!?  Copy, paste...
+8. I didn't need the alias for File#write anymore, so that's been left but commented.  (For when I get CSVFile#write working!)
+9. Added in a method and instance variable @attributes.  I realized that I had forgotten or misinterpreted that @columns was a hash, because the passed in column list is an Array.  So I thought I'd do an array version of the list of column names, hence attributes.  The funny thing was that I didn't have any obvious need for it until I started hunting in frustration for some alternative means to get #each_with_columns working.  So, I've already made use of it there.
+
+
 ## 20061203
 
 0.4.8

@@ -1,7 +1,7 @@
 # Test CSVFile
 
-# 20061203
-# 0.4.8
+# 20061203, 4
+# 0.4.9
 
 # Changes since 0.3: 
 # 1. Commented out the sorting stuff.  
@@ -42,6 +42,15 @@
 # 24. I've made another small change to CSVFile#read (truncate(0)), so now it works.  
 # 7/8
 # 25. Some more minor changes to be tested about getting 'w+' to work.  I decided it wouldn't and so I thought I'd test 'a+' instead!  It worked, but started on the same line, so I suppose that's as it should be?  Or, should I check that there's two newlines together first and add one if one is missing?  
+# 8/9
+# 26. Testing for several changes: 
+# i. being able to send the message write to a line; 
+# ii. Goal#1 with column parameter lists being possible; 
+# iii. the each_with_columns method.  
+# 30. What worked?
+# i.  Of course the Hash class is not available externally to the CSVFile class unless I'm able to be a bit more explicit with the scoping by some means.  I'll fix this in 0.4.10.  
+# ii. This is working fine.  
+# iii. This is now working after a long while of head scratching and apparently unnecessary changes!...  
 
 #@debug = true
 @debug = false
@@ -49,9 +58,31 @@
 require 'pp' if @debug
 require '../lib/csv_file'
 
-in_filename = '8.csv'
+# i. 
+#filename = '9a.csv'
+#file = CSVFile.new(filename, true, :double, 'r+')
+#file.each do |line|
+#  line.write(file, 'name', 'address')
+#end
+#file.close
 
-in_file = CSVFile.new(in_filename, true, :double, 'a+')
-in_file.read
-in_file.write_csv('name', 'phone')
+# ii. 
+in_filename = 'internet_web_services.!email&website.vic.20061121.csv'
+out_filename = '9b.csv'
+in_file = CSVFile.new(in_filename)
+out_file = CSVFile.new(out_filename, true, :none, 'w')
+in_file.each do |line|
+  out_file.write_line(line, 'name', 'address', 'phone') if line['phone'] != ''
+end
+[in_file, out_file].each {|file| file.close}
+
+# iii. 
+in_filename = 'internet_web_services.!email&website.vic.20061121.csv'
+in_file = CSVFile.new(in_filename, true, :single, 'r+')
+in_file.each_with_columns do |name, address, phone, email, website|
+  puts name, phone, email if website != ''
+end
+#in_file.each(:name, :address, :phone, :email, :website) do |name, address, phone, email, website|
+#  puts name, phone, email if website != ''
+#end
 in_file.close
