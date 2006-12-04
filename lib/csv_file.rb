@@ -1,7 +1,7 @@
 # csv_file.rb
 
-# 20061203, 4, 5
-# 0.5.0
+# 20061205
+# 0.5.1
 
 # Description: A CSV file object.  
 
@@ -21,6 +21,11 @@
 # 10. To that (Change#9) end I now have the same list of quote types as in the #to_csv methods.  
 # 11. I added unquoted options to the quote types.  
 # 12. Created Array#to_csv to refactor both the Hash and CSVFile#to_csv stuff, so the bulk of both of those methods has been gutted and moved to Array#to_csv.  
+# 0/1
+# 13. Moved what remained of CSVFile#to_csv into #write_line and deleted CSVFile#to_csv.  
+# 14. Created Array#wrap_each (formerly called just wrap) to simplify Array#to_csv.  
+# 15. Fixed a small error in logic with #write_line.  It is difficult when a method accepts all manner of inputs.  I was a little confused again about what's a Hash and what's an Array.  
+# 16. Fixed a small scoping problem on Array#wrap_each.  'a' wasn't accessible outside the loop.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -65,10 +70,11 @@
 
 $debug = {}
 $debug[:csv_split] = false
-$debug[:write_line] = false
-$debug[:csvfile_to_csv] = false
-$debug[:each] = true
+$debug[:write_line] = true
+$debug[:each] = false
 $debug[:first_line] = false
+$debug[:wrap_each] = false
+$debug[:Array_to_csv] = false
 
 require 'pp' if (b = false; $debug.each{|method, debug| b = true if debug}; b)
 
@@ -82,7 +88,7 @@ class String
       pp self if $debug[:csv_split]
       quote = :double
       double = self.match(/",|,\s"/)
-      pp double if $debug
+      pp double if $debug[:csv_split]
       unless double
         quote = :single
         single = self.match(/',|,\s'/) # Singly quoted CSV files are essentially unheard of, but who knows?  
@@ -142,19 +148,20 @@ end # class String
 class Array
   
   def to_csv(quote)
+    pp self if $debug[:Array_to_csv]
     case quote.to_sym # Also handles 'double', 'double_qoute', ...
       when :double, :double_quote, :double_quotes, :double_quoted, :doubly_quoted
-        return (self[0] = '"' + self[0]; self[self.size - 1] = self[self.size - 1] + '"'; self.join('","'))
+        return self.wrap_each('"').join(',')
       when :strict_double, :strict_double_quote, :strict_double_quotes, :strict_double_quoted, :strict_doubly_quoted
-        return (self[0] = '"' + self[0]; self[self.size - 1] = self[self.size - 1] + '"'; self.join('","'))
+        return self.wrap_each('"').join(',')
       when :spacey_double, :spacey_double_quote, :spacey_double_quotes, :spacey_double_quoted, :spacey_doubly_quoted
-        return (self[0] = '"' + self[0]; self[self.size - 1] = self[self.size - 1] + '"'; self.join('", "'))
+        return self.wrap_each('"').join(', ')
       when :single, :single_quote, :single_quotes, :single_quoted, :singly_quoted
-        return (self[0] = "'" + self[0]; self[self.size - 1] = self[self.size - 1] + "'"; self.join("','"))
+        return self.wrap_each("'").join(',')
       when :strict_single, :strict_single_quote, :strict_single_quotes, :strict_single_quoted, :strict_singly_quoted
-        return (self[0] = "'" + self[0]; self[self.size - 1] = self[self.size - 1] + "'"; self.join("','"))
+        return self.wrap_each("'").join(',')
       when :spacey_single, :spacey_single_quote, :spacey_single_quotes, :spacey_single_quoted, :spacey_singly_quoted
-        return (self[0] = "'" + self[0]; self[self.size - 1] = self[self.size - 1] + "'"; self.join("', '"))
+        return self.wrap_each("'").join(', ')
       when :none, :no_quotes, :not_quoted, :unquoted
         return self.join(',')
       when :strict_none, :strict_no_quotes, :strict_not_quoted, :strict_unquoted
@@ -163,6 +170,18 @@ class Array
         return self.join(', ')
     end # case
   end # def to_csv
+  
+  def wrap_each(wrapper)
+    pp self if $debug[:wrap_each]
+    a = []
+    each do |e|
+      pp e if $debug[:wrap_each]
+      (a||=[]) << wrapper + e + wrapper
+    end
+    a
+  end
+  alias_method :wrap_each_with, :wrap_each
+  alias_method :wrap_each_with___, :wrap_each
   
 end # class Array
 
@@ -323,34 +342,30 @@ class CSVFile < File
   alias_method :csv_write, :write_csv
   
   def write_line(line, *columns)
-    pp to_csv(line, columns) if $debug[:write_line]
+    pp line, columns if $debug[:write_line]
     # Consider creating a CSVLine class so as this line might preferably be line.to_csv.  That would mean that @lines would contain CSVLine objects, so I shouldn't forget to make other changes!  
+    a = []
+    pp columns[0] if $debug[:write_line]
     case columns[0]
       when Array
-        self.puts(self.to_csv(line, columns[0]))
+        if columns[0]
+          columns[0].each {|c| a << line[c] }
+        else
+          @columns.each {|k, v| a << line[v] }
+        end
       else
-        self.puts(self.to_csv(line, columns))
+        pp columns if $debug[:write_line]
+        if columns
+          columns.each {|c| a << line[c] }
+        else
+          @columns.each {|k, v| a << line[v] }
+        end
     end # case
+    pp a if $debug[:write_line]
+    self.puts(a.to_csv(@quote))
   end # def write_line
   alias_method :writeln, :write_line
   alias_method :writeline, :write_line
-  
-  def to_csv(line, columns = nil) # Consider putting *columns in later, so as to enable the supply of individual parameters as well as an array.  
-    collector = []
-    pp columns if $debug[:csvfile_to_csv]
-    pp @columns if $debug[:csvfile_to_csv]
-    if columns
-      columns.each do |c|
-        collector << line[c]
-      end
-    else
-      @columns.each do |k, v|
-        collector << line[v]
-      end
-    end
-    pp collector if $debug[:csvfile_to_csv]
-    collector.to_csv(@quote)
-  end # def to_csv
   
   alias_method :std_each, :each
   alias_method :std_file_each, :each

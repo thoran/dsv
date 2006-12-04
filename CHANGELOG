@@ -2,6 +2,14 @@
 
 ## 20061205
 
+0.5.1
+
+1. Moved what remained of CSVFile#to_csv into #write_line and deleted CSVFile#to_csv.
+2. Created Array#wrap_each (formerly called just wrap) to simplify Array#to_csv.
+3. Fixed a small error in logic with #write_line.  It is difficult when a method accepts all manner of inputs.  I was a little confused again about what's a Hash and what's an Array.
+4. Fixed a small scoping problem on Array#wrap_each.  'a' wasn't accessible outside the loop.
+
+
 0.5.0
 
 1. Rearranged things a little.  Put read_line next to read, etcetera.
