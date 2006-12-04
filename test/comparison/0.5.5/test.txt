@@ -1,0 +1,9 @@
+CSVFile: 0.12
+FasterCSV: 0.481
+CSV: 2.423
+
+After I made some more changes to #csv_split by way of using sub! instead and combining the subs...  
+
+CSVFile: 0.11
+FasterCSV: 0.47
+CSV: 2.444

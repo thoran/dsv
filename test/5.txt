@@ -1,0 +1,235 @@
+Prior to when attributes was modified: 
+
+S:\active\users\thoran\common\programming\Ruby\rubylib\CSVFile\5\test>ruby 5.rb
+  %   cumulative   self              self     total
+ time   seconds   seconds    calls  ms/call  ms/call  name
+ 27.65     0.18      0.18       86     2.09     3.14  Array#each
+ 18.43     0.30      0.12       87     1.38     3.57  String#csv_split
+  9.22     0.36      0.06       84     0.71     1.20  Kernel.loop
+  7.68     0.41      0.05      514     0.10     0.10  Hash#[]
+  4.61     0.44      0.03      168     0.18     0.18  Fixnum#-
+  4.61     0.47      0.03      229     0.13     0.13  String#gsub
+  4.61     0.50      0.03      433     0.07     0.07  Hash#[]=
+  3.07     0.52      0.02        1    20.00   611.00  IO#file_each
+  3.07     0.54      0.02      252     0.08     0.08  String#sub
+  3.07     0.56      0.02        1    20.00    20.00  Kernel.gem_original_requir
+e
+  1.69     0.57      0.01      235     0.05     0.05  String#==
+  1.54     0.58      0.01       87     0.11     0.11  String#split
+  1.54     0.59      0.01       84     0.12     3.70  CSVFile#parse_line
+  1.54     0.60      0.01     1026     0.01     0.01  Array#[]
+  1.54     0.61      0.01      425     0.02     0.02  Fixnum#+
+  1.54     0.62      0.01       92     0.11     0.11  String#chomp
+  1.54     0.63      0.01      169     0.06     0.06  Array#size
+  1.54     0.64      0.01       89     0.11     0.11  Array#<<
+  1.54     0.65      0.01      168     0.06     0.06  Array#[]=
+  0.00     0.65      0.00       87     0.00     0.00  Symbol#to_sym
+  0.00     0.65      0.00        1     0.00     0.00  File#initialize
+  0.00     0.65      0.00        1     0.00     0.00  Hash#each
+  0.00     0.65      0.00        1     0.00   611.00  CSVFile#read
+  0.00     0.65      0.00        1     0.00     0.00  Array#collect
+  0.00     0.65      0.00        1     0.00    20.00  IO#new
+  0.00     0.65      0.00        1     0.00    20.00  Kernel.require
+  0.00     0.65      0.00        1     0.00     0.00  Kernel.class
+  0.00     0.65      0.00        1     0.00    10.00  CSVFile#attributes
+  0.00     0.65      0.00        6     0.00     0.00  Fixnum#<=>
+  0.00     0.65      0.00        1     0.00     0.00  File#expand_path
+  0.00     0.65      0.00       59     0.00     0.00  Module#method_added
+  0.00     0.65      0.00       25     0.00     0.00  Module#alias_method
+  0.00     0.65      0.00        1     0.00     0.00  Array#==
+  0.00     0.65      0.00        9     0.00     0.00  Regexp#match
+  0.00     0.65      0.00        1     0.00     0.00  Symbol#to_s
+  0.00     0.65      0.00      346     0.00     0.00  Symbol#===
+  0.00     0.65      0.00        1     0.00     0.00  Class#inherited
+  0.00     0.65      0.00        1     0.00    20.00  CSVFile#initialize
+  0.00     0.65      0.00        4     0.00     0.00  IO#gets
+  0.00     0.65      0.00        3     0.00     0.00  Module#===
+  0.00     0.65      0.00        1     0.00     0.00  Module#private
+  0.00     0.65      0.00        9     0.00     0.00  String#match
+  0.00     0.65      0.00        1     0.00     0.00  Module#attr_accessor
+  0.00     0.65      0.00        2     0.00     0.00  Array#include?
+  0.00     0.65      0.00        3     0.00     3.33  CSVFile#first_line
+  0.00     0.65      0.00        1     0.00    10.00  CSVFile#columns
+  0.00     0.65      0.00        1     0.00     0.00  Hash#default
+  0.00     0.65      0.00        8     0.00     0.00  Kernel.===
+  0.00     0.65      0.00        1     0.00     0.00  Hash#sort
+  0.00     0.65      0.00        7     0.00     0.00  IO#rewind
+  0.00     0.65      0.00        1     0.00   651.00  #toplevel
+
+S:\active\users\thoran\common\programming\Ruby\rubylib\CSVFile\5\test>
+
+After #attributes and #init was modified: 
+
+S:\active\users\thoran\common\programming\Ruby\rubylib\CSVFile\5\test>ruby 5.rb
+  %   cumulative   self              self     total
+ time   seconds   seconds    calls  ms/call  ms/call  name
+ 21.51     0.14      0.14       86     1.63     2.79  Array#each
+ 17.05     0.25      0.11       87     1.28     3.92  String#csv_split
+ 15.36     0.35      0.10       85     1.18     1.65  Kernel.loop
+ 10.75     0.42      0.07     1030     0.07     0.07  Array#[]
+  6.14     0.46      0.04      230     0.17     0.17  String#gsub
+  6.14     0.50      0.04        1    40.00   621.00  IO#file_each
+  4.61     0.53      0.03      515     0.06     0.06  Hash#[]
+  3.07     0.55      0.02      318     0.06     0.06  Symbol#===
+  3.07     0.57      0.02      171     0.12     0.12  Array#size
+  3.07     0.59      0.02      434     0.05     0.05  Hash#[]=
+  1.54     0.60      0.01      170     0.06     0.06  Array#[]=
+  1.54     0.61      0.01      235     0.04     0.04  String#==
+  1.54     0.62      0.01       85     0.12     0.12  Array#<<
+  1.54     0.63      0.01      170     0.06     0.06  Fixnum#-
+  1.54     0.64      0.01      255     0.04     0.04  String#sub
+  1.54     0.65      0.01        1    10.00    20.00  CSVFile#initialize
+  0.00     0.65      0.00        1     0.00     0.00  File#expand_path
+  0.00     0.65      0.00        6     0.00     0.00  Regexp#match
+  0.00     0.65      0.00        1     0.00     0.00  File#initialize
+  0.00     0.65      0.00        1     0.00     0.00  Hash#each
+  0.00     0.65      0.00       85     0.00     4.01  CSVFile#parse_line
+  0.00     0.65      0.00        1     0.00     0.00  Array#collect
+  0.00     0.65      0.00        1     0.00    20.00  IO#new
+  0.00     0.65      0.00        1     0.00     0.00  Kernel.class
+  0.00     0.65      0.00        1     0.00     0.00  Kernel.gem_original_requir
+e
+  0.00     0.65      0.00       87     0.00     0.00  Symbol#to_sym
+  0.00     0.65      0.00        1     0.00   631.00  CSVFile#read
+  0.00     0.65      0.00        1     0.00    10.00  CSVFile#columns
+  0.00     0.65      0.00      426     0.00     0.00  Fixnum#+
+  0.00     0.65      0.00        2     0.00     0.00  CSVFile#first_line
+  0.00     0.65      0.00        1     0.00     0.00  Kernel.require
+  0.00     0.65      0.00       59     0.00     0.00  Module#method_added
+  0.00     0.65      0.00        1     0.00     0.00  Array#==
+  0.00     0.65      0.00        1     0.00     0.00  Symbol#to_s
+  0.00     0.65      0.00        6     0.00     0.00  String#match
+  0.00     0.65      0.00        1     0.00     0.00  Class#inherited
+  0.00     0.65      0.00       25     0.00     0.00  Module#alias_method
+  0.00     0.65      0.00        2     0.00     0.00  IO#gets
+  0.00     0.65      0.00        3     0.00     0.00  Module#===
+  0.00     0.65      0.00        1     0.00     0.00  Module#private
+  0.00     0.65      0.00        1     0.00     0.00  Module#attr_accessor
+  0.00     0.65      0.00        1     0.00     0.00  Array#include?
+  0.00     0.65      0.00       87     0.00     0.00  String#split
+  0.00     0.65      0.00       92     0.00     0.00  String#chomp
+  0.00     0.65      0.00        1     0.00    10.00  Hash#sort
+  0.00     0.65      0.00        1     0.00     0.00  Hash#default
+  0.00     0.65      0.00        8     0.00     0.00  Kernel.===
+  0.00     0.65      0.00        6     0.00     0.00  Fixnum#<=>
+  0.00     0.65      0.00        4     0.00     0.00  IO#rewind
+  0.00     0.65      0.00        1     0.00   651.00  #toplevel
+
+S:\active\users\thoran\common\programming\Ruby\rubylib\CSVFile\5\test>
+
+When the String#csv_split loop was commented out: 
+
+S:\active\users\thoran\common\programming\Ruby\rubylib\CSVFile\5\test>ruby 5.rb
+  %   cumulative   self              self     total
+ time   seconds   seconds    calls  ms/call  ms/call  name
+ 40.00     0.16      0.16       87     1.84     2.41  String#csv_split
+ 20.00     0.24      0.08       86     0.93     1.51  Array#each
+  7.50     0.27      0.03      194     0.15     0.15  Fixnum#+
+  5.00     0.29      0.02       85     0.24     2.59  CSVFile#parse_line
+  5.00     0.31      0.02        1    20.00    20.00  Kernel.gem_original_requir
+e
+  5.00     0.33      0.02      566     0.04     0.04  Array#[]
+  2.50     0.34      0.01      170     0.06     0.06  Array#[]=
+  2.50     0.35      0.01       87     0.11     0.11  Symbol#to_sym
+  2.50     0.36      0.01      283     0.04     0.04  Hash#[]
+  2.50     0.37      0.01      171     0.06     0.06  Array#size
+  2.50     0.38      0.01        1    10.00   360.00  IO#file_each
+  2.50     0.39      0.01      318     0.03     0.03  Symbol#===
+  0.00     0.39      0.00        1     0.00     0.00  Array#==
+  0.00     0.39      0.00        1     0.00     0.00  Kernel.class
+  0.00     0.39      0.00        1     0.00    20.00  Kernel.require
+  0.00     0.39      0.00      170     0.00     0.00  Fixnum#-
+  0.00     0.39      0.00        1     0.00     0.00  Array#include?
+  0.00     0.39      0.00        1     0.00     0.00  File#initialize
+  0.00     0.39      0.00        1     0.00     0.00  Hash#each
+  0.00     0.39      0.00        1     0.00     0.00  Array#collect
+  0.00     0.39      0.00        1     0.00     0.00  IO#new
+  0.00     0.39      0.00        1     0.00     0.00  Hash#sort
+  0.00     0.39      0.00      255     0.00     0.00  String#sub
+  0.00     0.39      0.00        6     0.00     0.00  Fixnum#<=>
+  0.00     0.39      0.00        6     0.00     0.00  String#match
+  0.00     0.39      0.00        1     0.00     0.00  File#expand_path
+  0.00     0.39      0.00       59     0.00     0.00  Module#method_added
+  0.00     0.39      0.00       10     0.00     0.00  String#==
+  0.00     0.39      0.00        1     0.00     0.00  Symbol#to_s
+  0.00     0.39      0.00       25     0.00     0.00  Module#alias_method
+  0.00     0.39      0.00        1     0.00     0.00  Class#inherited
+  0.00     0.39      0.00        1     0.00     0.00  Module#attr_accessor
+  0.00     0.39      0.00        1     0.00     0.00  CSVFile#initialize
+  0.00     0.39      0.00        2     0.00     0.00  CSVFile#first_line
+  0.00     0.39      0.00        2     0.00     0.00  IO#gets
+  0.00     0.39      0.00        3     0.00     0.00  Module#===
+  0.00     0.39      0.00        1     0.00     0.00  Module#private
+  0.00     0.39      0.00      202     0.00     0.00  Hash#[]=
+  0.00     0.39      0.00        1     0.00     0.00  CSVFile#columns
+  0.00     0.39      0.00        5     0.00     0.00  String#gsub
+  0.00     0.39      0.00       87     0.00     0.00  String#split
+  0.00     0.39      0.00       92     0.00     0.00  String#chomp
+  0.00     0.39      0.00        6     0.00     0.00  Regexp#match
+  0.00     0.39      0.00        1     0.00     0.00  Hash#default
+  0.00     0.39      0.00        8     0.00     0.00  Kernel.===
+  0.00     0.39      0.00        1     0.00   370.00  CSVFile#read
+  0.00     0.39      0.00       85     0.00     0.00  Array#<<
+  0.00     0.39      0.00        4     0.00     0.00  IO#rewind
+  0.00     0.40      0.00        1     0.00   400.00  #toplevel
+
+S:\active\users\thoran\common\programming\Ruby\rubylib\CSVFile\5\test>
+
+After changing #csv_split to do the subs in place.  
+
+S:\active\users\thoran\common\programming\Ruby\rubylib\CSVFile\5\test>ruby 5.rb
+  %   cumulative   self              self     total
+ time   seconds   seconds    calls  ms/call  ms/call  name
+ 35.43     0.22      0.22       86     2.56     3.84  Array#each
+ 14.65     0.31      0.09       87     1.05     2.77  String#csv_split
+  9.66     0.37      0.06       85     0.71     1.18  Kernel.loop
+  8.05     0.42      0.05     1030     0.05     0.05  Array#[]
+  6.44     0.46      0.04      426     0.09     0.09  Fixnum#+
+  4.83     0.49      0.03      235     0.13     0.13  String#==
+  4.83     0.52      0.03        1    30.00    30.00  Kernel.gem_original_requir
+e
+  3.22     0.54      0.02       85     0.24     0.24  Fixnum#-
+  3.22     0.56      0.02      515     0.04     0.04  Hash#[]
+  1.61     0.57      0.01      230     0.04     0.04  String#gsub
+  1.61     0.58      0.01      434     0.02     0.02  Hash#[]=
+  1.61     0.59      0.01        1    10.00   581.00  IO#file_each
+  1.61     0.60      0.01       87     0.11     0.11  Symbol#to_sym
+  1.61     0.61      0.01        2     5.00     5.00  CSVFile#first_line
+  1.61     0.62      0.01       87     0.11     0.11  String#split
+  0.00     0.62      0.00        1     0.00     0.00  Symbol#to_s
+  0.00     0.62      0.00        1     0.00    10.00  CSVFile#columns
+  0.00     0.62      0.00        6     0.00     0.00  Fixnum#<=>
+  0.00     0.62      0.00        1     0.00     0.00  File#initialize
+  0.00     0.62      0.00        1     0.00     0.00  Hash#each
+  0.00     0.62      0.00        1     0.00   581.00  CSVFile#read
+  0.00     0.62      0.00        1     0.00     0.00  Array#collect
+  0.00     0.62      0.00        1     0.00    10.00  IO#new
+  0.00     0.62      0.00       25     0.00     0.00  Module#alias_method
+  0.00     0.62      0.00        6     0.00     0.00  Regexp#match
+  0.00     0.62      0.00        6     0.00     0.00  String#match
+  0.00     0.62      0.00       86     0.00     0.00  Array#size
+  0.00     0.62      0.00        1     0.00     0.00  Hash#size
+  0.00     0.62      0.00        1     0.00     0.00  File#expand_path
+  0.00     0.62      0.00       59     0.00     0.00  Module#method_added
+  0.00     0.62      0.00        1     0.00     0.00  Array#==
+  0.00     0.62      0.00        1     0.00     0.00  Kernel.class
+  0.00     0.62      0.00      318     0.00     0.00  Symbol#===
+  0.00     0.62      0.00        1     0.00     0.00  Class#inherited
+  0.00     0.62      0.00        1     0.00    10.00  CSVFile#initialize
+  0.00     0.62      0.00        1     0.00    30.00  Kernel.require
+  0.00     0.62      0.00        2     0.00     0.00  IO#gets
+  0.00     0.62      0.00        3     0.00     0.00  Module#===
+  0.00     0.62      0.00        1     0.00     0.00  Module#private
+  0.00     0.62      0.00        1     0.00     0.00  Module#attr_accessor
+  0.00     0.62      0.00      170     0.00     0.00  String#sub!
+  0.00     0.62      0.00        1     0.00     0.00  Array#include?
+  0.00     0.62      0.00       85     0.00     2.84  CSVFile#parse_line
+  0.00     0.62      0.00       92     0.00     0.00  String#chomp
+  0.00     0.62      0.00        1     0.00     0.00  Hash#sort
+  0.00     0.62      0.00        1     0.00     0.00  Hash#default
+  0.00     0.62      0.00        8     0.00     0.00  Kernel.===
+  0.00     0.62      0.00       85     0.00     0.00  Array#<<
+  0.00     0.62      0.00        4     0.00     0.00  IO#rewind
+  0.00     0.62      0.00        1     0.00   621.00  #toplevel
+
+S:\active\users\thoran\common\programming\Ruby\rubylib\CSVFile\5\test>

@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 20061205
+
+0.5.0
+
+1. Rearranged things a little.  Put read_line next to read, etcetera.
+2. Added some aliases for :write_csv and some for :read_line.
+3. Modified #read_line, such that if the column isn't specified that it will return the whole line parsed into an array.
+4. I've optimised #read such that if no columns are specified then it will read the whole line in a go, rather than one column at a time.  I can optimise this further and simplify it by calling parse_line once only for all circumstances.
+5. Removed the when Array bizzo from #write_csv, since I'm simply passing that into #write_line anyway, so I thought I'd let it handle it by passing it through as found, and so added * to columns and removed the remainder.
+6. Aliased #write_csv to #csv_write.  I think I prefer this and may swap, but which I'll be consistent and do the same with #csv_split.
+7. Aliased #csv_split to #split_csv as per 6.
+8. Improved the debugging switches so that they are now a Hash.
+9. The quote to use when line splitting can now be specified in the call to #csv_split and via reference to it having been set elsewhere via @quote.
+10. To that (Change#9) end I now have the same list of quote types as in the #to_csv methods.
+11. I added unquoted options to the quote types.
+12. Created Array#to_csv to refactor both the Hash and CSVFile#to_csv stuff, so the bulk of both of those methods has been gutted and moved to Array#to_csv.
+
+
 ## 20061204
 
 0.4.10
