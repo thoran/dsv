@@ -2,6 +2,13 @@
 
 ## 20061205
 
+0.5.2
+
+1. Compressed #write_csv and #write_line.  Possibly more readable, possibly not.
+2. Did the same (compresses) for Array#wrap_each.
+3. Added String#wrap to be used in conjunction with Array#wrap_each and changed Array#wrap_each accordingly.
+
+
 0.5.1
 
 1. Moved what remained of CSVFile#to_csv into #write_line and deleted CSVFile#to_csv.

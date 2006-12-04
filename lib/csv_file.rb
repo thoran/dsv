@@ -1,12 +1,13 @@
 # csv_file.rb
 
 # 20061205
-# 0.5.1
+# 0.5.2
 
 # Description: A CSV file object.  
 
 # Goals for 0.5: 
-# 1. I think of something soon!  
+# 1. I suppose a bit of refactoring.  
+# 2. 
 
 # Changes since 0.4: 
 # 1. Rearranged things a little.  Put read_line next to read, etcetera.  
@@ -26,6 +27,10 @@
 # 14. Created Array#wrap_each (formerly called just wrap) to simplify Array#to_csv.  
 # 15. Fixed a small error in logic with #write_line.  It is difficult when a method accepts all manner of inputs.  I was a little confused again about what's a Hash and what's an Array.  
 # 16. Fixed a small scoping problem on Array#wrap_each.  'a' wasn't accessible outside the loop.  
+# 1/2
+# 17. Compressed #write_csv and #write_line.  Possibly more readable, possibly not.  
+# 18. Did the same (compresses) for Array#wrap_each.  
+# 19. Added String#wrap to be used in conjunction with Array#wrap_each and changed Array#wrap_each accordingly.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -143,6 +148,10 @@ class String
   
   # Does strictness automatically denote that integrity checks like column count equivalance is enforced?  I suggest so, since I doubt that anyone would want to strictly enforce quoting and not column count.  At some later stage I *may* allow this, but it is a really low priority.  
   
+  def wrap(wrapper)
+    wrapper + self + wrapper
+  end
+  
 end # class String
 
 class Array
@@ -174,10 +183,7 @@ class Array
   def wrap_each(wrapper)
     pp self if $debug[:wrap_each]
     a = []
-    each do |e|
-      pp e if $debug[:wrap_each]
-      (a||=[]) << wrapper + e + wrapper
-    end
+    each{|e| a << e.wrap(wrapper)}
     a
   end
   alias_method :wrap_each_with, :wrap_each
@@ -335,31 +341,19 @@ class CSVFile < File
   alias_method :std_write, :write
   
   def write_csv(*columns)
-    @lines.each do |line|
-      write_line(line, *columns)
-    end
+    pp columns if $debug[:write]
+    each{|line| write_line(line, *columns)}
   end
-  alias_method :csv_write, :write_csv
   
   def write_line(line, *columns)
     pp line, columns if $debug[:write_line]
-    # Consider creating a CSVLine class so as this line might preferably be line.to_csv.  That would mean that @lines would contain CSVLine objects, so I shouldn't forget to make other changes!  
     a = []
     pp columns[0] if $debug[:write_line]
     case columns[0]
       when Array
-        if columns[0]
-          columns[0].each {|c| a << line[c] }
-        else
-          @columns.each {|k, v| a << line[v] }
-        end
+        columns[0] ? columns[0].each{|c| a << line[c]} : @columns.each{|k, v| a << line[v]}
       else
-        pp columns if $debug[:write_line]
-        if columns
-          columns.each {|c| a << line[c] }
-        else
-          @columns.each {|k, v| a << line[v] }
-        end
+        columns ? columns.each{|c| a << line[c]} : @columns.each{|k, v| a << line[v]}
     end # case
     pp a if $debug[:write_line]
     self.puts(a.to_csv(@quote))
