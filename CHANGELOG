@@ -2,6 +2,19 @@
 
 ## 20061206
 
+0.5.4
+
+1. A bunch of debug lines excised---again!
+2. Added quote_each, #quote_each!, #unquote_each, #unquote_each! and changed the calls to wrap_each to quote_each.
+3. String#quote and #unquote to support the Array quoting stuff.
+4. Tightened up #read to be much more character-efficient.
+5. Added a bunch of additional options to selecting whether there is a header line, so that now one can be a little more informative when specifying a header line than simply 'true'; such as ':header_line'.
+6. Changed the options on header line to include strings and not just symbols.  I can't do the to_s or to_sym thing because I have booleans.  Well I could if I dropped in my TrueClass and FalseClass#to_s methods!
+7. Did the same thing as was done for @header_line for @mode.  I can now use more easily-remembered and obvious options like ':read_only'.
+8. I don't know what I did, but I've knocked another 0.03 seconds off for the test_data.csv file, making it roughly another 15% faster and now over 3x faster than FasterCSV!
+9. Changed Array#to_csv to make use of Array#quote_each instead; which just calls #wrap_each anyway.  I may have #quote_each replicate the content of #wrap_each and then call String#quote instead.
+
+
 0.5.3
 
 1. Added Array#wrap_each!, #unwrap_each, and #unwrap_each! and various aliases for each.

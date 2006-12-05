@@ -1,17 +1,17 @@
 # CSVFile vs. FasterCSV vs. CSV
 
-# 20061205
+# 20061206
 
 filename = 'test_data.csv'
 
 require '../../lib/csv_file'
 start_time = Time.now
-file = CSVFile.new(filename, true, :none, 'r+')
+file = CSVFile.new(filename, :header_line, :none, 'r+')
 file.read
 file.close
 finish_time = Time.now
 print 'CSVFile: '
-puts csv_file_time_delta = (finish_time - start_time)
+puts csv_file_time_delta = finish_time - start_time
 
 require 'faster_csv'
 start_time = Time.now
