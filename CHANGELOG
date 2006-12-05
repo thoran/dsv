@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 20061206
+
+0.5.3
+
+1. Added Array#wrap_each!, #unwrap_each, and #unwrap_each! and various aliases for each.
+2. Redid all the Array#wrap_each and all the other wrapping methods in a much tighter way than was done with #wrap_each before.
+3. Added String#unwrap.  Not sure how this will be used yet, or if at all, but I suspect it might be of use to String#csv_split.
+4. Removed a bunch of debugging.
+5. Did some speed testing last night against the standard CSV file used for testing I think for both FasterCSV and CSV and found quite a few bugs!
+6. Firstly the #read method was rooted.  I had to almost completely redo the parsing loop.  When @columns was available it was completing misloading the keys for each line.  There was also an unnecessary option on both when @columns was specified and when it wasn't to test for supplied columns, since it wasn't either or, I need both columns and @columns.  And using the same name is a bit confusing, @ or not.
+7. Also the column stuff in #read was rooted as well as the column order was coming out in the hash order and not the column order.  I've done a little bit of inline sorting magic, but really I could architect this better 3x faster than FasterCSV or not.  Once I tidy things up in #read and in #csv_split, I think I'd be able to get an additional 2 - 4x performance increase.
+8. Switched to not using 'self.' for most things.
+9. Modifed #read_line such that it will feed in @columns into #csv_split, rather than loading @columns into columns in #csv_split.
+
+
 ## 20061205
 
 0.5.2
