@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## 20061207
+
+0.5.5
+
+1. I modifed the regexes for the auto-detection part of String#csv_split to include zero or more spaces after the comma.  I still need to break up this auto-detection stuff to separate out spacey at least, if not strict by some means...
+2. Fixed a few issues with #write_line.  That is an understatement.
+3. Modified #write_csv to write a header line.
+4. Moved the header writing stuff to its own method #write_header and added a reference to this in #write_csv.
+5. Commented out all the typically, and only fairly recently, unused bits in #read_line to see if it made a speed difference.  It didn't.  At least it was essentially undetectable.
+6. Lispyified and compressed #read some by using parentheses, expression/statements, and collect.  I don't know if this will make it any faster though.
+7. So far I've wiped roughly 1/3 of the time taken to do a read since 0.5.3!
+8. #attributes now calls #columns, which will pass back @columns if it is available, or generate it if not, instead of doing file accesss and csv_split, which I expect is more'expensive' than a collect.  And I realise that #init calls both #columns and attributes.
+9. I've commented out the assignment to @attributes in the #init method because of the way that I've now done it, that if attributes is called, it will call #columns on demand, rather than pre-loading for no difference in cost excepting that it is not always being run, making this overall more efficient, except if I'm calling #attributes a lot, rather than relying upon @attributes having been set during #init...
+10. I temporarily commented out the code which does the removal of multiple commas and produces a more consistent format and found that (with profiling on) the time taken when tested on 5.csv dropped from 0.65 to 0.40!  That's a 40% drop in time.  I really need to fix that up with a decent regex...
+11. In String#csv_split I only do one #sub now.  One less method call per line!
+12. Added $column_count in #init to be used in #csv_split to reduce the number of calls to size, although of course if the line has more or less elements than this it will screw up...  This is just a bit of an experiment really.
+13. Now doing the first element and last element subs in-place.
+14. Stopped using $column_count in #csv_split.
+15. @columns now uses symbols for its keys.
+16. Standardized on symbols in #init for @header_line.
+17. Started to fill out the distinctions between the different quoting types with the none series having different regexes to split by.
+
+
 ## 20061206
 
 0.5.4
