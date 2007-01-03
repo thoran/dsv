@@ -1,13 +1,14 @@
 # csv_file.rb
 
-# 20061206, 7
-# 0.5.5
+# 20070104
+# 0.5.6
 
 # Description: A CSV file object.  
 
 # Goals for 0.5: 
 # 1. I suppose a bit of refactoring.  
 # 2. A bit of speed work, but not at the expense of beauty---at least not just yet.  
+# 3. Some interface tidyup.  
 
 # Changes since 0.4: 
 # 1. Rearranged things a little.  Put read_line next to read, etcetera.  
@@ -69,6 +70,13 @@
 # 52. @columns now uses symbols for its keys.  
 # 53. Standardized on symbols in #init for @header_line.  
 # 54. Started to fill out the distinctions between the different quoting types with the none series having different regexes to split by.  
+# 5/6
+# 55. For completeness I added String#wrap!, #unwrap!, #quote!, #unquote!.  
+# 56. A bit of tidying, removing unused/commented out code and reintroducing commented out code.  
+# 57. Added aliases #write_row, #writerow for #write_line.  
+# 58. Replaced all instances of "@columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}" with "attributes" since #attributes is just that.  
+# 59. #write_header now accepts columns as an array as well as a parameter list.  
+# 60. #attributes now copes for when there is no header line.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -92,8 +100,9 @@
 # *13. Get the lineno method working (if possible) because while what I have done is working OK, it is a little inelegant.  
 # *14. Align method names to more closely match those of File.  
 # *15. Put the option to specify quoting into to_csv and possibly remove it from #init.  
-# *16. When strict is specified, do some checks for column count consistency, and possibly reapply checks for data consistency as per the idea (Did I write this idea down?) to attempt to automatically detect if there is a header line by comparing the data of the first line with subsequent lines (by way of column length, type, and anything else I can figure to use).  So, I'd need to write that in a sufficiently general way to be used in both contexts.  
+# *16. When strict is specified, do some checks for column count consistency, and possibly re-apply checks for data consistency as per the idea (Did I write this idea down?) to attempt to automatically detect if there is a header line by comparing the data of the first line with subsequent lines (by way of column length, type, and anything else I can figure to use).  So, I'd need to write that in a sufficiently general way to be used in both contexts.  
 # 17. Remove underscores when outputting the header line, but only if they were added---and only if they're wanting to be removed?...  
+# *18. Reorder the conditionals in #write_line and #write_header.  
 
 # Ideas: 
 # 1. Subclass CSVFile from File.  I'm not sure what this gets me, but it occurred to me that I have a read method and I was thinking of applying a close to an instance of the CSVFile class, and of course I don't have one.  Done as of 0.2.0.  As of 0.4.9, this is still not quite working right---particularly the write method clash, so started 0.2.0 might be a better way to put it.  
@@ -140,21 +149,22 @@ class String
           none = self.match(/,/)
           unless none
             raise RuntimeError, "This file doesn't have any commas in it.  Are you sure that this is a CSV file?"
-          end # inner if
-        end # middle if
-      end # outer if
+          end # inner unless
+        end # middle unless
+      end # outer unless
     end # unless quote
     pp quote if $debug[:String_csv_split]
     result = ''
     result = case quote.to_sym # Also handles 'double', 'double_quote', ...
       when :double, :double_quote, :double_quotes, :double_quoted, :doubly_quoted # No spaces, but no integrity checks.  
         # What follows is particularly ugly...  Anyone have a regex book handy?  
-        old_result = self
-	      loop do
-          result = old_result.gsub(/,,/, ',"",')
-		      break if result == old_result
-          old_result = result
-		    end
+        #old_result = self
+	      #loop do
+        #  result = old_result.gsub(/,,/, ',"",')
+		    #  break if result == old_result
+        #  old_result = result
+		    #end
+		    result = self.gsub(/,/, ',""').gsub(/"""/, '"') # This too is ugly, but at least it might be faster!  
         result = result.chomp.split(/",\s*"/)
         #result = self.chomp.split(/",\s*"/) # For use when temporarily commenting out the above loop.  
         result[0].sub!(/^"/, '')
@@ -205,6 +215,23 @@ class String
   def unquote(mark = '"')
     unwrap(mark)
   end
+  
+  def wrap!(wrapper)
+    sub!(/^/, wrapper).sub!(/$/, wrapper) # It was only way I could think to do things in place.  Should I change #wrap to match now?  
+  end
+  
+  def unwrap!(wrapper)
+    sub!(/^#{wrapper}/, '').sub!(/#{wrapper}$/, '')
+  end
+  
+  def quote!(mark = '"')
+    wrap!(mark)
+  end
+  
+  def unquote!(mark = '"')
+    unwrap!(mark)
+  end
+  
   
 end # class String
 
@@ -370,15 +397,14 @@ class CSVFile < File
   end
   
   def read(*columns)
-    number_of_columns = first_line.csv_split.size
-    #@header_line ? (rewind; gets) : rewind # Start at line 0 or line 1.  #lineno wasn't working when I first wanted this, but I will try #lineno again at some stage.  
+    number_of_columns = first_line.csv_split.size # I could make this a floating count and report all anomolies---from the most common count, or the first line's count, or...
     @header_line ? lineno = 1 : lineno = 0
     pp lineno if $debug[:read]
     columns = case columns[0]
       when Array
         if columns[0] == [] # then select all columns by default...
-          if @columns # then select by column name...  
-            @columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
+          if @columns # then select by column name in sorted order...  
+            attributes
           else # select by column position...  
             0..(number_of_columns - 1)
           end
@@ -387,8 +413,8 @@ class CSVFile < File
         end # outer if
       else # the first item is (and presumably subsequent items are) somewhat more atomic...
         if columns == [] # then select all columns by default...
-          if @columns # then select by column name...  
-            @columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
+          if @columns # then select by column name in sorted order...  
+            attributes
           else # select by column position...  
             0..(number_of_columns - 1)
           end
@@ -397,6 +423,7 @@ class CSVFile < File
         end # outer if
     end # case
     h = {}
+    i = nil # An attempt at getting the following loop speed up a bit...  
     file_each do |line| # if @columns, then select by column name, else select by column position...  
       i = -1
       @columns ?
@@ -412,16 +439,16 @@ class CSVFile < File
   alias_method :parse, :read
   
   def read_line(line, column = nil)
-    # if column
-      # case column
-        # when Integer
-          # line.csv_split(@quote)[column]
-        # else
-          # line.csv_split(@quote)[@columns[column.to_s]]
-      # end
-    # else
+    if column
+      case column
+        when Integer
+          line.csv_split(@quote)[column]
+        else
+          line.csv_split(@quote)[@columns[column.to_s]]
+      end
+    else
       line.csv_split(@quote)
-    # end
+    end
   end
   alias_method :parse_line, :read_line
   alias_method :readln, :read_line
@@ -437,8 +464,13 @@ class CSVFile < File
   
   def write_header(*columns)
     pp columns, @header_line if $debug[:write_header]
-    columns != [] ? write_line(columns.to_csv) : write_line(@columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}.to_csv) # May need to check for columns containing an Array...  Don't worry for now.  
-  end
+    case columns[0]
+      when Array
+        columns[0] != [] ? write_line(columns[0].to_csv) : write_line(attributes.to_csv)
+      else
+        columns != [] ? write_line(columns.to_csv) : write_line(attributes.to_csv)
+    end # case columns
+  end # def write_header
   
   def write_line(line, *columns)
     pp line, columns, @columns if $debug[:write_line]
@@ -446,18 +478,23 @@ class CSVFile < File
     #pp columns[0] if $debug[:write_line]
     case columns[0]
       when Array
-        columns[0] != [] ? columns[0].each{|c| collector << line[c]} : (pp 'columns == []' if $debug[:write_line];  blah = @columns.sort{|a,b| a[1] <=> b[1]}.collect{|c| c[0]}; pp blah; pp collector;
-        blah.each{|column| pp column; pp collector; collector << line[column]})
+        pp 'case columns[0]; when Array' if $debug[:write_line]
+        columns[0] != [] ?
+        columns[0].each {|c| collector << line[c]} :
+        attributes.each {|column| collector << line[column]}
       else
-        #pp 'case columns[0], else' if $debug[:write_line]
-        columns != [] ? columns.each{|c| collector << line[c]} : (pp 'columns == []' if $debug[:write_line];  blah = @columns.sort{|a,b| a[1] <=> b[1]}.collect{|c| c[0]}; pp blah; pp collector;
-        blah.each{|column| pp column; pp collector; collector << line[column]})
+        pp 'case columns[0]... else' if $debug[:write_line]
+        columns != [] ?
+        columns.each {|c| collector << line[c]} :
+        attributes.each {|column| collector << line[column]}
     end # case
     pp collector if $debug[:write_line]
-    self.puts(collector.to_csv(@quote))
+    puts(collector.to_csv(@quote))
   end # def write_line
   alias_method :writeln, :write_line
   alias_method :writeline, :write_line
+  alias_method :write_row, :write_line
+  alias_method :writerow, :write_line
   
   alias_method :std_each, :each
   alias_method :std_file_each, :each
@@ -466,14 +503,14 @@ class CSVFile < File
   def each(*columns)
     pp columns if $debug[:each]
     if lines? # May have been more efficient to have left this as @lines[0], so do test this later...  
-      @lines.each {|line| yield line }
-    else
-      if columns != []
-        read(columns).each {|line|
-          yield columns.collect {|c| line[c] }
-        }
+      @lines.each {|line| yield line}
+    else # nothing has been read yet...
+      if columns != [] # then 
+        read(columns).each do |line|
+          yield columns.collect {|c| line[c]}
+        end
       else
-        read.each {|line| yield line }
+        read.each {|line| yield line}
       end
     end # outer if
   end
@@ -481,7 +518,7 @@ class CSVFile < File
   alias_method :each_with_line, :each
   
   def each_with_columns(*desired_columns)
-    case desired_columns[0] # Check that this isn't conflicting with #columns.  It may be.  
+    case desired_columns[0]
       when Array
         if desired_columns[0]
           if lines? # May have been more efficient to have left this as @lines[0], so do test this later...  
@@ -495,7 +532,7 @@ class CSVFile < File
           end # inner if
         else
           read.each {|line|
-            yield @attributes.collect {|a| line[a]} # I assume that I need to use attributes here too.  
+            yield attributes.collect {|a| line[a]} # I assume that I need to use attributes here too.  
           }
         end # outer if
       else
@@ -512,7 +549,7 @@ class CSVFile < File
         else
           read.each {|line|
             #yield @columns.collect {|k,v| line[k]} # I really do not understand why this doesn't work.  I'm leaving this here because it is so annoying that I don't get how it works.  
-            yield @attributes.collect {|a| line[a]}
+            yield attributes.collect {|a| line[a]}
           }
         end # outer if
     end # case
@@ -556,18 +593,8 @@ class CSVFile < File
   
   def attributes
     @attributes ||= (
-      columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
+      columns ? columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]} : nil
     )
-      # if @header_line
-        # a = []
-        # first_line.csv_split.each do |attribute|
-          # a << attribute
-        # end
-        # a
-      # else
-        # nil
-      # end
-    # )
   end
   
   private

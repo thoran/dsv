@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 20070104
+
+0.5.6
+
+1. For completeness I added String#wrap!, #unwrap!, #quote!, #unquote!.
+2. A bit of tidying, removing unused/commented out code and reintroducing commented out code.
+3. Added aliases #write_row, #writerow for #write_line.
+4. Replaced all instances of "@columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}" with "attributes" since #attributes is just that.
+5. #write_header now accepts columns as an array as well as a parameter list.
+6. #attributes now copes for when there is no header line.
+
+
 ## 20061207
 
 0.5.5
