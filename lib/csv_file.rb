@@ -1,7 +1,7 @@
 # csv_file.rb
 
-# 20070104
-# 0.5.6
+# 20070302
+# 0.5.7
 
 # Description: A CSV file object.  
 
@@ -77,6 +77,8 @@
 # 58. Replaced all instances of "@columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}" with "attributes" since #attributes is just that.  
 # 59. #write_header now accepts columns as an array as well as a parameter list.  
 # 60. #attributes now copes for when there is no header line.  
+# 6/7
+# 61. I noticed while I was browsing my code on thoran.com that I could speed things up a bit in read...  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -231,7 +233,6 @@ class String
   def unquote!(mark = '"')
     unwrap!(mark)
   end
-  
   
 end # class String
 
@@ -424,13 +425,19 @@ class CSVFile < File
     end # case
     h = {}
     i = nil # An attempt at getting the following loop speed up a bit...  
-    file_each do |line| # if @columns, then select by column name, else select by column position...  
-      i = -1
-      @columns ?
-        parse_line(line).each{|column| h[columns[@columns[columns[(i += 1)]]]] = column} :
+    @columns ? ( # if @columns, then select by column name, else select by column position...  
+      file_each do |line|
+        i = -1
+        parse_line(line).each{|column| h[columns[@columns[columns[(i += 1)]]]] = column}
+        @lines << h
+      end # file_each
+    ) : (
+      file_each do |line|
+        i = -1
         parse_line(line).each{|column| h[(i += 1)] = column}
-      @lines << h
-    end # file_each
+        @lines << h
+      end # file_each
+    )
     pp @lines if $debug[:read]
     #(rewind; truncate(0)) if @mode == 'r+'
     truncate(0) if @mode == 'r+'
