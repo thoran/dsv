@@ -2,6 +2,11 @@
 
 ## 20070408
 
+0.5.9: Now trying #read from 0.5.4.
+
+1. Now trying #read from 0.5.4.
+
+
 0.5.8
 
 1. CSVFile#initialize was attempting to convert the default boolean value to a symbol.  So it now checks if it is a boolean before attempting to convert it.

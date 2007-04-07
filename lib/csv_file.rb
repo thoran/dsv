@@ -1,7 +1,7 @@
 # csv_file.rb
 
 # 20070408
-# 0.5.8
+# 0.5.9
 
 # Description: A CSV file object.  
 
@@ -86,6 +86,8 @@
 # 65. Enabled the #write_header debug switch at the top.  
 # 66. #write_line only adds columns to the array now if an element is not nil.  
 # 67. Pasted #read from 0.5.6 back here, since it wasn't reading correctly.  
+# 8/9
+# 68. Now trying #read from 0.5.4.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -134,7 +136,7 @@ $debug = {}
 $debug[:String_csv_split] = false
 $debug[:Array_wrap_each] = false
 $debug[:Array_to_csv] = false
-$debug[:read] = true
+$debug[:read] = false
 $debug[:write_csv] = false
 $debug[:write_header] = false
 $debug[:write_line] = false
@@ -406,47 +408,43 @@ class CSVFile < File
   end
   
   def read(*columns)
-    number_of_columns = first_line.csv_split.size # I could make this a floating count and report all anomolies---from the most common count, or the first line's count, or...
-    @header_line ? lineno = 1 : lineno = 0
-    pp lineno if $debug[:read]
-    columns = case columns[0]
+    number_of_columns = first_line.csv_split.size
+    @header_line ? (rewind; gets) : rewind # Start at line 0 or line 1.  #lineno wasn't working when I first wanted this, but I will try #lineno again at some stage.  
+    case columns[0]
       when Array
         if columns[0] == [] # then select all columns by default...
-          if @columns # then select by column name in sorted order...  
-            attributes
+          if @columns # then select by column name...  
+            columns = @columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
           else # select by column position...  
-            0..(number_of_columns - 1)
+            columns = 0..(number_of_columns - 1)
           end
         else
-          columns[0] # I could check that what is provided really is a column, for when @columns exists by having an additional if here.  
+          columns = columns[0] # I could check that what is provided really is a column, for when @columns exists by having an additional if here.  
         end # outer if
       else # the first item is (and presumably subsequent items are) somewhat more atomic...
         if columns == [] # then select all columns by default...
-          if @columns # then select by column name in sorted order...  
-            attributes
+          if @columns # then select by column name...  
+            columns = @columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
           else # select by column position...  
-            0..(number_of_columns - 1)
+            columns = 0..(number_of_columns - 1)
           end
         else
-          columns # Redundant, but so as to be explicit.  
+          columns = columns # Redundant, but so as to be explicit.  
         end # outer if
     end # case
-    pp columns if $debug[:read]
-    h = {}
-    i = nil # An attempt at getting the following loop speed up a bit...  
-    file_each do |line| # if @columns, then select by column name, else select by column position...  
-      pp line if $debug[:read]
-      i = -1
-      @columns ?
-        parse_line(line).each{|column| h[columns[@columns[columns[(i += 1)]]]] = column} :
+    file_each do |line|
+      h = {}
+      if @columns # then select by column name...  
+        i = -1
+        parse_line(line).each{|column| h[columns[@columns[columns[(i += 1)]]]] = column}
+      else # select by column position...  
+        i = -1
         parse_line(line).each{|column| h[(i += 1)] = column}
-      pp h if $debug[:read]
+      end
       @lines << h
       pp @lines if $debug[:read]
     end # file_each
-    pp @lines if $debug[:read]
-    #(rewind; truncate(0)) if @mode == 'r+'
-    truncate(0) if @mode == 'r+'
+    (rewind; truncate(0)) if @mode == 'r+'
     @lines
   end # def read
   alias_method :parse, :read
