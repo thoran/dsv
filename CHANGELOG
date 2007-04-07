@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 20070408
+
+0.5.8
+
+1. CSVFile#initialize was attempting to convert the default boolean value to a symbol.  So it now checks if it is a boolean before attempting to convert it.
+2. I stopped CSVFile#init from trying to set the size of the columns before there was anything there for when the mode is write.  Need to be more complete about it though and check that I shouldn't also do 'w+' and several others.
+3. Removed the reference to $columnt_count because it is no longer being used!
+4. Enabled the #write_header debug switch at the top.
+5. #write_line only adds columns to the array now if an element is not nil.
+6. Pasted #read from 0.5.6 back here, since it wasn't reading correctly.
+
+
 ## 20070302
 
 0.5.7: I noticed while I was browsing my code on thoran.com that I could speed things up a bit in read...

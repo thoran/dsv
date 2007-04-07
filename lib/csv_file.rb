@@ -1,7 +1,7 @@
 # csv_file.rb
 
-# 20070302
-# 0.5.7
+# 20070408
+# 0.5.8
 
 # Description: A CSV file object.  
 
@@ -79,6 +79,13 @@
 # 60. #attributes now copes for when there is no header line.  
 # 6/7
 # 61. I noticed while I was browsing my code on thoran.com that I could speed things up a bit in read...  
+# 7/8
+# 62. CSVFile#initialize was attempting to convert the default boolean value to a symbol.  So it now checks if it is a boolean before attempting to convert it.  
+# 63. I stopped CSVFile#init from trying to set the size of the columns before there was anything there for when the mode is write.  Need to be more complete about it though and check that I shouldn't also do 'w+' and several others.  
+# 64. Removed the reference to $columnt_count because it is no longer being used!  
+# 65. Enabled the #write_header debug switch at the top.  
+# 66. #write_line only adds columns to the array now if an element is not nil.  
+# 67. Pasted #read from 0.5.6 back here, since it wasn't reading correctly.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -127,8 +134,9 @@ $debug = {}
 $debug[:String_csv_split] = false
 $debug[:Array_wrap_each] = false
 $debug[:Array_to_csv] = false
-$debug[:read] = false
+$debug[:read] = true
 $debug[:write_csv] = false
+$debug[:write_header] = false
 $debug[:write_line] = false
 $debug[:each] = false
 $debug[:first_line] = false
@@ -364,15 +372,16 @@ class CSVFile < File
   
   def initialize(filename, header_line = true, quote = :double, mode = 'r', permissions = nil)
     @filename, @header_line, @quote, @mode = self.class.expand_path(filename), header_line, quote, mode
-    case @header_line.to_sym
-      when TrueClass, FalseClass
-      when :header_line, :header, :heading
-        @header_line = true
-      when :no_header_line, :no_header, :no_heading
-        @header_line = false
-      else # unrecognised attempt at specifying a header line, so just assume so anyway.  Let any errors be caught as they may further on...  
-        @header_line = true
-    end # case @header_line
+    unless @header_line.class == TrueClass || @header_line.class == FalseClass
+      case @header_line.to_sym
+        when :header_line, :header, :heading
+          @header_line = true
+        when :no_header_line, :no_header, :no_heading
+          @header_line = false
+        else # unrecognised attempt at specifying a header line, so just assume so anyway.  Let any errors be caught as they may further on...  
+          @header_line = true
+      end # case @header_line
+    end # unless
     case @mode.to_s # It can handle :read, :write, ...
       when 'r', 'r+', 'w', 'w+', 'a', 'a+'
       when 'read', 'read_only', 'readonly'
@@ -393,7 +402,6 @@ class CSVFile < File
     super(@filename, @mode, permissions)
     @columns = columns if header_line && ['r', 'r+', 'a+'].include?(@mode)
     #@attributes = attributes if header_line && ['r', 'r+', 'a+'].include?(@mode)
-    $column_count = @columns.size
     @lines = []
   end
   
@@ -423,21 +431,19 @@ class CSVFile < File
           columns # Redundant, but so as to be explicit.  
         end # outer if
     end # case
+    pp columns if $debug[:read]
     h = {}
     i = nil # An attempt at getting the following loop speed up a bit...  
-    @columns ? ( # if @columns, then select by column name, else select by column position...  
-      file_each do |line|
-        i = -1
-        parse_line(line).each{|column| h[columns[@columns[columns[(i += 1)]]]] = column}
-        @lines << h
-      end # file_each
-    ) : (
-      file_each do |line|
-        i = -1
+    file_each do |line| # if @columns, then select by column name, else select by column position...  
+      pp line if $debug[:read]
+      i = -1
+      @columns ?
+        parse_line(line).each{|column| h[columns[@columns[columns[(i += 1)]]]] = column} :
         parse_line(line).each{|column| h[(i += 1)] = column}
-        @lines << h
-      end # file_each
-    )
+      pp h if $debug[:read]
+      @lines << h
+      pp @lines if $debug[:read]
+    end # file_each
     pp @lines if $debug[:read]
     #(rewind; truncate(0)) if @mode == 'r+'
     truncate(0) if @mode == 'r+'
@@ -487,13 +493,13 @@ class CSVFile < File
       when Array
         pp 'case columns[0]; when Array' if $debug[:write_line]
         columns[0] != [] ?
-        columns[0].each {|c| collector << line[c]} :
-        attributes.each {|column| collector << line[column]}
+          columns[0].each {|c| collector << line[c] unless line[c].nil?} :
+          attributes.each {|column| collector << line[column] unless line[column].nil?}
       else
         pp 'case columns[0]... else' if $debug[:write_line]
         columns != [] ?
-        columns.each {|c| collector << line[c]} :
-        attributes.each {|column| collector << line[column]}
+          columns.each {|c| collector << line[c] unless line[c].nil?} :
+          attributes.each {|column| collector << line[column] unless line[column].nil?}
     end # case
     pp collector if $debug[:write_line]
     puts(collector.to_csv(@quote))
