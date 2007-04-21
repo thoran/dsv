@@ -1,7 +1,7 @@
 # csv_file.rb
 
-# 20070408
-# 0.5.9
+# 20070422
+# 0.5.10
 
 # Description: A CSV file object.  
 
@@ -88,7 +88,13 @@
 # 67. Pasted #read from 0.5.6 back here, since it wasn't reading correctly.  
 # 8/9
 # 68. Now trying #read from 0.5.4.  
-
+# 9/10
+# 69. /read/read_csv/.  
+# 70. Dropped in some class methods which are File/IO interface similarity/compatibility stuff (open, readlines, read, write, writelines) written between 0.6.4 and 0.6.5 as per notes2.txt.  
+# 71. Added some aliases for read and write: read_csv and write_csv.  
+# 72. Removed self.class from expand_path in self.open.  
+# 73. CSVFile.open is having some trouble passing on the mode to the instance in a block.  See Interesting 0.7.3.  
+ 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
 # 2. In CSVFile#from_csv I couldn't decide whether to use the column name or the column position to find the required data item, so I just decided to cope with both!  
@@ -171,12 +177,12 @@ class String
       when :double, :double_quote, :double_quotes, :double_quoted, :doubly_quoted # No spaces, but no integrity checks.  
         # What follows is particularly ugly...  Anyone have a regex book handy?  
         #old_result = self
-	      #loop do
+        #loop do
         #  result = old_result.gsub(/,,/, ',"",')
-		    #  break if result == old_result
+        #  break if result == old_result
         #  old_result = result
-		    #end
-		    result = self.gsub(/,/, ',""').gsub(/"""/, '"') # This too is ugly, but at least it might be faster!  
+        #end
+        result = self.gsub(/,/, ',""').gsub(/"""/, '"') # This too is ugly, but at least it might be faster!  
         result = result.chomp.split(/",\s*"/)
         #result = self.chomp.split(/",\s*"/) # For use when temporarily commenting out the above loop.  
         result[0].sub!(/^"/, '')
@@ -188,11 +194,11 @@ class String
       when :single, :single_quote, :single_quotes, :single_quoted, :singly_quoted
         # More ugliness ensues...
         old_result = self
-	      loop do
+        loop do
           result = old_result.gsub(/,,/, ",'',")
-		      break if result == old_result
+          break if result == old_result
           old_result = result
-		    end
+        end
         result = self.gsub(/,,/, ",'',")
         result = result.chomp.split(/',\s*'/)
         result[0] = result[0].sub(/^'/, '')
@@ -407,7 +413,36 @@ class CSVFile < File
     @lines = []
   end
   
-  def read(*columns)
+  def self.open(filename, header_line = true, mode = 'r', permissions = nil, &block)
+    @filename, @header_line = expand_path(filename), header_line
+    super(filename, mode, permissions, block)
+    @columns = columns if header_line
+    @lines = []
+  end
+  
+  def self.readlines(filename, *desired_columns)
+    csv_file = new(filename)
+    csv_file.read_csv(*desired_columns)
+  end
+  class << self; alias_method :read_lines, :readlines; end
+  
+  def self.read(filename, *desired_columns)
+    self.class.readlines(filename, *desired_columns)
+  end
+  class << self; alias_method :read_csv, :read; end
+  
+  def self.writelines(filename, *desired_columns)
+    csv_file = new(filename, true, :double, 'w')
+    csv_file.write_csv(*desired_columns)
+  end
+  class << self; alias_method :write_lines, :writelines; end
+  
+  def self.write(filename, *desired_columns)
+    self.class.writelines(filename, *desired_columns)
+  end
+  class << self; alias_method :write_csv, :write; end
+  
+  def read_csv(*columns)
     number_of_columns = first_line.csv_split.size
     @header_line ? (rewind; gets) : rewind # Start at line 0 or line 1.  #lineno wasn't working when I first wanted this, but I will try #lineno again at some stage.  
     case columns[0]
@@ -432,6 +467,7 @@ class CSVFile < File
           columns = columns # Redundant, but so as to be explicit.  
         end # outer if
     end # case
+    pp columns if $debug[:read]
     file_each do |line|
       h = {}
       if @columns # then select by column name...  
@@ -447,7 +483,8 @@ class CSVFile < File
     (rewind; truncate(0)) if @mode == 'r+'
     @lines
   end # def read
-  alias_method :parse, :read
+  alias_method :parse, :read_csv
+  alias_method :parse_csv, :read_csv
   
   def read_line(line, column = nil)
     if column
@@ -517,11 +554,11 @@ class CSVFile < File
       @lines.each {|line| yield line}
     else # nothing has been read yet...
       if columns != [] # then 
-        read(columns).each do |line|
+        read_csv(columns).each do |line|
           yield columns.collect {|c| line[c]}
         end
       else
-        read.each {|line| yield line}
+        read_csv.each {|line| yield line}
       end
     end # outer if
   end
@@ -537,12 +574,12 @@ class CSVFile < File
               yield desired_columns[0].collect {|c| line[c]}
             }
           else
-            read(desired_columns[0]).each {|line|
+            read_csv(desired_columns[0]).each {|line|
               yield desired_columns[0].collect {|c| line[c]}
             }
           end # inner if
         else
-          read.each {|line|
+          read_csv.each {|line|
             yield attributes.collect {|a| line[a]} # I assume that I need to use attributes here too.  
           }
         end # outer if
@@ -553,12 +590,12 @@ class CSVFile < File
               yield desired_columns.collect {|c| line[c]}
             }
           else
-            read(desired_columns).each {|line|
+            read_csv(desired_columns).each {|line|
               yield desired_columns.collect {|c| line[c]}
             }
           end # inner if
         else
-          read.each {|line|
+          read_csv.each {|line|
             #yield @columns.collect {|k,v| line[k]} # I really do not understand why this doesn't work.  I'm leaving this here because it is so annoying that I don't get how it works.  
             yield attributes.collect {|a| line[a]}
           }

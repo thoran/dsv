@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 20070422
+
+0.5.10
+
+1. /read/read_csv/.
+2. Dropped in some class methods which are File/IO interface similarity/compatibility stuff (open, readlines, read, write, writelines) written between 0.6.4 and 0.6.5 as per notes2.txt.
+3. Added some aliases for read and write: read_csv and write_csv.
+4. Removed self.class from expand_path in self.open.
+5. CSVFile.open is having some trouble passing on the mode to the instance in a block.  See Interesting 0.7.3.
+
+
 ## 20070408
 
 0.5.9: Now trying #read from 0.5.4.
