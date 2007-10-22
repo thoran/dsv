@@ -1,7 +1,7 @@
 # csv_file.rb
 
-# 20070422
-# 0.5.10
+# 20071023
+# 0.5.11
 
 # Description: A CSV file object.  
 
@@ -94,7 +94,10 @@
 # 71. Added some aliases for read and write: read_csv and write_csv.  
 # 72. Removed self.class from expand_path in self.open.  
 # 73. CSVFile.open is having some trouble passing on the mode to the instance in a block.  See Interesting 0.7.3.  
- 
+# 10/11
+# 74. The interface for the CSVFile#initialize method is now the same as File.  Defaults are set for header_line and quote and accessors are now available for both.  
+# 75. The same has been done for the class method CSVFile.open, but I'm not sure that making the interface there the same as for file is necessary or a good idea.  
+# 76. All the class methods within CSVFile are now wrapped within a 'class << self' section.  
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
 # 2. In CSVFile#from_csv I couldn't decide whether to use the column name or the column position to find the required data item, so I just decided to cope with both!  
@@ -375,11 +378,15 @@ end # class Hash
 
 class CSVFile < File
   
-  attr_accessor :lines, :quote
+  attr_accessor :lines, :header_line, :quote
   alias_method :rows, :lines
   
-  def initialize(filename, header_line = true, quote = :double, mode = 'r', permissions = nil)
-    @filename, @header_line, @quote, @mode = self.class.expand_path(filename), header_line, quote, mode
+  def initialize(filename, mode = 'r', permissions = nil)
+  	@header_line = true
+  	@quote = :double
+    @filename = self.class.expand_path(filename)
+    @mode = mode
+    @permissions = permissions
     unless @header_line.class == TrueClass || @header_line.class == FalseClass
       case @header_line.to_sym
         when :header_line, :header, :heading
@@ -413,34 +420,40 @@ class CSVFile < File
     @lines = []
   end
   
-  def self.open(filename, header_line = true, mode = 'r', permissions = nil, &block)
-    @filename, @header_line = expand_path(filename), header_line
-    super(filename, mode, permissions, block)
-    @columns = columns if header_line
-    @lines = []
-  end
-  
-  def self.readlines(filename, *desired_columns)
-    csv_file = new(filename)
-    csv_file.read_csv(*desired_columns)
-  end
-  class << self; alias_method :read_lines, :readlines; end
-  
-  def self.read(filename, *desired_columns)
-    self.class.readlines(filename, *desired_columns)
-  end
-  class << self; alias_method :read_csv, :read; end
-  
-  def self.writelines(filename, *desired_columns)
-    csv_file = new(filename, true, :double, 'w')
-    csv_file.write_csv(*desired_columns)
-  end
-  class << self; alias_method :write_lines, :writelines; end
-  
-  def self.write(filename, *desired_columns)
-    self.class.writelines(filename, *desired_columns)
-  end
-  class << self; alias_method :write_csv, :write; end
+  class << self
+    attr_accessor :header_line
+    
+    def open(filename, mode = 'r', permissions = nil, &block)
+      @header_line = true
+      @filename, @header_line = expand_path(filename), header_line
+      super(filename, mode, permissions, block)
+      @columns = columns if @header_line
+      @lines = []
+    end
+    
+    def readlines(filename, *desired_columns)
+      csv_file = new(filename)
+      csv_file.read_csv(*desired_columns)
+    end
+    alias_method :read_lines, :readlines
+    
+    def read(filename, *desired_columns)
+      self.class.readlines(filename, *desired_columns)
+    end
+    alias_method :read_csv, :read
+    
+    def writelines(filename, *desired_columns)
+      csv_file = new(filename, true, :double, 'w')
+      csv_file.write_csv(*desired_columns)
+    end
+    alias_method :write_lines, :writelines
+    
+    def write(filename, *desired_columns)
+      self.class.writelines(filename, *desired_columns)
+    end
+    alias_method :write_csv, :write
+    
+  end # class << self
   
   def read_csv(*columns)
     number_of_columns = first_line.csv_split.size

@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 20071023
+
+0.5.11
+
+1. The interface for the CSVFile#initialize method is now the same as File.  Defaults are set for header_line and quote and accessors are now available for both.
+2. The same has been done for the class method CSVFile.open, but I'm not sure that making the interface there the same as for file is necessary or a good idea.
+3. All the class methods within CSVFile are now wrapped within a 'class << self' section.
+
+
 ## 20070422
 
 0.5.10
