@@ -1,103 +1,24 @@
 # csv_file.rb
 
-# 20071023
-# 0.5.11
+# 20071029
+# 0.6.0.0
 
 # Description: A CSV file object.  
 
 # Goals for 0.5: 
-# 1. I suppose a bit of refactoring.  
-# 2. A bit of speed work, but not at the expense of beauty---at least not just yet.  
-# 3. Some interface tidyup.  
+# 1. Have it be able to read mixed CSV files.  
+# 2. Have it be able to read escaped and quoted delimeters.  
+# 3. Be able to use the standard File method names.  
+# 4. Remove any unnecessary code.  
+# 5. One or two of the Todo's...  
+# 6. Fix the remaining bugs...  
+# 7. Create a foreach method.  
+# 8. Separate out the different classes into separate files.  
+# 9. Create a gem.  
 
-# Changes since 0.4: 
-# 1. Rearranged things a little.  Put read_line next to read, etcetera.  
-# 2. Added some aliases for :write_csv and some for :read_line.  
-# 3. Modified #read_line, such that if the column isn't specified that it will return the whole line parsed into an array.  
-# 4. I've optimised #read such that if no columns are specified then it will read the whole line in a go, rather than one column at a time.  I can optimise this further and simplify it by calling parse_line once only for all circumstances.  
-# 5. Removed the when Array bizzo from #write_csv, since I'm simply passing that into #write_line anyway, so I thought I'd let it handle it by passing it through as found, and so added * to columns and removed the remainder.  
-# 6. Aliased #write_csv to #csv_write.  I think I prefer this and may swap, but which I'll be consistent and do the same with #csv_split.  
-# 7. Aliased #csv_split to #split_csv as per 6.  
-# 8. Improved the debugging switches so that they are now a Hash.  
-# 9. The quote to use when line splitting can now be specified in the call to #csv_split and via reference to it having been set elsewhere via @quote.  
-# 10. To that (Change#9) end I now have the same list of quote types as in the #to_csv methods.  
-# 11. I added unquoted options to the quote types.  
-# 12. Created Array#to_csv to refactor both the Hash and CSVFile#to_csv stuff, so the bulk of both of those methods has been gutted and moved to Array#to_csv.  
-# 0/1
-# 13. Moved what remained of CSVFile#to_csv into #write_line and deleted CSVFile#to_csv.  
-# 14. Created Array#wrap_each (formerly called just wrap) to simplify Array#to_csv.  
-# 15. Fixed a small error in logic with #write_line.  It is difficult when a method accepts all manner of inputs.  I was a little confused again about what's a Hash and what's an Array.  
-# 16. Fixed a small scoping problem on Array#wrap_each.  'a' wasn't accessible outside the loop.  
-# 1/2
-# 17. Compressed #write_csv and #write_line.  Possibly more readable, possibly not.  
-# 18. Did the same (compresses) for Array#wrap_each.  
-# 19. Added String#wrap to be used in conjunction with Array#wrap_each and changed Array#wrap_each accordingly.  
-# 2/3
-# 20. Added Array#wrap_each!, #unwrap_each, and #unwrap_each! and various aliases for each.  
-# 21. Redid all the Array#wrap_each and all the other wrapping methods in a much tighter way than was done with #wrap_each before.  
-# 22. Added String#unwrap.  Not sure how this will be used yet, or if at all, but I suspect it might be of use to String#csv_split.  
-# 23. Removed a bunch of debugging.  
-# 24. Did some speed testing last night against the standard CSV file used for testing I think for both FasterCSV and CSV and found quite a few bugs!  
-# 25. Firstly the #read method was rooted.  I had to almost completely redo the parsing loop.  When @columns was available it was completing misloading the keys for each line.  There was also an unnecessary option on both when @columns was specified and when it wasn't to test for supplied columns, since it wasn't either or, I need both columns and @columns.  And using the same name is a bit confusing, @ or not.  
-# 26. Also the column stuff in #read was rooted as well as the column order was coming out in the hash order and not the column order.  I've done a little bit of inline sorting magic, but really I could architect this better 3x faster than FasterCSV or not.  Once I tidy things up in #read and in #csv_split, I think I'd be able to get an additional 2 - 4x performance increase.  
-# 27. Switched to not using 'self.' for most things.  
-# 28. Modifed #read_line such that it will feed in @columns into #csv_split, rather than loading @columns into columns in #csv_split.  
-# 3/4
-# 29. A bunch of debug lines excised---again!  
-# 30. Added quote_each, #quote_each!, #unquote_each, #unquote_each! and changed the calls to wrap_each to quote_each.  
-# 31. String#quote and #unquote to support the Array quoting stuff.  
-# 32. Tightened up #read to be much more character-efficient.  
-# 33. Added a bunch of additional options to selecting whether there is a header line, so that now one can be a little more informative when specifying a header line than simply 'true'; such as ':header_line'.  
-# 34. Changed the options on header line to include strings and not just symbols.  I can't do the to_s or to_sym thing because I have booleans.  Well I could if I dropped in my TrueClass and FalseClass#to_s methods!  
-# 35. Did the same thing as was done for @header_line for @mode.  I can now use more easily-remembered and obvious options like ':read_only'.  
-# 36. I don't know what I did, but I've knocked another 0.03 seconds off for the test_data.csv file, making it roughly another 15% faster and now over 3x faster than FasterCSV!  
-# 37. Changed Array#to_csv to make use of Array#quote_each instead; which just calls #wrap_each anyway.  I may have #quote_each replicate the content of #wrap_each and then call String#quote instead.  
-# 4/5
-# 38. I modifed the regexes for the auto-detection part of String#csv_split to include zero or more spaces after the comma.  I still need to break up this auto-detection stuff to separate out spacey at least, if not strict by some means...  
-# 39. Fixed a few issues with #write_line.  That is an understatement.  
-# 40. Modified #write_csv to write a header line.  
-# 41. Moved the header writing stuff to its own method #write_header and added a reference to this in #write_csv.  
-# 42. Commented out all the typically, and only fairly recently, unused bits in #read_line to see if it made a speed difference.  It didn't.  At least it was essentially undetectable.  
-# 43. Lispyified and compressed #read some by using parentheses, expression/statements, and collect.  I don't know if this will make it any faster though.  
-# 44. So far I've wiped roughly 1/3 of the time taken to do a read since 0.5.3!  
-# 45. #attributes now calls #columns, which will pass back @columns if it is available, or generate it if not, instead of doing file accesss and csv_split, which I expect is more'expensive' than a collect.  And I realise that #init calls both #columns and attributes.  
-# 46. I've commented out the assignment to @attributes in the #init method because of the way that I've now done it, that if attributes is called, it will call #columns on demand, rather than pre-loading for no difference in cost excepting that it is not always being run, making this overall more efficient, except if I'm calling #attributes a lot, rather than relying upon @attributes having been set during #init...  
-# 47. I temporarily commented out the code which does the removal of multiple commas and produces a more consistent format and found that (with profiling on) the time taken when tested on 5.csv dropped from 0.65 to 0.40!  That's a 40% drop in time.  I really need to fix that up with a decent regex...  
-# 48. In String#csv_split I only do one #sub now.  One less method call per line!  
-# 49. Added $column_count in #init to be used in #csv_split to reduce the number of calls to size, although of course if the line has more or less elements than this it will screw up...  This is just a bit of an experiment really.  
-# 50. Now doing the first element and last element subs in-place.  
-# 51. Stopped using $column_count in #csv_split.  
-# 52. @columns now uses symbols for its keys.  
-# 53. Standardized on symbols in #init for @header_line.  
-# 54. Started to fill out the distinctions between the different quoting types with the none series having different regexes to split by.  
-# 5/6
-# 55. For completeness I added String#wrap!, #unwrap!, #quote!, #unquote!.  
-# 56. A bit of tidying, removing unused/commented out code and reintroducing commented out code.  
-# 57. Added aliases #write_row, #writerow for #write_line.  
-# 58. Replaced all instances of "@columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}" with "attributes" since #attributes is just that.  
-# 59. #write_header now accepts columns as an array as well as a parameter list.  
-# 60. #attributes now copes for when there is no header line.  
-# 6/7
-# 61. I noticed while I was browsing my code on thoran.com that I could speed things up a bit in read...  
-# 7/8
-# 62. CSVFile#initialize was attempting to convert the default boolean value to a symbol.  So it now checks if it is a boolean before attempting to convert it.  
-# 63. I stopped CSVFile#init from trying to set the size of the columns before there was anything there for when the mode is write.  Need to be more complete about it though and check that I shouldn't also do 'w+' and several others.  
-# 64. Removed the reference to $columnt_count because it is no longer being used!  
-# 65. Enabled the #write_header debug switch at the top.  
-# 66. #write_line only adds columns to the array now if an element is not nil.  
-# 67. Pasted #read from 0.5.6 back here, since it wasn't reading correctly.  
-# 8/9
-# 68. Now trying #read from 0.5.4.  
-# 9/10
-# 69. /read/read_csv/.  
-# 70. Dropped in some class methods which are File/IO interface similarity/compatibility stuff (open, readlines, read, write, writelines) written between 0.6.4 and 0.6.5 as per notes2.txt.  
-# 71. Added some aliases for read and write: read_csv and write_csv.  
-# 72. Removed self.class from expand_path in self.open.  
-# 73. CSVFile.open is having some trouble passing on the mode to the instance in a block.  See Interesting 0.7.3.  
-# 10/11
-# 74. The interface for the CSVFile#initialize method is now the same as File.  Defaults are set for header_line and quote and accessors are now available for both.  
-# 75. The same has been done for the class method CSVFile.open, but I'm not sure that making the interface there the same as for file is necessary or a good idea.  
-# 76. All the class methods within CSVFile are now wrapped within a 'class << self' section.  
+# Changes since 0.5: 
+# 1. 
+
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
 # 2. In CSVFile#from_csv I couldn't decide whether to use the column name or the column position to find the required data item, so I just decided to cope with both!  
@@ -170,26 +91,18 @@ class String
           none = self.match(/,/)
           unless none
             raise RuntimeError, "This file doesn't have any commas in it.  Are you sure that this is a CSV file?"
-          end # inner unless
-        end # middle unless
-      end # outer unless
+          end # unless none
+        end # unless single
+      end # unless double
     end # unless quote
     pp quote if $debug[:String_csv_split]
     result = ''
     result = case quote.to_sym # Also handles 'double', 'double_quote', ...
       when :double, :double_quote, :double_quotes, :double_quoted, :doubly_quoted # No spaces, but no integrity checks.  
-        # What follows is particularly ugly...  Anyone have a regex book handy?  
-        #old_result = self
-        #loop do
-        #  result = old_result.gsub(/,,/, ',"",')
-        #  break if result == old_result
-        #  old_result = result
-        #end
         result = self.gsub(/,/, ',""').gsub(/"""/, '"') # This too is ugly, but at least it might be faster!  
         result = result.chomp.split(/",\s*"/)
         #result = self.chomp.split(/",\s*"/) # For use when temporarily commenting out the above loop.  
         result[0].sub!(/^"/, '')
-        #result[result.size - 1] = result[result.size - 1].sub(/"$|",$/, '')
         result[result.size - 1].sub!(/"$|",$/, '')
         result
       when :strict_double, :strict_double_quote, :strict_double_quotes, :strict_double_quoted, :strict_doubly_quoted
@@ -214,6 +127,70 @@ class String
         self.chomp.split(/,/)
       when :spacey_none, :spacey_no_quote, :spacey_not_quoted, :spacey_unquoted
         self.chomp.split(/,\s+/)
+      when :mixed
+        result = ''
+        comma_found = false
+        quote_found = false
+        self.each_char do |c|
+          case c
+          when /,/
+            if comma_found == true
+              result << '""'
+            end
+            result << c
+            quote_found = false
+            comma_found = true
+          when /"/
+          	if quote_found == true
+          	  result << c
+      		end
+      		result << c
+      		quote_found = true
+      		comma_found = false
+          else
+          	if !(quote_found && comma_found)
+              result << c
+            end
+            quote_found = false
+            comma_found = false
+          end # case c
+        end # self.each_char
+        #pp result; exit
+        a = result.csv_split(:strict_none)
+        i = -1
+        new_a = []
+        loop do
+          #pp i, a.size
+          e = a[i += 1]
+          pp i
+          pp a[i]
+          quotes_opened = true if e.opening_quote?
+          if quotes_opened
+            if e.opening_quote?
+              j = i - 1
+              new_a[i] = ''
+              pp 'e...', e
+              #until e.closing_quotes?
+                #pp i, j
+                #pp a[i], a[j]
+                #pp new_a[i], a[j + 1]
+                new_a[i] = new_a[i] + ',' + a[j += 1]
+              #end # until
+            elsif e.closing_quote? # closing
+              new_a[i] = new_a[i] + ',' + a[j += 1]
+              quotes_opened = false
+            else
+              new_a[i] = new_a[i] + ',' + a[j += 1]
+            end # if e.opening_quote?
+            i = j
+          elsif e.neither_opening_nor_closing_quotes?
+            new_a << e.quote
+          end # if e.open_xor_closing_quote?
+          pp new_a
+          pp i, a.size
+          break if i >= a.size
+        end # loop
+        result = new_a
     end # case quote
     result
   end # def csv_split
@@ -251,6 +228,36 @@ class String
   
   def unquote!(mark = '"')
     unwrap!(mark)
+  end
+  
+  def each_char
+    (0..(self.size - 1)).each{|i| yield self[i, 1]}
+  end
+  
+  def opening_quote?
+    (self =~ /^"/) ? true : false
+  end
+  alias_method :opening_quotes?, :opening_quote?
+  
+  def closing_quote?
+    (self =~ /"$/) ? true : false
+  end
+  alias_method :closing_quotes?, :closing_quote?
+  
+  def opening_and_closing_quotes?
+    opening_quote? && closing_quote?
+  end
+  
+  def opening_or_closing_quotes?
+    opening_quote? || closing_quote?
+  end
+  
+  def opening_xor_closing_quotes?
+    (opening_quote? || closing_quote?) && !opening_and_closing_quotes?
+  end
+  
+  def neither_opening_nor_closing_quotes?
+    !opening_and_closing_quotes?
   end
   
 end # class String
@@ -321,6 +328,15 @@ class Array
     unwrap_each!(mark)
   end
   
+  def each_with_index
+    collect_with_index.each{|e| yield e.first, e.last}
+  end
+  
+  def collect_with_index
+    i = -1
+    collect{|e| [e, i += 1]}
+  end
+  
 end # class Array
 
 class Hash
@@ -382,8 +398,8 @@ class CSVFile < File
   alias_method :rows, :lines
   
   def initialize(filename, mode = 'r', permissions = nil)
-  	@header_line = true
-  	@quote = :double
+    @header_line = true
+    @quote = :double
     @filename = self.class.expand_path(filename)
     @mode = mode
     @permissions = permissions

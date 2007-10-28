@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 20071029
+
+0.6.0: Began the 0.6 line with the library file alone, the 0.5 tests set aside.
+
+1. ~ lib/csv_file.rb: + opening_quote?(), + closing_quote?(), + opening_and_closing_quotes?(), + opening_or_closing_quotes?(), + opening_xor_closing_quotes?(), + neither_opening_nor_closing_quotes?(), so that csv_split() can say which state a field is in.
+2. ~ lib/csv_file.rb: ~ csv_split(): tracks whether quotes are open through those predicates rather than a quote_found flag.
+3. ~ lib/csv_file.rb: + each_char(), + each_with_index(), + collect_with_index(), String and Array helpers the parser wants.
+4. ~ lib/csv_file.rb: ~ initialize()
+5. - test/, the whole 0.5 tree with its FasterCSV comparisons; spec/ and tmp/ take its place at 0.6.1.
+
+
 ## 20071023
 
 0.5.11

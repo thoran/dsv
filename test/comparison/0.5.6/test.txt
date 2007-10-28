@@ -1,5 +1,0 @@
-In comparison with the other tests I must say "Huh?"...  
-
-CSVFile: 0.591452
-FasterCSV: 0.76468
-CSV: 6.819166
