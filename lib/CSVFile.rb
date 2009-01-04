@@ -1,11 +1,11 @@
-# csv_file.rb
+# CSVFile.rb
 
-# 20071029
-# 0.6.0.0
+# 20090104, 05
+# 0.6.1
 
 # Description: A CSV file object.  
 
-# Goals for 0.5: 
+# Goals for 0.6: 
 # 1. Have it be able to read mixed CSV files.  
 # 2. Have it be able to read escaped and quoted delimeters.  
 # 3. Be able to use the standard File method names.  
@@ -15,9 +15,18 @@
 # 7. Create a foreach method.  
 # 8. Separate out the different classes into separate files.  
 # 9. Create a gem.  
+# 10. Rubylibify.  
 
 # Changes since 0.5: 
-# 1. 
+# 1. Added in File/IO similarity/compatibility stuff.  
+# 2. Added the capacity for mixed quotations on a line.  (Yet to be tested thoroughly.)  
+# 3. String was extended with a raft of new methods.  
+# 4. Array was extended with a couple of methods.  (With one being unnecessary probably.)  
+# 0/1
+# 2. Split the standard ruby library extensions into own files.  
+# 3. Added a separator option in all interfaces, as is consistent with File/IO, even if it probably doesn't get used.  (Maybe piss it off too?...)  
+# 4. CSVFile#headers, aliased from CSVFile#attributes.  
+# 5. Corrected some errors in the class methods.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -77,320 +86,9 @@ require 'pp' if (b = false; $debug.each{|method, debug| b = true if debug}; b)
 $profile = false
 require 'profile' if $profile
 
-class String
-  
-  def csv_split(quote = nil)
-    unless quote # then auto-parse...  
-      quote = :double
-      double = self.match(/",|,\s*"/)
-      unless double
-        quote = :single
-        single = self.match(/',|,\s*'/) # Singly quoted CSV files are essentially unheard of, but who knows?  
-        unless single
-          quote = :none
-          none = self.match(/,/)
-          unless none
-            raise RuntimeError, "This file doesn't have any commas in it.  Are you sure that this is a CSV file?"
-          end # unless none
-        end # unless single
-      end # unless double
-    end # unless quote
-    pp quote if $debug[:String_csv_split]
-    result = ''
-    result = case quote.to_sym # Also handles 'double', 'double_quote', ...
-      when :double, :double_quote, :double_quotes, :double_quoted, :doubly_quoted # No spaces, but no integrity checks.  
-        result = self.gsub(/,/, ',""').gsub(/"""/, '"') # This too is ugly, but at least it might be faster!  
-        result = result.chomp.split(/",\s*"/)
-        #result = self.chomp.split(/",\s*"/) # For use when temporarily commenting out the above loop.  
-        result[0].sub!(/^"/, '')
-        result[result.size - 1].sub!(/"$|",$/, '')
-        result
-      when :strict_double, :strict_double_quote, :strict_double_quotes, :strict_double_quoted, :strict_doubly_quoted
-      when :spacey_double, :spacey_double_quote, :spacey_double_quotes, :spacey_double_quoted, :spacey_doubly_quoted
-      when :single, :single_quote, :single_quotes, :single_quoted, :singly_quoted
-        # More ugliness ensues...
-        old_result = self
-        loop do
-          result = old_result.gsub(/,,/, ",'',")
-          break if result == old_result
-          old_result = result
-        end
-        result = self.gsub(/,,/, ",'',")
-        result = result.chomp.split(/',\s*'/)
-        result[0] = result[0].sub(/^'/, '')
-        result[result.size - 1] = result[result.size - 1].sub(/'$/, '').sub(/',$/, '') # This last sub is also far more of a hack than most of the stuff here...  
-      when :strict_single, :strict_single_quote, :strict_single_quotes, :strict_single_quoted, :strict_singly_quoted
-      when :spacey_single, :spacey_single_quote, :spacey_single_quotes, :spacey_single_quoted, :spacey_singly_quoted
-      when :none, :no_quotes, :not_quoted, :unquoted
-        self.chomp.split(/,\s*/)
-      when :strict_none, :strict_no_quote, :strict_not_quoted, :strict_unquoted
-        self.chomp.split(/,/)
-      when :spacey_none, :spacey_no_quote, :spacey_not_quoted, :spacey_unquoted
-        self.chomp.split(/,\s+/)
-      when :mixed
-        result = ''
-        comma_found = false
-        quote_found = false
-        self.each_char do |c|
-          case c
-          when /,/
-            if comma_found == true
-              result << '""'
-            end
-            result << c
-            quote_found = false
-            comma_found = true
-          when /"/
-          	if quote_found == true
-          	  result << c
-      		end
-      		result << c
-      		quote_found = true
-      		comma_found = false
-          else
-          	if !(quote_found && comma_found)
-              result << c
-            end
-            quote_found = false
-            comma_found = false
-          end # case c
-        end # self.each_char
-        #pp result; exit
-        a = result.csv_split(:strict_none)
-        i = -1
-        new_a = []
-        loop do
-          #pp i, a.size
-          e = a[i += 1]
-          pp i
-          pp a[i]
-          quotes_opened = true if e.opening_quote?
-          if quotes_opened
-            if e.opening_quote?
-              j = i - 1
-              new_a[i] = ''
-              pp 'e...', e
-              #until e.closing_quotes?
-                #pp i, j
-                #pp a[i], a[j]
-                #pp new_a[i], a[j + 1]
-                new_a[i] = new_a[i] + ',' + a[j += 1]
-              #end # until
-            elsif e.closing_quote? # closing
-              new_a[i] = new_a[i] + ',' + a[j += 1]
-              quotes_opened = false
-            else
-              new_a[i] = new_a[i] + ',' + a[j += 1]
-            end # if e.opening_quote?
-            i = j
-          elsif e.neither_opening_nor_closing_quotes?
-            new_a << e.quote
-          end # if e.open_xor_closing_quote?
-          pp new_a
-          pp i, a.size
-          break if i >= a.size
-        end # loop
-        result = new_a
-    end # case quote
-    result
-  end # def csv_split
-  alias_method :split_csv, :csv_split
-  
-  # Does strictness automatically denote that integrity checks like column count equivalance is enforced?  I suggest so, since I doubt that anyone would want to strictly enforce quoting and not column count.  At some later stage I *may* allow this, but it is a really low priority.  
-  
-  def wrap(wrapper)
-    wrapper + self + wrapper
-  end
-  
-  def unwrap(wrapper)
-    sub(/^#{wrapper}/, '').sub(/#{wrapper}$/, '')
-  end
-  
-  def quote(mark = '"')
-    wrap(mark)
-  end
-  
-  def unquote(mark = '"')
-    unwrap(mark)
-  end
-  
-  def wrap!(wrapper)
-    sub!(/^/, wrapper).sub!(/$/, wrapper) # It was only way I could think to do things in place.  Should I change #wrap to match now?  
-  end
-  
-  def unwrap!(wrapper)
-    sub!(/^#{wrapper}/, '').sub!(/#{wrapper}$/, '')
-  end
-  
-  def quote!(mark = '"')
-    wrap!(mark)
-  end
-  
-  def unquote!(mark = '"')
-    unwrap!(mark)
-  end
-  
-  def each_char
-    (0..(self.size - 1)).each{|i| yield self[i, 1]}
-  end
-  
-  def opening_quote?
-    (self =~ /^"/) ? true : false
-  end
-  alias_method :opening_quotes?, :opening_quote?
-  
-  def closing_quote?
-    (self =~ /"$/) ? true : false
-  end
-  alias_method :closing_quotes?, :closing_quote?
-  
-  def opening_and_closing_quotes?
-    opening_quote? && closing_quote?
-  end
-  
-  def opening_or_closing_quotes?
-    opening_quote? || closing_quote?
-  end
-  
-  def opening_xor_closing_quotes?
-    (opening_quote? || closing_quote?) && !opening_and_closing_quotes?
-  end
-  
-  def neither_opening_nor_closing_quotes?
-    !opening_and_closing_quotes?
-  end
-  
-end # class String
-
-class Array
-  
-  def to_csv(quote = :double)
-    pp self if $debug[:Array_to_csv]
-    case quote.to_sym # Also handles 'double', 'double_qoute', ...
-      when :double, :double_quote, :double_quotes, :double_quoted, :doubly_quoted
-        return quote_each('"').join(',')
-      when :strict_double, :strict_double_quote, :strict_double_quotes, :strict_double_quoted, :strict_doubly_quoted
-        return quote_each('"').join(',')
-      when :spacey_double, :spacey_double_quote, :spacey_double_quotes, :spacey_double_quoted, :spacey_doubly_quoted
-        return quote_each('"').join(', ')
-      when :single, :single_quote, :single_quotes, :single_quoted, :singly_quoted
-        return quote_each("'").join(',')
-      when :strict_single, :strict_single_quote, :strict_single_quotes, :strict_single_quoted, :strict_singly_quoted
-        return quote_each("'").join(',')
-      when :spacey_single, :spacey_single_quote, :spacey_single_quotes, :spacey_single_quoted, :spacey_singly_quoted
-        return quote_each("'").join(', ')
-      when :none, :no_quotes, :not_quoted, :unquoted
-        return join(',')
-      when :strict_none, :strict_no_quotes, :strict_not_quoted, :strict_unquoted
-        return join(',')
-      when :spacey_none, :spacey_no_quotes, :spacey_not_quoted, :spacey_unquoted
-        return join(', ')
-    end # case
-  end # def to_csv
-  
-  def wrap_each(wrapper)
-    collect{|e| e.wrap(wrapper)}
-  end
-  alias_method :wrap_each_with, :wrap_each
-  alias_method :wrap_each_with___, :wrap_each
-  
-  def wrap_each!(wrapper)
-    collect!{|e| e.wrap(wrapper)}
-  end
-  alias_method :wrap_each_with!, :wrap_each!
-  alias_method :wrap_each_with___!, :wrap_each!
-  
-  def unwrap_each(wrapper)
-    collect{|e| e.unwrap(wrapper)}
-  end
-  alias_method :unwrap_each_of, :unwrap_each
-  alias_method :unwrap_each_of___, :unwrap_each
-  
-  def unwrap_each!(wrapper)
-    collect!{|e| e.unwrap(wrapper)}
-  end
-  alias_method :unwrap_each_of!, :unwrap_each!
-  alias_method :unwrap_each_of___!, :unwrap_each!
-  
-  def quote_each(mark = '"')
-    wrap_each(mark)
-  end
-  
-  def quote_each!(mark = '"')
-    wrap_each!(mark)
-  end
-  
-  def unquote_each(mark = '"')
-    unwrap_each(mark)
-  end
-  
-  def unquote_each!(mark = '"')
-    unwrap_each!(mark)
-  end
-  
-  def each_with_index
-    collect_with_index.each{|e| yield e.first, e.last}
-  end
-  
-  def collect_with_index
-    i = -1
-    collect{|e| [e, i += 1]}
-  end
-  
-end # class Array
-
-class Hash
-  
-  def write(file, *desired_columns) # Passing in the file_handle is a horrible kludge.  Should I subclass Hash for a CSVLine object?  That still doesn't guarantee access to the file object though, since I'd need to attach some reference to it to every line object.  It would be better if because of the context of a block that this message could be trapped and redirected somehow.  
-    @file = file
-    case desired_columns[0] # If I don't check for this, then by the time to_csv is called it might be possible that the atomic bits are two levels deep.  
-      when Array
-        file.puts(self.to_csv(desired_columns[0]))
-      else
-        file.puts(self.to_csv(desired_columns))
-    end # case
-  end # def write
-  alias_method :write_line, :write
-  alias_method :writeline, :write
-  alias_method :writeln, :write
-  
-  def to_csv(*desired_columns)
-    collector = []
-    case desired_columns[0]
-      when Array
-        if desired_columns[0]
-          desired_columns[0].each do |c| # Here is where re-ordering happens.  
-            collector << self[c]
-          end
-        elsif @file.columns?
-          file.columns.each do |k, v|
-            collector << self[v]
-          end
-        else
-          each do |k, v| # Assuming that the keys remain the same for each line, this should produce the same ordering of columns, but not the same as that entered...  
-            collector << self[v]
-          end
-        end
-      else
-        if desired_columns
-          desired_columns.each do |c|
-            collector << self[c]
-          end
-        elsif @file.columns?
-          file.columns.each do |k, v|
-            collector << self[v]
-          end
-        else
-          each do |k, v|
-            collector << self[v]
-          end
-        end
-    end # case
-    pp collector if $debug
-    collector.to_csv(@quote)
-  end # def to_csv
-  
-end # class Hash
+require File.expand_path(File.dirname(__FILE__) + '/String')
+require File.expand_path(File.dirname(__FILE__) + '/Array')
+require File.expand_path(File.dirname(__FILE__) + '/Hash')
 
 class CSVFile < File
   
@@ -439,22 +137,34 @@ class CSVFile < File
   class << self
     attr_accessor :header_line
     
-    def open(filename, mode = 'r', permissions = nil, &block)
-      @header_line = true
-      @filename, @header_line = expand_path(filename), header_line
-      super(filename, mode, permissions, block)
-      @columns = columns if @header_line
-      @lines = []
+    def open(filename, mode = 'r', permissions = nil)
+      csv_file = new(filename, mode, permissions)
+      if block_given?
+        begin
+          yield csv_file
+        ensure
+          csv_file.close
+        end
+      else
+        csv_file
+      end
     end
     
-    def readlines(filename, *desired_columns)
+    def each(filename, separator, &block)
+      open(filename) do |csv_file|
+        csv_file.each(separator, &block)
+      end
+    end
+    alias_method :foreach, :each
+    
+    def readlines(filename, separator = "\n", *desired_columns)
       csv_file = new(filename)
-      csv_file.read_csv(*desired_columns)
+      csv_file.read_csv(separator, *desired_columns)
     end
     alias_method :read_lines, :readlines
     
     def read(filename, *desired_columns)
-      self.class.readlines(filename, *desired_columns)
+      readlines(filename, *desired_columns)
     end
     alias_method :read_csv, :read
     
@@ -465,14 +175,14 @@ class CSVFile < File
     alias_method :write_lines, :writelines
     
     def write(filename, *desired_columns)
-      self.class.writelines(filename, *desired_columns)
+      writelines(filename, *desired_columns)
     end
     alias_method :write_csv, :write
     
   end # class << self
   
-  def read_csv(*columns)
-    number_of_columns = first_line.csv_split.size
+  def read_csv(separator = "\n", *columns)
+    number_of_columns = first_line(separator).csv_split.size
     @header_line ? (rewind; gets) : rewind # Start at line 0 or line 1.  #lineno wasn't working when I first wanted this, but I will try #lineno again at some stage.  
     case columns[0]
       when Array
@@ -497,7 +207,7 @@ class CSVFile < File
         end # outer if
     end # case
     pp columns if $debug[:read]
-    file_each do |line|
+    file_each(separator) do |line|
       h = {}
       if @columns # then select by column name...  
         i = -1
@@ -577,24 +287,24 @@ class CSVFile < File
   alias_method :std_file_each, :each
   alias_method :file_each, :each
   
-  def each(*columns)
+  def each(separator = "\n", *columns)
     pp columns if $debug[:each]
     if lines? # May have been more efficient to have left this as @lines[0], so do test this later...  
-      @lines.each {|line| yield line}
+      @lines.each{|line| yield line}
     else # nothing has been read yet...
       if columns != [] # then 
-        read_csv(columns).each do |line|
-          yield columns.collect {|c| line[c]}
+        read_csv(separator, columns).each do |line|
+          yield columns.collect{|c| line[c]}
         end
       else
-        read_csv.each {|line| yield line}
+        read_csv(separator).each{|line| yield line}
       end
     end # outer if
   end
   alias_method :csv_file_each, :each
   alias_method :each_with_line, :each
   
-  def each_with_columns(*desired_columns)
+  def each_with_columns(separator = "\n", *desired_columns)
     case desired_columns[0]
       when Array
         if desired_columns[0]
@@ -603,7 +313,7 @@ class CSVFile < File
               yield desired_columns[0].collect {|c| line[c]}
             }
           else
-            read_csv(desired_columns[0]).each {|line|
+            read_csv(separator, desired_columns[0]).each {|line|
               yield desired_columns[0].collect {|c| line[c]}
             }
           end # inner if
@@ -632,13 +342,13 @@ class CSVFile < File
     end # case
   end
   
-  def columns
+  def columns(separator = "\n")
     pp '#columns' if $debug[:columns]
     @columns ||= (
       if @header_line  
         h = {}
         i = -1
-        first_line.csv_split.each do |key|
+        first_line(separator).csv_split.each do |key|
           h[key.gsub(/ /, '_').chomp.to_sym] = (i += 1) # I may remove the underscore substitution, but then symbols are in a bit of strife...
         end
         h
@@ -673,13 +383,14 @@ class CSVFile < File
       columns ? columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]} : nil
     )
   end
+  alias_method :headers, :attributes
   
   private
   
-  def first_line
+  def first_line(separator = "\n")
     pp self if $debug[:first_line]
     self.rewind
-    return_value = self.gets
+    return_value = self.gets(separator)
     self.rewind
     pp return_value if $debug[:first_line]
     return_value

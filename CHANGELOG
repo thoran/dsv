@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 20090105
+
+0.6.1
+
+1. Split the standard ruby library extensions into own files.
+2. Added a separator option in all interfaces, as is consistent with File/IO, even if it probably doesn't get used.  (Maybe piss it off too?...)
+3. CSVFile#headers, aliased from CSVFile#attributes.
+4. Corrected some errors in the class methods.
+
+
 ## 20071029
 
 0.6.0: Began the 0.6 line with the library file alone, the 0.5 tests set aside.
