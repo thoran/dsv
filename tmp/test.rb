@@ -21,7 +21,9 @@ in_file = CSVFile.new(in_filename, :read_only)
 # 
 # pp in_file.collect{|line| line[:name]}
 
-CSVFile.open(in_filename) do |csv_file|
-  csv_file.each{|line| pp line}
-end
-pp CSVFile.read(in_filename)
+#CSVFile.open(in_filename) do |csv_file|
+#  csv_file.each{|line| pp line}
+#end
+#pp CSVFile.read(in_filename)
+
+CSVFile.each(in_filename){|line| pp line}

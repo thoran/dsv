@@ -1,7 +1,7 @@
 # CSVFile.rb
 
-# 20090104, 05
-# 0.6.1
+# 20090105
+# 0.6.2
 
 # Description: A CSV file object.  
 
@@ -27,6 +27,8 @@
 # 3. Added a separator option in all interfaces, as is consistent with File/IO, even if it probably doesn't get used.  (Maybe piss it off too?...)  
 # 4. CSVFile#headers, aliased from CSVFile#attributes.  
 # 5. Corrected some errors in the class methods.  
+# 1/2
+# 6. 
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -150,7 +152,7 @@ class CSVFile < File
       end
     end
     
-    def each(filename, separator, &block)
+    def each(filename, separator = "\n", &block)
       open(filename) do |csv_file|
         csv_file.each(separator, &block)
       end

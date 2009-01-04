@@ -72,13 +72,15 @@ class Array
     unwrap_each!(mark)
   end
   
-  def each_with_index
-    collect_with_index.each{|e| yield e.first, e.last}
-  end
+  # The following are not being used, but moreover, each_with_index exists!?
   
-  def collect_with_index
-    i = -1
-    collect{|e| [e, i += 1]}
-  end
+  # def each_with_index
+  #   collect_with_index.each{|e| yield e.first, e.last}
+  # end
+  # 
+  # def collect_with_index
+  #   i = -1
+  #   collect{|e| [e, i += 1]}
+  # end
   
 end # class Array

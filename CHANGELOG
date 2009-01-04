@@ -2,6 +2,14 @@
 
 ## 20090105
 
+0.6.2: A default separator for CSVFile.each, and two unused Array extensions set aside.
+
+1. ~ lib/CSVFile.rb: ~ CSVFile.each: separator defaults to "
+", as the instance method's already did.
+2. ~ lib/Array.rb: - each_with_index(), - collect_with_index(), commented out, Array#each_with_index existing already.
+3. ~ tmp/test.rb
+
+
 0.6.1
 
 1. Split the standard ruby library extensions into own files.
