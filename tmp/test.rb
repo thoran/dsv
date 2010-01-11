@@ -1,6 +1,6 @@
 # Test CSVFile
 
-# 20090104
+# 20090104, 20100112
 
 @debug = true
 require 'pp' if @debug
@@ -12,7 +12,7 @@ require File.expand_path(File.dirname(__FILE__) + '/../lib/CSVFile')
 in_filename = 'test.csv'
 in_file = CSVFile.new(in_filename, :read_only)
 #pp in_file.read
-#in_file.read_csv
+pp in_file.read_csv
 
 # in_file.each{|line| pp line}
 # pp in_file.lines[0].keys
@@ -26,4 +26,4 @@ in_file = CSVFile.new(in_filename, :read_only)
 #end
 #pp CSVFile.read(in_filename)
 
-CSVFile.each(in_filename){|line| pp line}
+#CSVFile.each(in_filename){|line| pp line}

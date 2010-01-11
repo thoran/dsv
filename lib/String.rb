@@ -1,7 +1,7 @@
 # String.rb
 
-# 20090104, 05
-# 0.6.1
+# 20091218, 19, 20100112
+# 0.7.0
 
 # Changes: 
 # 1. Moved from same file as CSVFile.  
@@ -24,9 +24,10 @@ class String
         end # unless single
       end # unless double
     end # unless quote
-    pp quote if $debug[:String_csv_split]
+    #pp quote if $debug[:String_csv_split]
     result = ''
-    result = case quote.to_sym # Also handles 'double', 'double_quote', ...
+    result = (
+      case quote.to_sym # Also handles 'double', 'double_quote', ...
       when :double, :double_quote, :double_quotes, :double_quoted, :doubly_quoted # No spaces, but no integrity checks.  
         result = self.gsub(/,/, ',""').gsub(/"""/, '"') # This too is ugly, but at least it might be faster!  
         result = result.chomp.split(/",\s*"/)
@@ -70,14 +71,14 @@ class String
             quote_found = false
             comma_found = true
           when /"/
-          	if quote_found == true
-          	  result << c
-      		end
-      		result << c
-      		quote_found = true
-      		comma_found = false
+            if quote_found == true
+              result << c
+          end
+          result << c
+          quote_found = true
+          comma_found = false
           else
-          	if !(quote_found && comma_found)
+            if !(quote_found && comma_found)
               result << c
             end
             quote_found = false
@@ -120,7 +121,8 @@ class String
           break if i >= a.size
         end # loop
         result = new_a
-    end # case quote
+      end # case quote
+    )
     result
   end # def csv_split
   alias_method :split_csv, :csv_split

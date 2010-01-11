@@ -1,7 +1,7 @@
 # CSVFile.rb
 
-# 20090105
-# 0.6.2
+# 20091220, 20100112
+# 0.7.0
 
 # Description: A CSV file object.  
 
@@ -17,18 +17,16 @@
 # 9. Create a gem.  
 # 10. Rubylibify.  
 
-# Changes since 0.5: 
-# 1. Added in File/IO similarity/compatibility stuff.  
-# 2. Added the capacity for mixed quotations on a line.  (Yet to be tested thoroughly.)  
-# 3. String was extended with a raft of new methods.  
-# 4. Array was extended with a couple of methods.  (With one being unnecessary probably.)  
-# 0/1
-# 2. Split the standard ruby library extensions into own files.  
-# 3. Added a separator option in all interfaces, as is consistent with File/IO, even if it probably doesn't get used.  (Maybe piss it off too?...)  
-# 4. CSVFile#headers, aliased from CSVFile#attributes.  
-# 5. Corrected some errors in the class methods.  
-# 1/2
-# 6. 
+# Changes since 0.6: 
+# 1. Removed all the debug stuff.  
+# 2. require'ing of String placed in Array.rb.  
+# 3. include Enumerable.  
+# 4. /line/row/.  
+# 5. /separator/row_separator/.  
+# 6. ~ #read_csv.  
+# 7. + #do_read.  
+# 8. + #read_header.  
+# 9. Using more getters and setters than instance variables.  Need to check speed effects of those changes...  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -73,71 +71,53 @@
 # 6. If I try to read a field which does not exist it crashes.  It should at least trap such an error, rather than crashing outright.  
 # 7. Header lines are not being written out either as the default, nor even if such is specified.  Fixed as of 0.5.4.  
 
-$debug = {}
-$debug[:String_csv_split] = false
-$debug[:Array_wrap_each] = false
-$debug[:Array_to_csv] = false
-$debug[:read] = false
-$debug[:write_csv] = false
-$debug[:write_header] = false
-$debug[:write_line] = false
-$debug[:each] = false
-$debug[:first_line] = false
-require 'pp' if (b = false; $debug.each{|method, debug| b = true if debug}; b)
-
 $profile = false
 require 'profile' if $profile
+require 'pp'
 
-require File.expand_path(File.dirname(__FILE__) + '/String')
 require File.expand_path(File.dirname(__FILE__) + '/Array')
 require File.expand_path(File.dirname(__FILE__) + '/Hash')
 
 class CSVFile < File
   
-  attr_accessor :lines, :header_line, :quote
-  alias_method :rows, :lines
+  include Enumerable
+  
+  attr_accessor :rows, :quote
+  alias_method :lines, :rows
   
   def initialize(filename, mode = 'r', permissions = nil)
-    @header_line = true
+    @header_row = true
     @quote = :double
     @filename = self.class.expand_path(filename)
     @mode = mode
     @permissions = permissions
-    unless @header_line.class == TrueClass || @header_line.class == FalseClass
-      case @header_line.to_sym
-        when :header_line, :header, :heading
-          @header_line = true
-        when :no_header_line, :no_header, :no_heading
-          @header_line = false
-        else # unrecognised attempt at specifying a header line, so just assume so anyway.  Let any errors be caught as they may further on...  
-          @header_line = true
-      end # case @header_line
-    end # unless
-    case @mode.to_s # It can handle :read, :write, ...
-      when 'r', 'r+', 'w', 'w+', 'a', 'a+'
-      when 'read', 'read_only', 'readonly'
-        @mode = 'r'
-      when 'rw', 'read_write', 'readwrite', 'read_plus', 'read+', 'readplus', 'read_+'
-        @mode = 'r+'
-      when 'write', 'w_only', 'write_only', 'writeonly'
-        @mode = 'w'
-      when 'wr', 'write_read', 'writeread', 'write_plus', 'write+', 'writeplus', 'write_+', 'w_plus', 'wplus', 'w_+'
-        @mode = 'w+'
-      when 'append', 'w_append', 'write_append', 'w_only_append', 'write_only_append', 'writeonly_append'
-        @mode = 'a'
-      when 'rw_append', 'read_write_append', 'readwrite_append', 'read_plus_append', 'read+_append', 'readplus_append', 'read_+_append', 'r+_append', 'r_+_append'
-        @mode = 'a+'
-      else # unrecognised attempt at specifying a mode, so just make it read.  Let any errors be caught as they may further on...  
-        @mode = 'r'
-    end # case @mode.to_s
+    unless @header_row.class == TrueClass || @header_row.class == FalseClass
+      @header_row = (
+        case @header_row.to_sym
+        when :header_row, :header_line, :header, :heading; true
+        when :no_header_row, :no_header_line, :no_header, :no_heading; false
+        else; true # unrecognised attempt at specifying a header line, so just assume so anyway.  Let any errors be caught as they may further on...  
+        end
+      )
+    end
+    @mode = (
+      case @mode.to_s # It can handle :read, :write, ...
+      when 'r', 'r+', 'w', 'w+', 'a', 'a+'; @mode.to_s # make no changes
+      when 'read', 'read_only', 'readonly'; 'r'
+      when 'rw', 'read_write', 'readwrite', 'read_plus', 'read+', 'readplus', 'read_+'; 'r+'
+      when 'write', 'w_only', 'write_only', 'writeonly'; 'w'
+      when 'wr', 'write_read', 'writeread', 'write_plus', 'write+', 'writeplus', 'write_+', 'w_plus', 'wplus', 'w_+'; 'w+'
+      when 'append', 'w_append', 'write_append', 'w_only_append', 'write_only_append', 'writeonly_append'; 'a'
+      when 'rw_append', 'read_write_append', 'readwrite_append', 'read_plus_append', 'read+_append', 'readplus_append', 'read_+_append', 'r+_append', 'r_+_append'; 'a+'
+      else 'r' # unrecognised attempt at specifying a mode, so just make it read.  Let any errors be caught as they may further on...  
+      end
+    )
     super(@filename, @mode, permissions)
-    @columns = columns if header_line && ['r', 'r+', 'a+'].include?(@mode)
-    #@attributes = attributes if header_line && ['r', 'r+', 'a+'].include?(@mode)
-    @lines = []
+    @columns = columns if header_row? && ['r', 'r+', 'a+'].include?(@mode)
+    @rows = []
   end
   
   class << self
-    attr_accessor :header_line
     
     def open(filename, mode = 'r', permissions = nil)
       csv_file = new(filename, mode, permissions)
@@ -152,16 +132,16 @@ class CSVFile < File
       end
     end
     
-    def each(filename, separator = "\n", &block)
+    def each(filename, row_separator = "\n", &block)
       open(filename) do |csv_file|
-        csv_file.each(separator, &block)
+        csv_file.each(row_separator, &block)
       end
     end
     alias_method :foreach, :each
     
-    def readlines(filename, separator = "\n", *desired_columns)
+    def readlines(filename, row_separator = "\n", *desired_columns)
       csv_file = new(filename)
-      csv_file.read_csv(separator, *desired_columns)
+      csv_file.read_csv(row_separator, *desired_columns)
     end
     alias_method :read_lines, :readlines
     
@@ -170,7 +150,7 @@ class CSVFile < File
     end
     alias_method :read_csv, :read
     
-    def writelines(filename, *desired_columns)
+    def writelines(filename, row_separator = "\n", *desired_columns)
       csv_file = new(filename, true, :double, 'w')
       csv_file.write_csv(*desired_columns)
     end
@@ -183,139 +163,136 @@ class CSVFile < File
     
   end # class << self
   
-  def read_csv(separator = "\n", *columns)
-    number_of_columns = first_line(separator).csv_split.size
-    @header_line ? (rewind; gets) : rewind # Start at line 0 or line 1.  #lineno wasn't working when I first wanted this, but I will try #lineno again at some stage.  
-    case columns[0]
+  def read_csv(row_separator = "\n", *desired_columns)
+    read_header
+    columns = (
+      case desired_columns[0]
       when Array
-        if columns[0] == [] # then select all columns by default...
+        if desired_columns[0] == [] # then select all columns by default...
           if @columns # then select by column name...  
-            columns = @columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
+            @columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
           else # select by column position...  
-            columns = 0..(number_of_columns - 1)
+            0..(number_of_columns - 1)
           end
         else
-          columns = columns[0] # I could check that what is provided really is a column, for when @columns exists by having an additional if here.  
-        end # outer if
-      else # the first item is (and presumably subsequent items are) somewhat more atomic...
+          @columns[0] # I could check that what is provided really is a column, for when @columns exists by having an additional if here.  
+        end
+      else # the first item is (and presumably subsequent items are) somewhat more atomic...  
         if columns == [] # then select all columns by default...
           if @columns # then select by column name...  
-            columns = @columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
+            @columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
           else # select by column position...  
-            columns = 0..(number_of_columns - 1)
+            0..(@columns.size - 1)
           end
         else
-          columns = columns # Redundant, but so as to be explicit.  
-        end # outer if
-    end # case
-    pp columns if $debug[:read]
-    file_each(separator) do |line|
-      h = {}
-      if @columns # then select by column name...  
-        i = -1
-        parse_line(line).each{|column| h[columns[@columns[columns[(i += 1)]]]] = column}
-      else # select by column position...  
-        i = -1
-        parse_line(line).each{|column| h[(i += 1)] = column}
+          @columns
+        end
       end
-      @lines << h
-      pp @lines if $debug[:read]
-    end # file_each
-    (rewind; truncate(0)) if @mode == 'r+'
-    @lines
-  end # def read
+    )
+    do_read(columns)
+  end
   alias_method :parse, :read_csv
   alias_method :parse_csv, :read_csv
   
-  def read_line(line, column = nil)
+  def do_read(columns, row_separator = "\n")
+    file_each(row_separator) do |raw_row|
+      parsed_row = {}
+      if columns? # then select by column name
+        i = -1
+        parse_line(raw_row).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
+      else # select by column position
+        i = -1
+        parse_line(raw_row).each{|column_value| parsed_row[i += 1] = column_value}
+      end
+      @rows << parsed_row
+    end
+    (rewind; truncate(0)) if @mode == 'r+'
+    @rows
+  end
+  
+  def read_header
+    columns
+    header_row? ? (rewind; gets) : rewind # Start at line 0 or line 1.  #lineno wasn't working when I first wanted this, but I will try #lineno again at some stage.  
+  end
+  
+  def read_row(row, column = nil)
     if column
       case column
-        when Integer
-          line.csv_split(@quote)[column]
-        else
-          line.csv_split(@quote)[@columns[column.to_s]]
+      when Integer
+        row.csv_split(quote)[column]
+      else
+        row.csv_split(quote)[columns[column.to_s]]
       end
     else
-      line.csv_split(@quote)
+      row.csv_split(quote)
     end
   end
-  alias_method :parse_line, :read_line
-  alias_method :readln, :read_line
-  alias_method :readline, :read_line
-  
-  #alias_method :std_write, :write
+  alias_method :read_line, :read_row
+  alias_method :parse_line, :read_row
+  alias_method :readline, :read_row
   
   def write_csv(*columns)
-    pp columns, @header_line if $debug[:write_csv]
-    write_header(*columns) if @header_line
+    write_header(*columns) if header_row?
     each{|line| write_line(line, *columns)}
   end
+  alias_method :write, :write_csv
   
   def write_header(*columns)
-    pp columns, @header_line if $debug[:write_header]
     case columns[0]
-      when Array
-        columns[0] != [] ? write_line(columns[0].to_csv) : write_line(attributes.to_csv)
-      else
-        columns != [] ? write_line(columns.to_csv) : write_line(attributes.to_csv)
-    end # case columns
-  end # def write_header
+    when Array
+      columns[0] != [] ? write_line(columns[0].to_csv) : write_line(attributes.to_csv)
+    else
+      columns != [] ? write_line(columns.to_csv) : write_line(attributes.to_csv)
+    end
+  end
   
-  def write_line(line, *columns)
-    pp line, columns, @columns if $debug[:write_line]
+  def write_row(line, *columns)
     collector = []
-    #pp columns[0] if $debug[:write_line]
     case columns[0]
-      when Array
-        pp 'case columns[0]; when Array' if $debug[:write_line]
-        columns[0] != [] ?
-          columns[0].each {|c| collector << line[c] unless line[c].nil?} :
-          attributes.each {|column| collector << line[column] unless line[column].nil?}
-      else
-        pp 'case columns[0]... else' if $debug[:write_line]
-        columns != [] ?
-          columns.each {|c| collector << line[c] unless line[c].nil?} :
-          attributes.each {|column| collector << line[column] unless line[column].nil?}
-    end # case
-    pp collector if $debug[:write_line]
-    puts(collector.to_csv(@quote))
-  end # def write_line
-  alias_method :writeln, :write_line
-  alias_method :writeline, :write_line
-  alias_method :write_row, :write_line
-  alias_method :writerow, :write_line
+    when Array
+      columns[0] != [] ?
+        columns[0].each{|c| collector << line[c] unless line[c].nil?} :
+        attributes.each{|column| collector << line[column] unless line[column].nil?}
+    else
+      columns != [] ?
+        columns.each{|c| collector << line[c] unless line[c].nil?} :
+        attributes.each{|column| collector << line[column] unless line[column].nil?}
+    end
+    puts(collector.to_csv(quote))
+  end
+  alias_method :write_line, :write_row
+  alias_method :writeline, :write_row
+  alias_method :writerow, :write_row
   
   alias_method :std_each, :each
   alias_method :std_file_each, :each
   alias_method :file_each, :each
-  
-  def each(separator = "\n", *columns)
-    pp columns if $debug[:each]
-    if lines? # May have been more efficient to have left this as @lines[0], so do test this later...  
-      @lines.each{|line| yield line}
+  def each(row_separator = "\n", *columns)
+    if rows?
+      rows.each{|line| yield line}
     else # nothing has been read yet...
-      if columns != [] # then 
-        read_csv(separator, columns).each do |line|
+      if columns != []
+        read_csv(row_separator, columns).each do |line|
           yield columns.collect{|c| line[c]}
         end
       else
-        read_csv(separator).each{|line| yield line}
+        read_csv(row_separator).each{|line| yield line}
       end
-    end # outer if
+    end
   end
-  alias_method :csv_file_each, :each
+  alias_method :each_with_row, :each
   alias_method :each_with_line, :each
   
-  def each_with_columns(separator = "\n", *desired_columns)
+  def each_with_columns(row_separator = "\n", *desired_columns)
     case desired_columns[0]
       when Array
         if desired_columns[0]
-          if lines? # May have been more efficient to have left this as @lines[0], so do test this later...  
-            @lines.each {|line|
+          if lines?
+            lines.each {|line|
               yield desired_columns[0].collect {|c| line[c]}
             }
           else
-            read_csv(separator, desired_columns[0]).each {|line|
+            read_csv(row_separator, desired_columns[0]).each {|line|
               yield desired_columns[0].collect {|c| line[c]}
             }
           end # inner if
@@ -327,7 +304,7 @@ class CSVFile < File
       else
         if desired_columns != []
           if lines? # May have been more efficient to have left this as @lines[0], so do test this later...  
-            @lines.each {|line|
+            lines.each {|line|
               yield desired_columns.collect {|c| line[c]}
             }
           else
@@ -344,15 +321,11 @@ class CSVFile < File
     end # case
   end
   
-  def columns(separator = "\n")
-    pp '#columns' if $debug[:columns]
+  def columns(row_separator = "\n")
     @columns ||= (
-      if @header_line  
-        h = {}
-        i = -1
-        first_line(separator).csv_split.each do |key|
-          h[key.gsub(/ /, '_').chomp.to_sym] = (i += 1) # I may remove the underscore substitution, but then symbols are in a bit of strife...
-        end
+      if header_row?
+        h, i = {}, -1
+        first_row(row_separator).csv_split.each{|key| h[key.gsub(/ /, '_').chomp.to_sym] = (i += 1)} # I may remove the underscore substitution, but then symbols are in a bit of strife...
         h
       else
         nil
@@ -360,24 +333,23 @@ class CSVFile < File
     )
   end
   
-  def columns=(column_order)
-    case column_order
-      when Hash
-        @columns = {}
-        column_order.each do |column_name, column_position|
-          @columns[column_name.to_s] = column_position
-        end
-      when Array
-        @columns = {}
-        i = -1
-        column_order.each do |column|
-          @columns[column.to_s] = (i += 1)
-        end
-    end # case column_order
+  def columns=(*column_order)
+    @columns = {}
+    case column_order[0]
+    when Hash
+      column_order.each{|column_name, column_position| columns[column_name.to_s] = column_position}
+    when Array
+      i = -1
+      column_order[0].each{|column| columns[column.to_s] = (i += 1)}
+    else
+      i = -1
+      column_order.each{|column| columns[column.to_s] = (i += 1)}
+    end
+    @columns = columns
   end
   
   def columns?
-    @columns != nil
+    columns != nil
   end
   
   def attributes
@@ -387,20 +359,25 @@ class CSVFile < File
   end
   alias_method :headers, :attributes
   
+  def header_row?
+    @header_row
+  end
+  alias_method :header_line?, :header_row?
+  
   private
   
-  def first_line(separator = "\n")
-    pp self if $debug[:first_line]
+  def first_row(row_separator = "\n")
     self.rewind
-    return_value = self.gets(separator)
+    return_value = self.gets(row_separator)
     self.rewind
-    pp return_value if $debug[:first_line]
     return_value
   end
+  alias_method :first_line, :first_row
   
-  def lines?
-    @lines[0]
+  def rows?
+    @rows[0]
   end
-  alias_method :read?, :lines?
+  alias_method :lines?, :rows?
+  alias_method :read?, :rows?
   
 end # class CSVFile

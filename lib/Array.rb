@@ -1,10 +1,12 @@
 # Array.rb
 
-# 20090104, 05
-# 0.6.1
+# 20091216, 20100112
+# 0.7.0
 
 # Changes: 
-# 1. Moved from same file as CSVFile.  
+# 1. Removed unused code: #each_with_index and #collect_with_index, upon which it relies.  
+
+require File.expand_path(File.dirname(__FILE__) + '/String')
 
 class Array
   
@@ -71,16 +73,5 @@ class Array
   def unquote_each!(mark = '"')
     unwrap_each!(mark)
   end
-  
-  # The following are not being used, but moreover, each_with_index exists!?
-  
-  # def each_with_index
-  #   collect_with_index.each{|e| yield e.first, e.last}
-  # end
-  # 
-  # def collect_with_index
-  #   i = -1
-  #   collect{|e| [e, i += 1]}
-  # end
   
 end # class Array
