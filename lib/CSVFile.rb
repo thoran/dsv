@@ -1,7 +1,7 @@
 # CSVFile.rb
 
 # 20091220, 20100112
-# 0.7.0
+# 0.7.1
 
 # Description: A CSV file object.  
 
@@ -27,6 +27,17 @@
 # 7. + #do_read.  
 # 8. + #read_header.  
 # 9. Using more getters and setters than instance variables.  Need to check speed effects of those changes...  
+# 0/1
+# 10. Moved CSVFile singleton methods to the top of the CSVFile class.  
+# 11. More emphasizing of #.*row methods, moving any #.*line methods to aliases.  
+# 12. + .header_row
+# 13. + .first_row
+# 14. + .attributes
+# 15. + .columns
+# 16. /#read_csv/#read/.  
+# 17. ~ #do_read to use parse_row instead of parse_line.  
+# 18. + alias_method :parse_row, :read_row
+# 19. ~ #columns=, fixed when taking a hash.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -80,44 +91,10 @@ require File.expand_path(File.dirname(__FILE__) + '/Hash')
 
 class CSVFile < File
   
-  include Enumerable
-  
-  attr_accessor :rows, :quote
-  alias_method :lines, :rows
-  
-  def initialize(filename, mode = 'r', permissions = nil)
-    @header_row = true
-    @quote = :double
-    @filename = self.class.expand_path(filename)
-    @mode = mode
-    @permissions = permissions
-    unless @header_row.class == TrueClass || @header_row.class == FalseClass
-      @header_row = (
-        case @header_row.to_sym
-        when :header_row, :header_line, :header, :heading; true
-        when :no_header_row, :no_header_line, :no_header, :no_heading; false
-        else; true # unrecognised attempt at specifying a header line, so just assume so anyway.  Let any errors be caught as they may further on...  
-        end
-      )
-    end
-    @mode = (
-      case @mode.to_s # It can handle :read, :write, ...
-      when 'r', 'r+', 'w', 'w+', 'a', 'a+'; @mode.to_s # make no changes
-      when 'read', 'read_only', 'readonly'; 'r'
-      when 'rw', 'read_write', 'readwrite', 'read_plus', 'read+', 'readplus', 'read_+'; 'r+'
-      when 'write', 'w_only', 'write_only', 'writeonly'; 'w'
-      when 'wr', 'write_read', 'writeread', 'write_plus', 'write+', 'writeplus', 'write_+', 'w_plus', 'wplus', 'w_+'; 'w+'
-      when 'append', 'w_append', 'write_append', 'w_only_append', 'write_only_append', 'writeonly_append'; 'a'
-      when 'rw_append', 'read_write_append', 'readwrite_append', 'read_plus_append', 'read+_append', 'readplus_append', 'read_+_append', 'r+_append', 'r_+_append'; 'a+'
-      else 'r' # unrecognised attempt at specifying a mode, so just make it read.  Let any errors be caught as they may further on...  
-      end
-    )
-    super(@filename, @mode, permissions)
-    @columns = columns if header_row? && ['r', 'r+', 'a+'].include?(@mode)
-    @rows = []
-  end
-  
   class << self
+    
+    attr_accessor :rows, :quote
+    alias_method :lines, :rows
     
     def open(filename, mode = 'r', permissions = nil)
       csv_file = new(filename, mode, permissions)
@@ -161,9 +138,66 @@ class CSVFile < File
     end
     alias_method :write_csv, :write
     
+    def header_row(filename)
+      csv_file = new(filename)
+      csv_file.header_row
+    end
+    
+    def first_row(filename)
+      csv_file = new(filename)
+      csv_file.first_row
+    end
+    
+    def attributes(filename)
+      csv_file = new(filename)
+      csv_file.attributes
+    end
+    
+    def columns(filename)
+      csv_file = new(filename)
+      csv_file.columns
+    end
+    
   end # class << self
   
-  def read_csv(row_separator = "\n", *desired_columns)
+  include Enumerable
+  
+  attr_accessor :rows, :quote, :header_row
+  alias_method :lines, :rows
+  
+  def initialize(filename, mode = 'r', permissions = nil)
+    @header_row = true
+    @quote = :double
+    @filename = self.class.expand_path(filename)
+    @mode = mode
+    @permissions = permissions
+    unless @header_row.class == TrueClass || @header_row.class == FalseClass
+      @header_row = (
+        case @header_row.to_sym
+        when :header_row, :header_line, :header, :heading; true
+        when :no_header_row, :no_header_line, :no_header, :no_heading; false
+        else; true # unrecognised attempt at specifying a header line, so just assume so anyway.  Let any errors be caught as they may further on...  
+        end
+      )
+    end
+    @mode = (
+      case @mode.to_s # It can handle :read, :write, ...
+      when 'r', 'r+', 'w', 'w+', 'a', 'a+'; @mode.to_s # make no changes
+      when 'read', 'read_only', 'readonly'; 'r'
+      when 'rw', 'read_write', 'readwrite', 'read_plus', 'read+', 'readplus', 'read_+'; 'r+'
+      when 'write', 'w_only', 'write_only', 'writeonly'; 'w'
+      when 'wr', 'write_read', 'writeread', 'write_plus', 'write+', 'writeplus', 'write_+', 'w_plus', 'wplus', 'w_+'; 'w+'
+      when 'append', 'w_append', 'write_append', 'w_only_append', 'write_only_append', 'writeonly_append'; 'a'
+      when 'rw_append', 'read_write_append', 'readwrite_append', 'read_plus_append', 'read+_append', 'readplus_append', 'read_+_append', 'r+_append', 'r_+_append'; 'a+'
+      else 'r' # unrecognised attempt at specifying a mode, so just make it read.  Let any errors be caught as they may further on...  
+      end
+    )
+    super(@filename, @mode, permissions)
+    @columns = columns if header_row? && ['r', 'r+', 'a+'].include?(@mode)
+    @rows = []
+  end
+  
+  def read(row_separator = "\n", *desired_columns)
     read_header
     columns = (
       case desired_columns[0]
@@ -191,18 +225,19 @@ class CSVFile < File
     )
     do_read(columns)
   end
-  alias_method :parse, :read_csv
-  alias_method :parse_csv, :read_csv
+  alias_method :read_csv, :read
+  alias_method :parse, :read
+  alias_method :parse_csv, :read
   
   def do_read(columns, row_separator = "\n")
     file_each(row_separator) do |raw_row|
       parsed_row = {}
       if columns? # then select by column name
         i = -1
-        parse_line(raw_row).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
+        parse_row(raw_row).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
       else # select by column position
         i = -1
-        parse_line(raw_row).each{|column_value| parsed_row[i += 1] = column_value}
+        parse_row(raw_row).each{|column_value| parsed_row[i += 1] = column_value}
       end
       @rows << parsed_row
     end
@@ -227,6 +262,7 @@ class CSVFile < File
       row.csv_split(quote)
     end
   end
+  alias_method :parse_row, :read_row
   alias_method :read_line, :read_row
   alias_method :parse_line, :read_row
   alias_method :readline, :read_row
@@ -337,15 +373,14 @@ class CSVFile < File
     @columns = {}
     case column_order[0]
     when Hash
-      column_order.each{|column_name, column_position| columns[column_name.to_s] = column_position}
+      column_order[0].each{|column_name, column_position| @columns[column_name.to_s] = column_position}
     when Array
       i = -1
-      column_order[0].each{|column| columns[column.to_s] = (i += 1)}
+      column_order[0].each{|column| @columns[column.to_s] = (i += 1)}
     else
       i = -1
-      column_order.each{|column| columns[column.to_s] = (i += 1)}
+      column_order.each{|column| @columns[column.to_s] = (i += 1)}
     end
-    @columns = columns
   end
   
   def columns?
@@ -363,8 +398,6 @@ class CSVFile < File
     @header_row
   end
   alias_method :header_line?, :header_row?
-  
-  private
   
   def first_row(row_separator = "\n")
     self.rewind

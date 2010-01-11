@@ -2,6 +2,20 @@
 
 ## 20100112
 
+0.7.1
+
+1. Moved CSVFile singleton methods to the top of the CSVFile class.
+2. More emphasizing of #.*row methods, moving any #.*line methods to aliases.
+3. + .header_row
+4. + .first_row
+5. + .attributes
+6. + .columns
+7. /#read_csv/#read/.
+8. ~ #do_read to use parse_row instead of parse_line.
+9. + alias_method :parse_row, :read_row
+10. ~ #columns=, fixed when taking a hash.
+
+
 0.7.0
 
 1. Removed all the debug stuff.
