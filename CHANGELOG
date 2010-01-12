@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 20100113
+
+0.7.2
+
+1. More swapping out of line for row.
+2. ~ #read...
+3. + #set_columns.
+4. + #readrow.
+5. /write_csv/write/.
+6. alias_method :write_csv, :write
+7. + #each_csv.
+8. + #csv_each.
+9. ~ #each_with_columns, since it hasn't been touched yet.  Actually, do I really need it?
+
+
 ## 20100112
 
 0.7.1

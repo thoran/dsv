@@ -1,7 +1,7 @@
 # CSVFile.rb
 
-# 20091220, 20100112
-# 0.7.1
+# 20091220, 20100112, 20100113
+# 0.7.2
 
 # Description: A CSV file object.  
 
@@ -38,6 +38,16 @@
 # 17. ~ #do_read to use parse_row instead of parse_line.  
 # 18. + alias_method :parse_row, :read_row
 # 19. ~ #columns=, fixed when taking a hash.  
+# 1/2
+# 20. More swapping out of line for row.  
+# 21. ~ #read...  
+# 22. + #set_columns.  
+# 23. + #readrow.  
+# 24. /write_csv/write/.  
+# 25. alias_method :write_csv, :write
+# 26. + #each_csv.  
+# 27. + #csv_each.  
+# 28. ~ #each_with_columns, since it hasn't been touched yet.  Actually, do I really need it?  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -116,25 +126,31 @@ class CSVFile < File
     end
     alias_method :foreach, :each
     
-    def readlines(filename, row_separator = "\n", *desired_columns)
+    def read_rows(filename, row_separator = "\n", *desired_columns)
       csv_file = new(filename)
       csv_file.read_csv(row_separator, *desired_columns)
     end
-    alias_method :read_lines, :readlines
+    alias_method :readrows, :read_rows
+    alias_method :readlines, :read_rows
+    alias_method :read_lines, :read_rows
     
     def read(filename, *desired_columns)
-      readlines(filename, *desired_columns)
+      read_rows(filename, *desired_columns)
     end
     alias_method :read_csv, :read
+    alias_method :parse, :read
+    alias_method :parse_csv, :read
     
-    def writelines(filename, row_separator = "\n", *desired_columns)
+    def write_rows(filename, row_separator = "\n", *desired_columns)
       csv_file = new(filename, true, :double, 'w')
       csv_file.write_csv(*desired_columns)
     end
-    alias_method :write_lines, :writelines
+    alias_method :writerows, :write_rows
+    alias_method :writelines, :write_rows
+    alias_method :write_lines, :write_rows
     
     def write(filename, *desired_columns)
-      writelines(filename, *desired_columns)
+      write_rows(filename, *desired_columns)
     end
     alias_method :write_csv, :write
     
@@ -199,35 +215,37 @@ class CSVFile < File
   
   def read(row_separator = "\n", *desired_columns)
     read_header
-    columns = (
-      case desired_columns[0]
-      when Array
-        if desired_columns[0] == [] # then select all columns by default...
-          if @columns # then select by column name...  
-            @columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
-          else # select by column position...  
-            0..(number_of_columns - 1)
-          end
-        else
-          @columns[0] # I could check that what is provided really is a column, for when @columns exists by having an additional if here.  
-        end
-      else # the first item is (and presumably subsequent items are) somewhat more atomic...  
-        if columns == [] # then select all columns by default...
-          if @columns # then select by column name...  
-            @columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
-          else # select by column position...  
-            0..(@columns.size - 1)
-          end
-        else
-          @columns
-        end
-      end
-    )
-    do_read(columns)
+    desired_columns = set_columns(*desired_columns)
+    do_read(desired_columns)
   end
   alias_method :read_csv, :read
   alias_method :parse, :read
   alias_method :parse_csv, :read
+  
+  def set_columns(*desired_columns)
+    case desired_columns[0]
+    when Array
+      if desired_columns[0] == [] # then select all columns by default...
+        if @columns # then select by column name...  
+          @columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
+        else # select by column position...  
+          0..(number_of_columns - 1)
+        end
+      else
+        @columns[0] # I could check that what is provided really is a column, for when @columns exists by having an additional if here.  
+      end
+    else # the first item is (and presumably subsequent items are) somewhat more atomic...  
+      if columns == [] # then select all columns by default...
+        if @columns # then select by column name...  
+          @columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
+        else # select by column position...  
+          0..(@columns.size - 1)
+        end
+      else
+        @columns
+      end
+    end
+  end
   
   def do_read(columns, row_separator = "\n")
     file_each(row_separator) do |raw_row|
@@ -262,16 +280,17 @@ class CSVFile < File
       row.csv_split(quote)
     end
   end
-  alias_method :parse_row, :read_row
+  alias_method :readrow, :read_row
   alias_method :read_line, :read_row
-  alias_method :parse_line, :read_row
   alias_method :readline, :read_row
+  alias_method :parse_row, :read_row
+  alias_method :parse_line, :read_row
   
-  def write_csv(*columns)
+  def write(*columns)
     write_header(*columns) if header_row?
-    each{|line| write_line(line, *columns)}
+    each{|row| write_row(line, *columns)}
   end
-  alias_method :write, :write_csv
+  alias_method :write_csv, :write
   
   def write_header(*columns)
     case columns[0]
@@ -316,44 +335,45 @@ class CSVFile < File
       end
     end
   end
+  alias_method :each_csv, :each
+  alias_method :csv_each, :each
   alias_method :each_with_row, :each
   alias_method :each_with_line, :each
   
   def each_with_columns(row_separator = "\n", *desired_columns)
     case desired_columns[0]
-      when Array
-        if desired_columns[0]
-          if lines?
-            lines.each {|line|
-              yield desired_columns[0].collect {|c| line[c]}
-            }
-          else
-            read_csv(row_separator, desired_columns[0]).each {|line|
-              yield desired_columns[0].collect {|c| line[c]}
-            }
-          end # inner if
+    when Array
+      if desired_columns[0]
+        if rows?
+          rows.each do |row|
+            yield desired_columns[0].collect{|c| row[c]}
+          end
         else
-          read_csv.each {|line|
-            yield attributes.collect {|a| line[a]} # I assume that I need to use attributes here too.  
-          }
-        end # outer if
+          read_csv(row_separator, desired_columns[0]).each  do |row|
+            yield desired_columns[0].collect{|c| row[c]}
+          end
+        end # inner if
       else
-        if desired_columns != []
-          if lines? # May have been more efficient to have left this as @lines[0], so do test this later...  
-            lines.each {|line|
-              yield desired_columns.collect {|c| line[c]}
-            }
-          else
-            read_csv(desired_columns).each {|line|
-              yield desired_columns.collect {|c| line[c]}
-            }
-          end # inner if
+        read_csv.each do |row|
+          yield attributes.collect{|a| row[a]} # I assume that I need to use attributes here too.  
+        end
+      end # outer if
+    else
+      if desired_columns != []
+        if rows?
+          rows.each do |row|
+            yield desired_columns.collect{|c| row[c]}
+          end
         else
-          read_csv.each {|line|
-            #yield @columns.collect {|k,v| line[k]} # I really do not understand why this doesn't work.  I'm leaving this here because it is so annoying that I don't get how it works.  
-            yield attributes.collect {|a| line[a]}
-          }
-        end # outer if
+          read_csv(desired_columns).each do |row|
+            yield desired_columns.collect{|c| row[c]}
+          end
+        end # inner if
+      else
+        read_csv.each do |row|
+          yield attributes.collect{|a| row[a]}
+        end
+      end # outer if
     end # case
   end
   
