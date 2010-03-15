@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 20100316
+
+0.8.0: A significant change to the CSVFile.new interface.  I should probably bump it to 0.8.0.  This breaks compatibility with the File.new method which I was wanting...
+
+1. A significant change to the CSVFile.new interface.  I should probably bump it to 0.8.0.  This breaks compatibility with the File.new method which I was wanting...
+2. + CSVFile.rb, a loader for the CSVFile library, the requires moving out of CSVFile/CSVFile.rb; the library and its lib/ move under CSVFile/.
+
+
 ## 20100113
 
 0.7.2

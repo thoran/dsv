@@ -1,7 +1,7 @@
 # CSVFile.rb
 
-# 20091220, 20100112, 20100113
-# 0.7.2
+# 20100316
+# 0.8.0
 
 # Description: A CSV file object.  
 
@@ -17,37 +17,8 @@
 # 9. Create a gem.  
 # 10. Rubylibify.  
 
-# Changes since 0.6: 
-# 1. Removed all the debug stuff.  
-# 2. require'ing of String placed in Array.rb.  
-# 3. include Enumerable.  
-# 4. /line/row/.  
-# 5. /separator/row_separator/.  
-# 6. ~ #read_csv.  
-# 7. + #do_read.  
-# 8. + #read_header.  
-# 9. Using more getters and setters than instance variables.  Need to check speed effects of those changes...  
-# 0/1
-# 10. Moved CSVFile singleton methods to the top of the CSVFile class.  
-# 11. More emphasizing of #.*row methods, moving any #.*line methods to aliases.  
-# 12. + .header_row
-# 13. + .first_row
-# 14. + .attributes
-# 15. + .columns
-# 16. /#read_csv/#read/.  
-# 17. ~ #do_read to use parse_row instead of parse_line.  
-# 18. + alias_method :parse_row, :read_row
-# 19. ~ #columns=, fixed when taking a hash.  
-# 1/2
-# 20. More swapping out of line for row.  
-# 21. ~ #read...  
-# 22. + #set_columns.  
-# 23. + #readrow.  
-# 24. /write_csv/write/.  
-# 25. alias_method :write_csv, :write
-# 26. + #each_csv.  
-# 27. + #csv_each.  
-# 28. ~ #each_with_columns, since it hasn't been touched yet.  Actually, do I really need it?  
+# Changes since 0.7: 
+# 1. A significant change to the CSVFile.new interface.  I should probably bump it to 0.8.0.  This breaks compatibility with the File.new method which I was wanting...  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -96,6 +67,9 @@ $profile = false
 require 'profile' if $profile
 require 'pp'
 
+require 'Array/extract_optionsX'
+require '_meta/default_to'
+
 require File.expand_path(File.dirname(__FILE__) + '/Array')
 require File.expand_path(File.dirname(__FILE__) + '/Hash')
 
@@ -106,8 +80,8 @@ class CSVFile < File
     attr_accessor :rows, :quote
     alias_method :lines, :rows
     
-    def open(filename, mode = 'r', permissions = nil)
-      csv_file = new(filename, mode, permissions)
+    def open(filename, *args)
+      csv_file = new(filename, *args)
       if block_given?
         begin
           yield csv_file
@@ -181,12 +155,13 @@ class CSVFile < File
   attr_accessor :rows, :quote, :header_row
   alias_method :lines, :rows
   
-  def initialize(filename, mode = 'r', permissions = nil)
-    @header_row = true
-    @quote = :double
+  def initialize(filename, *args)
+    options = args.extract_options!
+    @header_row = options[:header_row].default_is(true)
+    @quote = options[:quote].default_is(:double)
     @filename = self.class.expand_path(filename)
-    @mode = mode
-    @permissions = permissions
+    @mode = options[:mode].default_is('r')
+    permissions = options[:permissions].default_is(nil)
     unless @header_row.class == TrueClass || @header_row.class == FalseClass
       @header_row = (
         case @header_row.to_sym
