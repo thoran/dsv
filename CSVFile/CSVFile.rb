@@ -1,7 +1,7 @@
 # CSVFile.rb
 
-# 20100316
-# 0.8.0
+# 2010.03.25
+# 0.8.1
 
 # Description: A CSV file object.  
 
@@ -19,6 +19,8 @@
 
 # Changes since 0.7: 
 # 1. A significant change to the CSVFile.new interface.  I should probably bump it to 0.8.0.  This breaks compatibility with the File.new method which I was wanting...  
+# 0/1
+# 2. Simplified the CSVFile.new, @mode options.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -173,13 +175,13 @@ class CSVFile < File
     end
     @mode = (
       case @mode.to_s # It can handle :read, :write, ...
-      when 'r', 'r+', 'w', 'w+', 'a', 'a+'; @mode.to_s # make no changes
+      when 'r', 'r+', 'w', 'w+', 'a', 'a+'; mode.to_s
       when 'read', 'read_only', 'readonly'; 'r'
-      when 'rw', 'read_write', 'readwrite', 'read_plus', 'read+', 'readplus', 'read_+'; 'r+'
-      when 'write', 'w_only', 'write_only', 'writeonly'; 'w'
-      when 'wr', 'write_read', 'writeread', 'write_plus', 'write+', 'writeplus', 'write_+', 'w_plus', 'wplus', 'w_+'; 'w+'
-      when 'append', 'w_append', 'write_append', 'w_only_append', 'write_only_append', 'writeonly_append'; 'a'
-      when 'rw_append', 'read_write_append', 'readwrite_append', 'read_plus_append', 'read+_append', 'readplus_append', 'read_+_append', 'r+_append', 'r_+_append'; 'a+'
+      when 'rw', 'read_write', 'readwrite'; 'r+'
+      when 'write', 'write_only', 'writeonly'; 'w'
+      when 'wr'; 'w+'
+      when 'append'; 'a'
+      when 'rw_append', 'read_write_append', 'readwrite_append'; 'a+'
       else 'r' # unrecognised attempt at specifying a mode, so just make it read.  Let any errors be caught as they may further on...  
       end
     )

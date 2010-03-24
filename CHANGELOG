@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 20100325
+
+0.8.1: Simplified the CSVFile.new, @mode options.
+
+1. Simplified the CSVFile.new, @mode options.
+
+
 ## 20100316
 
 0.8.0: A significant change to the CSVFile.new interface.  I should probably bump it to 0.8.0.  This breaks compatibility with the File.new method which I was wanting...

@@ -1,9 +1,13 @@
 # File/CSVFile
 
 # 2010.03.25
-# 0.0.0
+# 0.8.1
 
 # Description: This loads all the different class files associated with making CSVFile work.  
+
+# Changes: 
+# 0/1
+# 1. Changed the version number above to reflect the overall CSVFile version number.  
 
 require 'File/relative_path'
 
