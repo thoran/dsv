@@ -1,7 +1,7 @@
 # Hash.rb
 
-# 20090104, 05
-# 0.6.1
+# 2010.05.03
+# 0.8.2
 
 # Changes: 
 # 1. Moved from same file as CSVFile.  

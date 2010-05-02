@@ -1,7 +1,7 @@
 # File/CSVFile
 
 # 2010.03.25
-# 0.8.1
+# 0.8.2
 
 # Description: This loads all the different class files associated with making CSVFile work.  
 

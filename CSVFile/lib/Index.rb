@@ -1,7 +1,7 @@
 # Index
 
-# 20091218
-# 0.4.4
+# 2010.05.03
+# 0.8.2
 
 # Discussion: 
 # 1. Alternate names may/might have been or be: Lookup, Dictionary, Directory, and Map.  

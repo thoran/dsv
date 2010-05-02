@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 20100503
+
+0.8.2
+
+1. Removed some requires, since I have a general purpose loader CSVFile.rb to load files in the CSVFile library now.
+2. + attr_accessor :mode.
+
+
 ## 20100325
 
 0.8.1: Simplified the CSVFile.new, @mode options.

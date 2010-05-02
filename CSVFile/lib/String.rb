@@ -1,7 +1,7 @@
 # String.rb
 
-# 20091218, 19, 20100112
-# 0.7.0
+# 2010.05.03
+# 0.8.2
 
 # Changes: 
 # 1. Moved from same file as CSVFile.  

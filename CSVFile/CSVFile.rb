@@ -1,7 +1,7 @@
 # CSVFile.rb
 
-# 2010.03.25
-# 0.8.1
+# 2010.05.03
+# 0.8.2
 
 # Description: A CSV file object.  
 
@@ -21,6 +21,9 @@
 # 1. A significant change to the CSVFile.new interface.  I should probably bump it to 0.8.0.  This breaks compatibility with the File.new method which I was wanting...  
 # 0/1
 # 2. Simplified the CSVFile.new, @mode options.  
+# 1/2
+# 3. Removed some requires, since I have a general purpose loader CSVFile.rb to load files in the CSVFile library now.  
+# 4. + attr_accessor :mode.  
 
 # Nice bits: 
 # 1. In CSVFile#read, the default is to read all columns.  
@@ -71,9 +74,6 @@ require 'pp'
 
 require 'Array/extract_optionsX'
 require '_meta/default_to'
-
-require File.expand_path(File.dirname(__FILE__) + '/Array')
-require File.expand_path(File.dirname(__FILE__) + '/Hash')
 
 class CSVFile < File
   
@@ -154,7 +154,7 @@ class CSVFile < File
   
   include Enumerable
   
-  attr_accessor :rows, :quote, :header_row
+  attr_accessor :rows, :quote, :header_row, :mode
   alias_method :lines, :rows
   
   def initialize(filename, *args)

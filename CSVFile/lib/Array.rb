@@ -1,12 +1,10 @@
 # Array.rb
 
-# 20091216, 20100112
-# 0.7.0
+# 2010.05.03
+# 0.8.2
 
 # Changes: 
 # 1. Removed unused code: #each_with_index and #collect_with_index, upon which it relies.  
-
-require File.expand_path(File.dirname(__FILE__) + '/String')
 
 class Array
   
