@@ -1,32 +1,34 @@
-# Array/to_csv
+# Array#to_csv
 
-# 2010.05.18, 19
-# 0.9.0
-
-# Changes: 
-# 1. Has it's own file now.  
+# 2010.05.21
+# 0.9.1
 
 # Todo: 
 # 1. Split all these up and move each method into Array...  Done as of 0.9.0.  
 # 2. ~ Array#to_csv, massive refactor, including getting rid of a lot of aliases for now at least.  Done as of 0.9.0.  
 
-require 'Array/to_csv_double_quoted'
-require 'Array/to_csv_spacey_double_quoted'
-require 'Array/to_csv_single_quoted'
-require 'Array/to_csv_spacey_single_quoted'
-require 'Array/to_csv_unquoted'
-require 'Array/to_csv_spacey_unquoted'
+# Changes since 0.8: 
+# 1. Has it's own file now.  
+# 0/1
+# 2. Removed all the method calls as these are simple operations.  
+# 3. Now doing the quoting directly, since quote_each() which calls wrap_each() which in turn calls wrap() is lots of extra method calls.  
 
 class Array
   
   def to_csv(quote = :double)
     case quote.to_sym
-    when :double; to_csv_double_quoted
-    when :spacey_double; to_csv_spacey_double_quoted
-    when :single; to_csv_single_quoted
-    when :spacey_single; to_csv_spacey_single_quoted
-    when :none, :unquoted; to_csv_unquoted
-    when :spacey_none, :spacey_unquoted; to_csv_spacey_unquoted
+    when :double
+      self.collect{|e| '"' + e + '"'}.join(',')
+    when :spacey_double
+      self.collect{|e| '"' + e + '"'}.join(', ')
+    when :single
+      self.collect{|e| "'" + e + "'"}.join(',')
+    when :spacey_single
+      self.collect{|e| "'" + e + "'"}.join(', ')
+    when :none, :unquoted
+      self.join(',')
+    when :spacey_none, :spacey_unquoted
+      self.join(', ')
     end
   end
   

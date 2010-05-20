@@ -2,6 +2,29 @@
 
 ## 20100521
 
+0.9.1
+
+1. ~ SimpleCSV.rbd/SimpleCSV.rb: - require 'profile' if false
+2. ~ SimpleCSV.rbd/SimpleCSV.rb: + require 'profile' if true
+3. - SimpleCSV.rbd/lib/Array/quote_each.rb
+4. - SimpleCSV.rbd/lib/Array/to_csv_double_quoted.rb
+5. - SimpleCSV.rbd/lib/Array/to_csv_single_quoted.rb
+6. - SimpleCSV.rbd/lib/Array/to_csv_spacey_double_quoted.rb
+7. - SimpleCSV.rbd/lib/Array/to_csv_spacey_single_quoted.rb
+8. - SimpleCSV.rbd/lib/Array/to_csv_spacey_unquoted.rb
+9. - SimpleCSV.rbd/lib/Array/to_csv_unquoted.rb
+10. - SimpleCSV.rbd/lib/Array/wrap_each.rb
+11. - SimpleCSV.rbd/lib/String/split_csv_double_quoted.rb
+12. - SimpleCSV.rbd/lib/String/split_csv_mixed_quoted.rb
+13. - SimpleCSV.rbd/lib/String/split_csv_unquoted.rb
+14. - SimpleCSV.rbd/lib/String/unwrap.rb
+15. - SimpleCSV.rbd/lib/String/wrap.rb
+16. ~ SimpleCSV.rbd/SimpleCSV.rb
+17. ~ SimpleCSV.rbd/lib/Array/to_csv.rb
+18. ~ SimpleCSV.rbd/lib/String/split_csv.rb
+19. ~ SimpleCSV.rbd/test/test.rb
+
+
 0.9.0
 
 1. /CSVFile/SimpleCSV/.

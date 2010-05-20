@@ -1,7 +1,7 @@
 # SimpleCSV
 
-# 2010.05.17, 19, 20, 21
-# 0.9.0
+# 2010.05.21
+# 0.9.1
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.  
 
@@ -33,7 +33,7 @@
 # 3. Moved the loader stuff (Array, Hash, String) in here.  
 # 4. More changes to interfaces to reflect the change in 0.8.0 to interface arguments.  
 
-require 'profile' if false
+require 'profile' if true
 require 'pp'
 
 require 'stringio'

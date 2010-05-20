@@ -1,11 +1,11 @@
-# CSVFile 0.9.0 vs. FasterCSV vs. CSV
+# CSVFile 0.9.1 vs. FasterCSV vs. CSV
 
-# 2010.05.20
+# 2010.05.21
 
 filename = 'test_data.csv'
 
 require 'Kernel/require_with_rbd'
-require 'CSVFile'
+require 'SimpleCSV'
 start_time = Time.now
 CSVFile.foreach(filename, :header_line => true) do |row|; end
 CSVFile.read(filename)
