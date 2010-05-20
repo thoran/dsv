@@ -1,7 +1,7 @@
 # Index
 
-# 2010.05.03
-# 0.8.2
+# 2010.05.18
+# 0.8.3 (The versioning is all screwy, because this is a drop in.)  
 
 # Discussion: 
 # 1. Alternate names may/might have been or be: Lookup, Dictionary, Directory, and Map.  
@@ -14,6 +14,9 @@
 # 3. A small tidy.  
 # 3/4
 # 4. Index#sort! default sort_order now reflects the default sort_order as per the initializer.  
+
+# Notes
+# 1. Still not using this anywhere...  It will almost certainly slow things down (except on Rubinus perhaps), so I may ditch it soon...  
 
 class Index < Array
   

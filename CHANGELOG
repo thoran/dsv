@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 20100521
+
+0.9.0
+
+1. /CSVFile/SimpleCSV/.
+2. Reset the Todo list and rolled in the Goals to that.
+3. Moved the loader stuff (Array, Hash, String) in here.
+4. More changes to interfaces to reflect the change in 0.8.0 to interface arguments.
+
+
 ## 20100503
 
 0.8.2
