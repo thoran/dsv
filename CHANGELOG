@@ -1,5 +1,38 @@
 # CHANGELOG
 
+## 20100522
+
+0.9.2
+
+1. ~ SimpleCSV.read, contains SimpleCSV.read_rows.
+2. ~ SimpleCSV.write, contains SimpleCSV.write_rows.
+3. ~ SimpleCSV.header_row, simplified.
+4. ~ SimpleCSV.first_row, simplified.
+5. ~ SimpleCSV.attributes, simplified.
+6. ~ SimpleCSV.columns, simplified.
+7. - attr_accessor :rows, :quote, not being used.
+8. - alias_method :lines, :rows, not being used.
+9. - SimpleCSV#each_with_columns, rolled into SimpleCSV#each.
+10. ~ SimpleCSV#each, rolled in SimpleCSV#each_with_columns and only output Hashes now.
+11. - alias_method :lines, :rows, since a line is an unparsed row.
+12. ~ SimpleCSV#initialize, it now makes use of SimpleCSV.source.
+13. + SimpleCSV.parse, since it behaves slightly differently now from when it was an alias of SimpleCSV.read.
+14. ~ SimpleCSV.read, is now tidier!
+15. ~ SimpleCSV.write, is also a bit tidier!
+16. + SimpleCSV.to_a, so as to give this sort of output.
+17. + SimpleCSV.source_type.
+18. + CSVFile#initialize.
+19. + CSVString#initialize.
+20. - require '_meta/default_to'.
+21. - SimpleCSV#columns?, and using @columns.empty? instead in SimpleCSV#parse_row, since it is faster not to make that method call every row.
+22. - SimpleCSV#read_row, now just SimpleCSV#parse_row.
+23. - SimpleCSV#read_header, since it wasn't being used.
+24. - SimpleCSV#rows?, using @rows[0] instead in SimpleCSV#each, since it is faster not to make that method call every row.
+25. + SimpleCSV#parse, so as to mirror the changes in the class interface.
+26. ~ SimpleCSV#read, so as to accommodate the creation of SimpleCSV#parse as per the class interface.
+27. - require 'Index' and the file from ./lib also, since it wasn't being used still.
+
+
 ## 20100521
 
 0.9.1

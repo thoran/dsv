@@ -1,7 +1,7 @@
 # Array#to_csv
 
-# 2010.05.21
-# 0.9.1
+# 2010.05.21, 22
+# 0.9.2
 
 # Todo: 
 # 1. Split all these up and move each method into Array...  Done as of 0.9.0.  
@@ -10,8 +10,7 @@
 # Changes since 0.8: 
 # 1. Has it's own file now.  
 # 0/1
-# 2. Removed all the method calls as these are simple operations.  
-# 3. Now doing the quoting directly, since quote_each() which calls wrap_each() which in turn calls wrap() is lots of extra method calls.  
+# 2. Removed all the require lines for the array methods since these are simple operations.  So, I am now doing the quoting directly, since quote_each() which calls wrap_each() which in turn calls wrap() is lots of extra method calls.  
 
 class Array
   

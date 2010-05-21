@@ -1,12 +1,12 @@
 # String#split_csv
 
-# 2010.05.19
-# 0.1.0
+# 2010.05.22
+# 0.2.0
 
-# History: Originally written for CSVFile 0.9.0.  This one for 0.9.1.  
+# History: Originally written for CSVFile 0.9.0.  This one for 0.9.2.  
 
 # Changes: 
-# 1. Now doing the quoting directly, since calling split_csv_* all the time is lots of extra method calls.  
+# 1. It actually works for doing mixed quoted strings now.  
 
 class String
   
@@ -19,12 +19,13 @@ class String
     else
       split_row = []
       assembling_column = false
-      self.chomp.split(/,/).each do |e|
-        if e.assembling_column && !e.closing_quotes?
+      buffer = ''
+      self.split(/,/).each do |e|
+        if assembling_column && !e.closing_quotes?
           buffer << e
-        elsif e.assembling_column && e.closing_quotes?
+        elsif assembling_column && e.closing_quotes?
           buffer << e
-          split_row << e
+          split_row << buffer
           assembling_column = false
         elsif e.opening_or_closing_quotes_but_not_both?
           buffer << e

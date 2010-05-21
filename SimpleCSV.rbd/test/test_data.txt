@@ -1,0 +1,3 @@
+SimpleCSV: 0.081954
+FasterCSV: 0.189246
+CSV: 0.832464
