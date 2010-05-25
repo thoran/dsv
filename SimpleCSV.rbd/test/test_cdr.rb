@@ -1,25 +1,27 @@
-# CSVFile 0.9.2 vs. FasterCSV vs. CSV
+# CSVFile 0.9.3 vs. FasterCSV vs. CSV
 
-# 2010.05.22
+# 2010.05.26
 
 filename = 'cdr.csv'
 
 
 simple_csv_start_time = Time.now
-#require 'Kernel/require_with_rbd'
-#require 'SimpleCSV'
 #require 'SimpleCSV-0.9.0.rbd/SimpleCSV'
 #require 'SimpleCSV-0.9.1.rbd/SimpleCSV'
-require 'Kernel/require_relative'
-require_relative '../../SimpleCSV-0.9.2.rbd/SimpleCSV'
+#require 'SimpleCSV-0.9.2.rbd/SimpleCSV'
+require 'SimpleCSV.rbd/SimpleCSV'
 
-# columns = [:event_id, :record_type_usage, :datetime_start, :duration_seconds, :originating_number, :terminating_number, :charged_party_number, :currency, :price_to_wholesaler, :plan_id, :distance, :is_local, :call_type, :begin_date, :end_date, :description, :number_of_items, :carrier_id, :rate_id]
+#columns = [:event_id, :record_type_usage, :datetime_start, :duration_seconds, :originating_number, :terminating_number, :charged_party_number, :currency, :price_to_wholesaler, :plan_id, :distance, :is_local, :call_type, :begin_date, :end_date, :description, :number_of_items, :carrier_id, :rate_id]
 # SimpleCSV.open(filename, :columns => columns) do |csv_file|
 #   csv_file.each do |row|
 #     p row[0]
 #   end
 # end
-SimpleCSV.foreach(filename, :header_row => true, :quote => :none) do |row|
+SimpleCSV.foreach(filename, :headers => false) do |row|
+#SimpleCSV.foreach(filename, :headers => false, :columns => columns) do |row|
+#SimpleCSV.foreach(filename, :headers => false, :quote => :mixed) do |row|
+#SimpleCSV.foreach(filename, :quote => :none, :as_array => true) do |row|
+#SimpleCSV.foreach(filename, :quote => :none, :as_array => true, :quote => :mixed) do |row|
   # do nothing, we're just timing a read...
 end
 simple_csv_finish_time = Time.now
@@ -33,7 +35,7 @@ require 'faster_csv'
 #     p row[0]
 #   end
 # end
-FasterCSV.foreach(filename) do |row|
+FasterCSV.foreach(filename, :headers => false) do |row|
   # do nothing, we're just timing a read...
 end
 faster_csv_finish_time = Time.now

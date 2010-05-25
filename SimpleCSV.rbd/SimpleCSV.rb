@@ -1,7 +1,7 @@
 # SimpleCSV
 
-# 2010.05.21, 22
-# 0.9.2
+# 2010.05.26
+# 0.9.3
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.  
 
@@ -62,11 +62,20 @@
 # 29. + SimpleCSV#parse, so as to mirror the changes in the class interface.  
 # 30. ~ SimpleCSV#read, so as to accommodate the creation of SimpleCSV#parse as per the class interface.  
 # 31. - require 'Index' and the file from ./lib also, since it wasn't being used still.  
+# 2/3
+# 32. ~ SimpleCSV#initialize, so as the default quoting is :none, not :double.  
+# 33. + SimpleCSV#read_header, which I'd mistakenly taken out in the recent cull... for use with SimpleCSV#read.  
+# 34. ~ SimpleCSV#read, calls read_header, so the first line isn't pulled in as data.  
+# 35. ~ SimpleCSV#initialize, /use_array/as_array/.  
+# 36. ~ SimpleCSV#initialize, compressed a couple of the if statements, since they weren't complicated enough to be over 7 lines each.  
+# 37. ~ SimpleCSV#parse_row, logic was inverted for when @columns.blank? after a change in the logic for at 0.9.0!  
+# 38. ~ SimpleCSV#attributes, /columns/@columns.blank?/, and switched the logic order(!), since this is a little more robust and probably slightly faster too.  
+# 39. ~ SimpleCSV#to_a, so as it copes when there are not attributes (ie. no columns specified) and so it now uses each row's order value to sort by for the getting the correct column order.  
+# 40. ~ SimpleCSV#initialize, fixed manual column setting, so as it makes use of SimpleCSV#column=.  
 
 require 'stringio'
 
-require 'File/relative_path'
-$LOAD_PATH.unshift(File.expand_path(File.relative_path('lib')))
+$LOAD_PATH.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 
 require '_meta/blankQ'
 require 'Array/extract_optionsX'
@@ -149,30 +158,18 @@ class SimpleCSV
   
   include Enumerable
   
-  attr_accessor :header_row, :mode, :quote, :row_separator, :selected_columns, :use_array, :rows
+  attr_accessor :header_row, :mode, :quote, :row_separator, :selected_columns, :as_array, :rows
   
   def initialize(source, *args)
-    @source = (
-      if source.is_a?(String)
-        SimpleCSV.source_type(source)
-      else
-        source
-      end
-    )
+    @source = (source.is_a?(String) ? SimpleCSV.source_type(source) : source)
     options = args.extract_options!
     @header_row = options[:header_row] || options[:headers] || options[:header] || false
-    @mode ||= options[:mode] || 'r'
-    @quote = options[:quote] || :double
+    @mode = options[:mode] || 'r'
+    @quote = options[:quote] || :none
     @row_separator = options[:row_separator] || "\n"
     @selected_columns = options[:selected_columns]
-    @use_array = options[:use_array] || false
-    @columns = (
-      if options[:columns]
-        columns = (options[:columns])
-      else
-        columns
-      end
-    )
+    @as_array = options[:as_array] || false
+    columns = options[:columns]
     @rows = []
   end
   
@@ -184,12 +181,22 @@ class SimpleCSV
     if block
       parse(*selected_columns, &block)
     else
+      read_header
       @source.each(@row_separator){|raw_row| @rows << parse_row(raw_row, *selected_columns)}
       (@source.rewind; @source.truncate(0)) if @mode == 'r+'
       @as_array ? to_a : @rows
     end
   end
   alias_method :read_csv, :read
+  
+  def read_header
+    columns
+    if header_row?
+      (@source.rewind; @source.gets(@row_separator))
+    else
+      @source.rewind
+    end
+  end
   
   def parse(*selected_columns, &block)
     if block
@@ -228,10 +235,10 @@ class SimpleCSV
     if selected_columns.empty?
       if @columns.blank?
         i = -1
-        raw_row.split_csv(@quote).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
+        raw_row.split_csv(@quote).each{|column_value| parsed_row[i += 1] = column_value}
       else
         i = -1
-        raw_row.split_csv(@quote).each{|column_value| parsed_row[i += 1] = column_value}
+        raw_row.split_csv(@quote).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
       end
     else
       selected_columns.flatten!
@@ -298,10 +305,10 @@ class SimpleCSV
   
   def attributes
     @attributes ||= (
-      if columns
-        columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
-      else
+      if @columns.blank?
         nil
+      else
+        columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
       end
     )
   end
@@ -318,8 +325,14 @@ class SimpleCSV
   end
   
   def to_a
-    @rows.collect do |row|
-      attributes.collect{|attribute| row[attribute]}
+    if @columns.blank?
+      @rows.collect do |row|
+        row.sort{|a,b| a[1] <=> b[1]}
+      end
+    else
+      @rows.collect do |row|
+        attributes.collect{|attribute| row[attribute]}
+      end
     end
   end
   
