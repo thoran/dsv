@@ -2,6 +2,11 @@
 
 ## 20100526
 
+0.9.3: ~ SimpleCSV.rbd/lib/String/split_csv.rb
+
+1. ~ SimpleCSV.rbd/lib/String/split_csv.rb
+
+
 0.9.3
 
 1. ~ SimpleCSV#initialize, so as the default quoting is :none, not :double.
