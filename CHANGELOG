@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 20110217
+
+0.9.5
+
+1. ~ SimpleCSV#initialize, + options[:row_sep] as an optional key to set @row_separator with a view to some FasterCSV compatibility.
+2. ~ SimpleCSV#columns, so as to gather empty header columns.
+3. ~ SimpleCSV#attributes, so as it can handle the empty header columns compiled in columns().
+4. This was bumped from 0.9.4 to 0.9.5 and an intermediate version which was 0.9.4 was left at that version number.
+
+
 ## 20100526
 
 0.9.3: ~ SimpleCSV.rbd/lib/String/split_csv.rb

@@ -1,7 +1,7 @@
 # SimpleCSV
 
-# 2010.05.26
-# 0.9.3
+# 2010.05.27, 06.19, 08.16, 2011.02.17
+# 0.9.5
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.  
 
@@ -25,8 +25,8 @@
 # 4. Finally try to make use of Index instead of Hash, since that library file is still hanging around.  Using this class may be simpler but not faster than using Hash and Array.  
 
 # Bugs: 
-# 1. This did cope with commas within a quoted CSV file, however while I think I broke this again with 0.9.0, I'm not sure that I ever had it working properly.  
-# 2. SimpleCSV#write_row doesn't handle it if there are no attributes/columns defined.  It needs to work with CSV files with no column names.  
+# 1. This did cope with commas within a quoted CSV file, however while I think I broke this again with 0.9.0, I'm not sure that I ever had it working properly.  It works properly as of 0.9.3 at least.  
+#check it# 2. SimpleCSV#write_row doesn't handle it if there are no attributes/columns defined.  It needs to work with CSV files with no column names.  
 
 # Changes since 0.8: 
 # 1. /CSVFile/SimpleCSV/.  
@@ -34,7 +34,7 @@
 # 3. Moved the loader stuff (Array, Hash, String) in here.  
 # 4. More changes to interfaces to reflect the change in 0.8.0 to interface arguments.  
 # 0/1 (Mostly the changes have been to supporting libraries.)
-# 0/2
+# 1/2
 # 5. ~ SimpleCSV.read, contains SimpleCSV.read_rows.  
 # 6. ~ SimpleCSV.write, contains SimpleCSV.write_rows.  
 # 7. ~ SimpleCSV.header_row, simplified.  
@@ -72,6 +72,11 @@
 # 38. ~ SimpleCSV#attributes, /columns/@columns.blank?/, and switched the logic order(!), since this is a little more robust and probably slightly faster too.  
 # 39. ~ SimpleCSV#to_a, so as it copes when there are not attributes (ie. no columns specified) and so it now uses each row's order value to sort by for the getting the correct column order.  
 # 40. ~ SimpleCSV#initialize, fixed manual column setting, so as it makes use of SimpleCSV#column=.  
+# 4/5
+# 41. ~ SimpleCSV#initialize, + options[:row_sep] as an optional key to set @row_separator with a view to some FasterCSV compatibility.  
+# 42. ~ SimpleCSV#columns, so as to gather empty header columns.  
+# 43. ~ SimpleCSV#attributes, so as it can handle the empty header columns compiled in columns().  
+# 44. This was bumped from 0.9.4 to 0.9.5 and an intermediate version which was 0.9.4 was left at that version number.  
 
 require 'stringio'
 
@@ -96,17 +101,17 @@ class SimpleCSV
       end
     end
     
-    def open(source, *args)
-      csv_file = source_type(source).new(source, *args)
-      if block_given?
+    def open(source, *args, &block)
+      @csv_file ||= source_type(source).new(source, *args)
+      if block
         begin
-          yield csv_file
-          csv_file
+          yield @csv_file
+          @csv_file
         ensure
-          csv_file.close
+          @csv_file.close
         end
       else
-        csv_file
+        @csv_file
       end
     end
     
@@ -166,10 +171,14 @@ class SimpleCSV
     @header_row = options[:header_row] || options[:headers] || options[:header] || false
     @mode = options[:mode] || 'r'
     @quote = options[:quote] || :none
-    @row_separator = options[:row_separator] || "\n"
+    @row_separator = options[:row_separator] || options[:row_sep] || "\n"
     @selected_columns = options[:selected_columns]
     @as_array = options[:as_array] || false
-    columns = options[:columns]
+    if options[:columns]
+      self.columns = options[:columns]
+    else
+      self.columns
+    end
     @rows = []
   end
   
@@ -209,9 +218,15 @@ class SimpleCSV
   
   def columns
     @columns ||= (
-      if header_row? && ['r', 'r+', 'a+'].include?(@mode)
+      if header_row? && ['r', 'r+', 'a+'].include?(@mode) && first_row?
         columns, i = {}, -1
-        first_row.split_csv(@quote).each{|column_name| columns[column_name] = (i += 1)}
+        first_row.split_csv(@quote).each do |column_name|
+          if column_name.empty?
+            columns[column_name].blank? ? columns[column_name] = [i += 1] : columns[column_name] << (i += 1)
+          else
+            columns[column_name] = (i += 1)
+          end
+        end
         columns
       else
         nil
@@ -256,7 +271,7 @@ class SimpleCSV
   
   def write(*selected_columns)
     write_header(*selected_columns) if header_row?
-    each{|row| write_row(line, *selected_columns)}
+    each{|row| write_row(row, *selected_columns)}
   end
   alias_method :write_csv, :write
   
@@ -272,8 +287,8 @@ class SimpleCSV
   def write_row(row, *selected_columns)
     collector = []
     selected_columns.flatten!
-    unless attributes.empty?
-      if selected_columns.empty?
+    unless attributes.blank?
+      if selected_columns.blank?
         attributes.each{|attribute| collector << row[attribute] unless row[attribute].nil?}
       else
         selected_columns.each{|column| collector << row[column] unless row[column].nil?}
@@ -305,10 +320,19 @@ class SimpleCSV
   
   def attributes
     @attributes ||= (
-      if @columns.blank?
+      if columns.blank?
         nil
       else
-        columns.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
+        a = []
+        columns.each do |k,v|
+          case v
+          when Array
+            v.each{|e| a << ['', e]}
+          else
+            a << [k, v]
+          end
+        end
+        a.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
       end
     )
   end
@@ -323,6 +347,7 @@ class SimpleCSV
     @source.rewind
     return_value
   end
+  alias_method :first_row?, :first_row
   
   def to_a
     if @columns.blank?
@@ -340,6 +365,15 @@ end # class SimpleCSV
 
 class CSVFile < SimpleCSV
   
+  class << self
+    
+    def open(source, *args, &block)
+      @csv_file = CSVFile.new(source, *args)
+      super(source, *args, &block)
+    end
+    
+  end
+  
   def initialize(filename, *args)
     source = (
       filename = File.expand_path(filename)
@@ -353,19 +387,29 @@ class CSVFile < SimpleCSV
         else 'r'
         end
       )
+      @mode = 'w+' if !File.exist?(filename) && @mode == 'r'
       permissions = args.peek_options[:permissions]
       File.new(filename, @mode, permissions)
     )
     super(source, *args)
   end
   
-end
+end # class CSVFile
 
 class CSVString < SimpleCSV
+  
+  class << self
+    
+    def open(source, *args, &block)
+      @csv_file = CSVString.new(source, *args)
+      super(source, *args, &block)
+    end
+    
+  end
   
   def initialize(string, *args)
     source = StringIO.new(string)
     super(source, *args)
   end
   
-end
+end # class CSVString

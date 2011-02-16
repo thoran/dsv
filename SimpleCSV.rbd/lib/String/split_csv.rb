@@ -1,19 +1,21 @@
 # String#split_csv
 
-# 2010.06.12
-# 0.5.0
+# 2010.06.19
+# 0.5.1
 
-# History: Originally written for SimpleCSV 0.9.0.  This one is for 0.9.4.  
-
-# Changes since 0.4: 
-# 1. It was not handling commas within quotes properly STILL!  It will now remove quotes when quoting is mixed and will not 'lose' commas.  
-# 2. Tidied up the logic with respec to starting the assembling of a column: the test on the second elsif.  
+# History: Originally written for SimpleCSV 0.9.0.  This too is for 0.9.4.  
 
 # Todo: 
 # 1. Consider having a mode which splits up strings as if they were unquoted, but retains quotes (which contain commas) as per 0.4.0.  I think that is what I had in mind when I thought that the other two libraries weren't handling it correctly.  It should really be optional as to how quotes are handled.  
 
 # Notes: 
 # 1. I reckon both CSV and FasterCSV handle doubly-quoted quotes incorrectly.  If I am wanting everything between the commas, then that means *everything*, including any quote marks regardless of where they are.  If additionally, I am wanting to selectively choose only that which is between, then I can do this too by specifying that the data contained therein is mixed and so I dispense with the outer-most quote marks.  CSV and FasterCSV presume to know what I want and dispense with the outer quote marks even though the rest of a line is being parsed as if there are none.  This is inconsistent.  
+
+# Changes since 0.4: 
+# 1. It was not handling commas within quotes properly STILL!  It will now remove quotes when quoting is mixed and will not 'lose' commas.  
+# 2. Tidied up the logic with respec to starting the assembling of a column: the test on the second elsif.  
+# 0/1
+# 3. I forgot reset the buffer for cases where there are multiple commas per column.  
 
 class String
   
@@ -36,11 +38,8 @@ class String
           split_row << buffer
           assembling_column = false
         elsif (e =~ /^"/) && !(e =~ /"$/) # e.opening_quotes_but_not_closing_quotes?
-          if e =~ /^"/
-            buffer << e.sub(/^"/, '') + ',' # remove leading quote and replace the comma
-          else
-            buffer << e
-          end
+          buffer = ''
+          buffer << e.sub(/^"/, '') + ',' # remove leading quote and replace the comma
           assembling_column = true
         else
           if (e =~ /^"/) && (e =~ /"$/) # e.both_opening_and_closing_quotes?
