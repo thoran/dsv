@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 20110402
+
+0.9.6
+
+1. + SimpleCSV.parse_line for FasterCSV compatibiity.
+2. ~ SimpleCSV#initialize, + @column_separator in part for FasterCSV compatibility.
+3. ~ SimpleCSV#columns, + @column_separator in part for FasterCSV compatibility.
+4. ~ SimpleCSV#parse_row, + @column_separator in part for FasterCSV compatibility.
+5. ~ SimpleCSV#initialize, ~ @source.
+6. ~ CSVFile#initialize moved @source to own method.
+7. + CSVFile#source.
+8. + CSVFile#mode.
+9. + CSVFile#permissions.
+10. + CSVFile#filename.
+11. ~ CSVString#initialize.
+12. + CSVString#source.
+
+
 ## 20110217
 
 0.9.5

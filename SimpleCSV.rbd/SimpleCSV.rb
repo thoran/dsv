@@ -1,7 +1,7 @@
 # SimpleCSV
 
-# 2010.05.27, 06.19, 08.16, 2011.02.17
-# 0.9.5
+# 2011.02.17, 03.07, 03.19, 03.21, 04.02
+# 0.9.6
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.  
 
@@ -77,6 +77,19 @@
 # 42. ~ SimpleCSV#columns, so as to gather empty header columns.  
 # 43. ~ SimpleCSV#attributes, so as it can handle the empty header columns compiled in columns().  
 # 44. This was bumped from 0.9.4 to 0.9.5 and an intermediate version which was 0.9.4 was left at that version number.  
+# 5/6
+# 45. + SimpleCSV.parse_line for FasterCSV compatibiity.  
+# 46. ~ SimpleCSV#initialize, + @column_separator in part for FasterCSV compatibility.  
+# 47. ~ SimpleCSV#columns, + @column_separator in part for FasterCSV compatibility.  
+# 48. ~ SimpleCSV#parse_row, + @column_separator in part for FasterCSV compatibility.  
+# 49. ~ SimpleCSV#initialize, ~ @source.  
+# 50. ~ CSVFile#initialize moved @source to own method.  
+# 51. + CSVFile#source.  
+# 52. + CSVFile#mode.  
+# 53. + CSVFile#permissions.  
+# 54. + CSVFile#filename.  
+# 55. ~ CSVString#initialize.  
+# 56. + CSVString#source.  
 
 require 'stringio'
 
@@ -159,6 +172,14 @@ class SimpleCSV
       new(source).columns
     end
     
+    def parse_line(raw_row, *args) # For FasterCSV compatibility.  
+      options = args.extract_options!
+      row_separator = options[:row_separator] || options[:row_sep] || "\n"
+      column_separator = options[:column_separator] || options[:col_sep] || ','
+      sc = SimpleCSV.new(raw_row, :quote => nil, :as_array => true, :row_separator => row_separator, :column_separator => column_separator)
+      sc.parse_row(raw_row)
+    end
+    
   end # class << self
   
   include Enumerable
@@ -166,12 +187,19 @@ class SimpleCSV
   attr_accessor :header_row, :mode, :quote, :row_separator, :selected_columns, :as_array, :rows
   
   def initialize(source, *args)
-    @source = (source.is_a?(String) ? SimpleCSV.source_type(source) : source)
+    @source = (
+      if source.is_a?(String)
+        SimpleCSV.source_type(source).new(source, *args).source
+      else
+        source
+      end
+    )
     options = args.extract_options!
     @header_row = options[:header_row] || options[:headers] || options[:header] || false
     @mode = options[:mode] || 'r'
     @quote = options[:quote] || :none
     @row_separator = options[:row_separator] || options[:row_sep] || "\n"
+    @column_separator = options[:column_separator] || options[:col_sep] || ','
     @selected_columns = options[:selected_columns]
     @as_array = options[:as_array] || false
     if options[:columns]
@@ -220,7 +248,7 @@ class SimpleCSV
     @columns ||= (
       if header_row? && ['r', 'r+', 'a+'].include?(@mode) && first_row?
         columns, i = {}, -1
-        first_row.split_csv(@quote).each do |column_name|
+        first_row.split_csv(@quote, @column_separator).each do |column_name|
           if column_name.empty?
             columns[column_name].blank? ? columns[column_name] = [i += 1] : columns[column_name] << (i += 1)
           else
@@ -250,23 +278,23 @@ class SimpleCSV
     if selected_columns.empty?
       if @columns.blank?
         i = -1
-        raw_row.split_csv(@quote).each{|column_value| parsed_row[i += 1] = column_value}
+        raw_row.split_csv(@quote, @column_separator).each{|column_value| parsed_row[i += 1] = column_value}
       else
         i = -1
-        raw_row.split_csv(@quote).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
+        raw_row.split_csv(@quote, @column_separator).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
       end
     else
       selected_columns.flatten!
       case selected_columns[0]
       when Integer
         i = -1
-        raw_row.split_csv(@quote).each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
+        raw_row.split_csv(@quote, @column_separator).each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
       else
         i = -1
-        raw_row.split_csv(@quote).each{|column_value| parsed_row[attributes[i]] = column_value unless !selected_columns.include?(attributes[i += 1])}
+        raw_row.split_csv(@quote, @column_separator).each{|column_value| parsed_row[attributes[i]] = column_value unless !selected_columns.include?(attributes[i += 1])}
       end
     end
-    parsed_row
+    @as_array ? parsed_row.values : parsed_row
   end
   
   def write(*selected_columns)
@@ -372,26 +400,39 @@ class CSVFile < SimpleCSV
       super(source, *args, &block)
     end
     
-  end
+  end # class << self
+  
+  attr_reader :filename, :args
   
   def initialize(filename, *args)
-    source = (
-      filename = File.expand_path(filename)
-      @mode = (
-        case args.peek_options[:mode].to_s
-        when 'r', 'r+', 'w', 'w+', 'a', 'a+'; args.peek_options[:mode].to_s
-        when 'read_only', 'readonly'; 'r'
-        when 'rw', 'read_write', 'readwrite'; 'r+'
-        when 'write_only', 'writeonly'; 'w'
-        when 'append'; 'a'
-        else 'r'
-        end
-      )
-      @mode = 'w+' if !File.exist?(filename) && @mode == 'r'
-      permissions = args.peek_options[:permissions]
-      File.new(filename, @mode, permissions)
-    )
+    @filename = filename
+    @args = args
     super(source, *args)
+  end
+  
+  def source
+    @source ||= File.new(filename, mode, permissions)
+  end
+  
+  def mode
+    @mode ||= (
+      case args.peek_options[:mode].to_s
+      when 'r', 'r+', 'w', 'w+', 'a', 'a+'; args.peek_options[:mode].to_s
+      when 'read_only', 'readonly'; 'r'
+      when 'rw', 'read_write', 'readwrite'; 'r+'
+      when 'write_only', 'writeonly'; 'w'
+      when 'append'; 'a'
+      else 'r'
+      end
+    )
+  end
+  
+  def permissions
+    @permissions ||= args.peek_options[:permissions]
+  end
+  
+  def filename
+    @filename = File.expand_path(@filename)
   end
   
 end # class CSVFile
@@ -405,11 +446,15 @@ class CSVString < SimpleCSV
       super(source, *args, &block)
     end
     
-  end
+  end # class << self
   
   def initialize(string, *args)
-    source = StringIO.new(string)
+    @string = string
     super(source, *args)
+  end
+  
+  def source
+    @source ||= StringIO.new(@string)
   end
   
 end # class CSVString
