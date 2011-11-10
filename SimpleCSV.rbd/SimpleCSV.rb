@@ -1,7 +1,7 @@
 # SimpleCSV
 
-# 2011.02.17, 03.07, 03.19, 03.21, 04.02
-# 0.9.6
+# 2011.04.20, 21, 1111
+# 0.9.7
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.  
 
@@ -90,6 +90,10 @@
 # 54. + CSVFile#filename.  
 # 55. ~ CSVString#initialize.  
 # 56. + CSVString#source.  
+# 6/7 (A better implementation of enabling @as_array)
+# 57. ~ SimpleCSV#read, so as the @as_array decisions are handled further down---in CSVFile#parse_row...  
+# 58. ~ SimpleCSV#parse_row, so as it returns an array instead of a hash if so desired.  
+# 59. ~ SimpleCSV#to_a, so as it handles the @as_array option.  
 
 require 'stringio'
 
@@ -221,7 +225,7 @@ class SimpleCSV
       read_header
       @source.each(@row_separator){|raw_row| @rows << parse_row(raw_row, *selected_columns)}
       (@source.rewind; @source.truncate(0)) if @mode == 'r+'
-      @as_array ? to_a : @rows
+      @rows
     end
   end
   alias_method :read_csv, :read
@@ -294,7 +298,15 @@ class SimpleCSV
         raw_row.split_csv(@quote, @column_separator).each{|column_value| parsed_row[attributes[i]] = column_value unless !selected_columns.include?(attributes[i += 1])}
       end
     end
-    @as_array ? parsed_row.values : parsed_row
+    if @as_array
+      if @columns.blank?
+        (0..(parsed_row.size - 1)).inject([]){|a,i| a << parsed_row[i]}
+      else
+        attributes.collect{|attribute| parsed_row[attribute]}
+      end
+    else
+      parsed_row
+    end
   end
   
   def write(*selected_columns)
@@ -378,10 +390,17 @@ class SimpleCSV
   alias_method :first_row?, :first_row
   
   def to_a
-    if @columns.blank?
-      @rows.collect do |row|
-        row.sort{|a,b| a[1] <=> b[1]}
+    read_csv unless @rows[0]
+    if @as_array
+      @rows
+    elsif @columns.blank?
+      result = []
+      @rows.each do |row|
+        a = []
+        (0..(row.size - 1)).inject([]){|a,i| a << row[i]}
+        result << a
       end
+      result
     else
       @rows.collect do |row|
         attributes.collect{|attribute| row[attribute]}

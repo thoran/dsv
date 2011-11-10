@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 20111111
+
+0.9.7: A better implementation of enabling @as_array
+
+1. ~ SimpleCSV#read, so as the @as_array decisions are handled further down---in CSVFile#parse_row...
+2. ~ SimpleCSV#parse_row, so as it returns an array instead of a hash if so desired.
+3. ~ SimpleCSV#to_a, so as it handles the @as_array option.
+
+
 ## 20110402
 
 0.9.6
