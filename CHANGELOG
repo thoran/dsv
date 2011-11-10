@@ -2,6 +2,20 @@
 
 ## 20111111
 
+0.9.8: 1. Proper handling of @row_separator and 2. a more full implementation of the class method interfaces.
+
+1. ~ SimpleCSVe#parse_row, so as it assigns the index variable in fewer places.
+2. Now using String#split_csv 0.7.0, which has an additional argument and associated code to handle the row_separator or the chomping that goes on in there...
+3. ~ SimpleCSV#columns, introduced @row_separator into the call to String#split_csv.
+4. ~ SimpleCSV#parse_row, introduced @row_separator into the calls to String#split_csv.
+5. ~ SimpleCSV#initialize so that @quote now defaults to nil, allowing String#split_csv to handle heterogenously quoted lines.
+6. ~ SimpleCSV.parse, so as the call to read() makes use of any block supplied.
+7. ~ SimpleCSV.header_row, so as arguments can be supplied to the constructor.
+8. ~ SimpleCSV.first_row, so as arguments can be supplied to the constructor.
+9. ~ SimpleCSV.attributes, so as arguments can be supplied to the constructor.
+10. ~ SimpleCSV.columns, so as arguments can be supplied to the constructor.
+
+
 0.9.7: A better implementation of enabling @as_array
 
 1. ~ SimpleCSV#read, so as the @as_array decisions are handled further down---in CSVFile#parse_row...

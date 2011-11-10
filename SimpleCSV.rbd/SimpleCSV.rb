@@ -1,7 +1,7 @@
 # SimpleCSV
 
-# 2011.04.20, 21, 1111
-# 0.9.7
+# 20111110, 11
+# 0.9.8
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.  
 
@@ -94,6 +94,17 @@
 # 57. ~ SimpleCSV#read, so as the @as_array decisions are handled further down---in CSVFile#parse_row...  
 # 58. ~ SimpleCSV#parse_row, so as it returns an array instead of a hash if so desired.  
 # 59. ~ SimpleCSV#to_a, so as it handles the @as_array option.  
+# 7/8 (1. Proper handling of @row_separator and 2. a more full implementation of the class method interfaces.)
+# 60. ~ SimpleCSVe#parse_row, so as it assigns the index variable in fewer places.  
+# 61. Now using String#split_csv 0.7.0, which has an additional argument and associated code to handle the row_separator or the chomping that goes on in there...  
+# 62. ~ SimpleCSV#columns, introduced @row_separator into the call to String#split_csv.  
+# 63. ~ SimpleCSV#parse_row, introduced @row_separator into the calls to String#split_csv.  
+# 64. ~ SimpleCSV#initialize so that @quote now defaults to nil, allowing String#split_csv to handle heterogenously quoted lines.  
+# 65. ~ SimpleCSV.parse, so as the call to read() makes use of any block supplied.  
+# 66. ~ SimpleCSV.header_row, so as arguments can be supplied to the constructor.  
+# 67. ~ SimpleCSV.first_row, so as arguments can be supplied to the constructor.  
+# 68. ~ SimpleCSV.attributes, so as arguments can be supplied to the constructor.  
+# 69. ~ SimpleCSV.columns, so as arguments can be supplied to the constructor.  
 
 require 'stringio'
 
@@ -150,7 +161,7 @@ class SimpleCSV
       if block
         each(source, *args, &block)
       else
-        read(source, *args)
+        read(source, *args, &block)
       end
     end
     alias_method :parse_csv, :parse
@@ -160,20 +171,20 @@ class SimpleCSV
     end
     alias_method :write_csv, :write
     
-    def header_row(source)
-      new(source).header_row
+    def header_row(source, *args)
+      new(source, *args).header_row
     end
     
-    def first_row(source)
-      new(source).first_row
+    def first_row(source, *args)
+      new(source, *args).first_row
     end
     
-    def attributes(source)
-      new(source).attributes
+    def attributes(source, *args)
+      new(source, *args).attributes
     end
     
-    def columns(source)
-      new(source).columns
+    def columns(source, *args)
+      new(source, *args).columns
     end
     
     def parse_line(raw_row, *args) # For FasterCSV compatibility.  
@@ -201,7 +212,7 @@ class SimpleCSV
     options = args.extract_options!
     @header_row = options[:header_row] || options[:headers] || options[:header] || false
     @mode = options[:mode] || 'r'
-    @quote = options[:quote] || :none
+    @quote = options[:quote] || nil
     @row_separator = options[:row_separator] || options[:row_sep] || "\n"
     @column_separator = options[:column_separator] || options[:col_sep] || ','
     @selected_columns = options[:selected_columns]
@@ -252,7 +263,7 @@ class SimpleCSV
     @columns ||= (
       if header_row? && ['r', 'r+', 'a+'].include?(@mode) && first_row?
         columns, i = {}, -1
-        first_row.split_csv(@quote, @column_separator).each do |column_name|
+        first_row.split_csv(@quote, @column_separator, @row_separator).each do |column_name|
           if column_name.empty?
             columns[column_name].blank? ? columns[column_name] = [i += 1] : columns[column_name] << (i += 1)
           else
@@ -279,23 +290,20 @@ class SimpleCSV
   
   def parse_row(raw_row, *selected_columns)
     parsed_row = {}
+    i = -1
     if selected_columns.empty?
       if @columns.blank?
-        i = -1
-        raw_row.split_csv(@quote, @column_separator).each{|column_value| parsed_row[i += 1] = column_value}
+        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[i += 1] = column_value}
       else
-        i = -1
-        raw_row.split_csv(@quote, @column_separator).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
+        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
       end
     else
       selected_columns.flatten!
       case selected_columns[0]
       when Integer
-        i = -1
-        raw_row.split_csv(@quote, @column_separator).each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
+        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
       else
-        i = -1
-        raw_row.split_csv(@quote, @column_separator).each{|column_value| parsed_row[attributes[i]] = column_value unless !selected_columns.include?(attributes[i += 1])}
+        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[attributes[i]] = column_value unless !selected_columns.include?(attributes[i += 1])}
       end
     end
     if @as_array
