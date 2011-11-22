@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## 20111123
+
+0.9.9
+
+1. ~ SimpleCSV.parse, back to the way it was at 0.9.7, since the call to read will never require the block argument as it never makes it there.
+2. Simplified the SimpleCSV eigenclass methods which were using open() by using new() instead, since this is more correct, more succinct, and more efficient.
+3. Added SimpleCSV eigenclass collection methods: collect, select, reject, detect.  I couldn't simply mixin Enumerable as I had with the instance methods, because I needed to be able to supply arguments other than a block.
+4. + in SimpleCSV, alias_method :read_csv_header, :read_header in SimpleCSV.
+5. + in SimpleCSV, alias_method :write_csv_header, :write_header.
+6. + in SimpleCSV, alias_method :write_csv_row, :write_row.
+7. + in SimpleCSV, alias_method :each_row, :each.
+8. - CSVFile, attr_reader :filename, :args.
+9. ~ CSVFile#mode, so as it makes use of the instance variable rather than the removed reader method args.
+10. ~ CSVFile#mode, so it may accept hyphenated options for the mode aliases: read-only, read-write, write-only.
+11. ~ CSVFile#permissions, so as it makes use of the instance variable rather than the removed reader method args.
+12. ~ CSVFile#filename, by memoizing it.
+13. ~ SimpleCSV#each, /rows/@rows/, so as there are fewer method invocations.
+14. ~ SimpleCSV#columns, memozing first_row in the conditional, since this will be faster typically than doing the IO again.
+15. + alias_method :find_all, :select.
+16. + alias_method :find, :detect.
+
+
 ## 20111111
 
 0.9.8: 1. Proper handling of @row_separator and 2. a more full implementation of the class method interfaces.

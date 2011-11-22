@@ -1,7 +1,7 @@
 # SimpleCSV
 
-# 20111110, 11
-# 0.9.8
+# 20111111, 17, 18, 23
+# 0.9.9 (in progress)
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.  
 
@@ -105,6 +105,23 @@
 # 67. ~ SimpleCSV.first_row, so as arguments can be supplied to the constructor.  
 # 68. ~ SimpleCSV.attributes, so as arguments can be supplied to the constructor.  
 # 69. ~ SimpleCSV.columns, so as arguments can be supplied to the constructor.  
+# 8/9
+# 70. ~ SimpleCSV.parse, back to the way it was at 0.9.7, since the call to read will never require the block argument as it never makes it there.  
+# 71. Simplified the SimpleCSV eigenclass methods which were using open() by using new() instead, since this is more correct, more succinct, and more efficient.  
+# 72. Added SimpleCSV eigenclass collection methods: collect, select, reject, detect.  I couldn't simply mixin Enumerable as I had with the instance methods, because I needed to be able to supply arguments other than a block.  
+# 73. + in SimpleCSV, alias_method :read_csv_header, :read_header in SimpleCSV.  
+# 74. + in SimpleCSV, alias_method :write_csv_header, :write_header.  
+# 75. + in SimpleCSV, alias_method :write_csv_row, :write_row.  
+# 76. + in SimpleCSV, alias_method :each_row, :each.  
+# 77. - CSVFile, attr_reader :filename, :args.  
+# 78. ~ CSVFile#mode, so as it makes use of the instance variable rather than the removed reader method args.  
+# 79. ~ CSVFile#mode, so it may accept hyphenated options for the mode aliases: read-only, read-write, write-only.  
+# 80. ~ CSVFile#permissions, so as it makes use of the instance variable rather than the removed reader method args.  
+# 81. ~ CSVFile#filename, by memoizing it.  
+# 82. ~ SimpleCSV#each, /rows/@rows/, so as there are fewer method invocations.  
+# 83. ~ SimpleCSV#columns, memozing first_row in the conditional, since this will be faster typically than doing the IO again.  
+# 84. + alias_method :find_all, :select.  
+# 85. + alias_method :find, :detect.  
 
 require 'stringio'
 
@@ -130,7 +147,7 @@ class SimpleCSV
     end
     
     def open(source, *args, &block)
-      @csv_file ||= source_type(source).new(source, *args)
+      @csv_file = new(source, *args)
       if block
         begin
           yield @csv_file
@@ -144,15 +161,40 @@ class SimpleCSV
     end
     
     def each(source, *args, &block)
-      open(source, *args){|csv_file| csv_file.each(&block)}
+      new(source, *args).each(&block)
     end
     alias_method :foreach, :each
+    
+    def collect(source, *args, &block)
+      new_collection = []
+      each(source, *args){|row| new_collection << block.call(row)}
+      new_collection
+    end
+    alias_method :map, :collect
+    
+    def select(source, *args, &block)
+      new_collection = []
+      each(source, *args){|row| new_collection << row if block.call(row)}
+      new_collection
+    end
+    alias_method :find_all, :select
+    
+    def reject(source, *args, &block)
+      new_collection = []
+      each(source, *args){|row| new_collection << row unless block.call(row)}
+      new_collection
+    end
+    
+    def detect(source, *args, &block)
+      each(source, *args){|row| return row if block.call(row)}
+    end
+    alias_method :find, :detect
     
     def read(source, *args, &block)
       if block
         parse(source, *args, &block)
       else
-        open(source, *args){|csv_file| csv_file.read_csv}
+        new(source, *args).read_csv
       end
     end
     alias_method :read_csv, :read
@@ -161,13 +203,13 @@ class SimpleCSV
       if block
         each(source, *args, &block)
       else
-        read(source, *args, &block)
+        read(source, *args)
       end
     end
     alias_method :parse_csv, :parse
     
     def write(source, *args)
-      open(source, *args){|csv_file| csv_file.write_csv}
+      new(source, *args).write_csv
     end
     alias_method :write_csv, :write
     
@@ -249,6 +291,7 @@ class SimpleCSV
       @source.rewind
     end
   end
+  alias_method :read_csv_header, :read_header
   
   def parse(*selected_columns, &block)
     if block
@@ -261,7 +304,7 @@ class SimpleCSV
   
   def columns
     @columns ||= (
-      if header_row? && ['r', 'r+', 'a+'].include?(@mode) && first_row?
+      if header_row? && ['r', 'r+', 'a+'].include?(@mode) && (first_row = first_row?)
         columns, i = {}, -1
         first_row.split_csv(@quote, @column_separator, @row_separator).each do |column_name|
           if column_name.empty?
@@ -331,6 +374,7 @@ class SimpleCSV
       write_row(columns.to_csv)
     end
   end
+  alias_method :write_csv_header, :write_header
   
   def write_row(row, *selected_columns)
     collector = []
@@ -344,14 +388,15 @@ class SimpleCSV
       @source.puts(collector.to_csv(@quote))
     end
   end
+  alias_method :write_csv_row, :write_row
   
   def each(*selected_columns)
     selected_columns.flatten!
     if @rows[0]
       if selected_columns.empty?
-        rows.each{|row| yield row}
+        @rows.each{|row| yield row}
       else
-        rows.each do |row|
+        @rows.each do |row|
           yield selected_columns.inject({}){|hash, column_name| hash[column_name] = row[column_name]; hash}
         end
       end
@@ -365,6 +410,7 @@ class SimpleCSV
       end
     end
   end
+  alias_method :each_row, :each
   
   def attributes
     @attributes ||= (
@@ -429,8 +475,6 @@ class CSVFile < SimpleCSV
     
   end # class << self
   
-  attr_reader :filename, :args
-  
   def initialize(filename, *args)
     @filename = filename
     @args = args
@@ -443,11 +487,11 @@ class CSVFile < SimpleCSV
   
   def mode
     @mode ||= (
-      case args.peek_options[:mode].to_s
-      when 'r', 'r+', 'w', 'w+', 'a', 'a+'; args.peek_options[:mode].to_s
-      when 'read_only', 'readonly'; 'r'
-      when 'rw', 'read_write', 'readwrite'; 'r+'
-      when 'write_only', 'writeonly'; 'w'
+      case @args.peek_options[:mode].to_s
+      when 'r', 'r+', 'w', 'w+', 'a', 'a+'; @args.peek_options[:mode].to_s
+      when 'read_only', 'read-only', 'readonly'; 'r'
+      when 'rw', 'read_write', 'read-write', 'readwrite'; 'r+'
+      when 'write_only', 'write-only', 'writeonly'; 'w'
       when 'append'; 'a'
       else 'r'
       end
@@ -455,11 +499,11 @@ class CSVFile < SimpleCSV
   end
   
   def permissions
-    @permissions ||= args.peek_options[:permissions]
+    @permissions ||= @args.peek_options[:permissions]
   end
   
   def filename
-    @filename = File.expand_path(@filename)
+    @filename ||= File.expand_path(@filename)
   end
   
 end # class CSVFile
