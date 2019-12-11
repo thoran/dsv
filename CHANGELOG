@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 20191212
+
+0.9.10: + attributes=(), so that the attributes from another instance of SimpleCSV can be copied across or just an array of attributes can be used.
+
+1. + attributes=(), so that the attributes from another instance of SimpleCSV can be copied across or just an array of attributes can be used.
+
+
 ## 20111123
 
 0.9.9
