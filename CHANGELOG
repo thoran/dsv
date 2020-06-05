@@ -2,6 +2,13 @@
 
 ## 20200606
 
+0.10.3
+
+1. /CSVFile/SimpleCSV::File/
+2. /CSVString/SimpleCSV::String/
+3. Ensured that there are a number of leading class colon separators (::) in strategic places!
+
+
 0.10.2
 
 1. Separated CSVFile and CSVString into their own files.

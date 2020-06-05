@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20200606
-# 0.10.2
+# 0.10.3
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -37,6 +37,10 @@
 # 1/2
 # 4. Separated CSVFile and CSVString into their own files.
 # 5. require 'stringio' --> CSVString.rb
+# 2/3
+# 6. /CSVFile/SimpleCSV::File/
+# 7. /CSVString/SimpleCSV::String/
+# 8. Ensured that there are a number of leading class colon separators (::) in strategic places!
 
 $LOAD_PATH.unshift(File.expand_path('..', __FILE__))
 
@@ -47,18 +51,18 @@ require 'Array/to_csv'
 require 'Hash/to_csv'
 require 'String/split_csv'
 
-require 'CSVFile'
-require 'CSVString'
+require 'SimpleCSV/File'
+require 'SimpleCSV/String'
 
 class SimpleCSV
 
   class << self
 
     def source_type(source)
-      if File.exist?(source)
-        CSVFile
+      if ::File.exist?(source)
+        SimpleCSV::File
       else
-        CSVString
+        SimpleCSV::String
       end
     end
 
@@ -161,7 +165,7 @@ class SimpleCSV
 
   def initialize(source, *args)
     @source = (
-      if source.is_a?(String)
+      if source.is_a?(::String)
         SimpleCSV.source_type(source).new(source, *args).source
       else
         source
