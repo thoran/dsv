@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20200606
-# 0.10.0
+# 0.10.1
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -31,7 +31,9 @@
 
 # Changes since 0.9:
 # 1. - SimpleCSV.rbd directory, moving everything up a directory, and SimpleCSV.rb inside the lib directory, so it now adheres to a more conventional Ruby library structure. May re-introduce .rbd, self-contained Ruby libraries one day, but will need to have the require overload work correctly and be able to load .rbd files correctly when presented. This may have changed sometime in the past quite a few years...
-# 2. + lib/Kernel/silently.rb which was used in the speed testing file, but had never been incorporated into the lib directory as it should.
+# 2. + ./Kernel/silently.rb which was used in the speed testing file, but had never been incorporated into the lib directory as it should.
+# 0/1
+# 3. - ./test until such time as they are half-decent, which they have never been!
 
 require 'stringio'
 

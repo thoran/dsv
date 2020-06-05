@@ -2,6 +2,11 @@
 
 ## 20200606
 
+0.10.1: - ./test until such time as they are half-decent, which they have never been!
+
+1. - ./test until such time as they are half-decent, which they have never been!
+
+
 0.10.0
 
 1. - SimpleCSV.rbd directory, moving everything up a directory, and SimpleCSV.rb inside the lib directory, so it now adheres to a more conventional Ruby library structure. May re-introduce .rbd, self-contained Ruby libraries one day, but will need to have the require overload work correctly and be able to load .rbd files correctly when presented. This may have changed sometime in the past quite a few years...
