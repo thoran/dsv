@@ -1,8 +1,8 @@
 # SimpleCSV.rb
 # SimpleCSV
 
-# 20191212
-# 0.9.10
+# 20200606
+# 0.10.0
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -27,108 +27,15 @@
 
 # Bugs:
 # 1. This did cope with commas within a quoted CSV file, however while I think I broke this again with 0.9.0, I'm not sure that I ever had it working properly.  It works properly as of 0.9.3 at least.
-#check it# 2. SimpleCSV#write_row doesn't handle it if there are no attributes/columns defined.  It needs to work with CSV files with no column names.
+# 2. Does SimpleCSV#write_row handle it if there are no attributes/columns defined?  It needs to work with CSV files with no column names.
 
-# Changes since 0.8:
-# 1. /CSVFile/SimpleCSV/.
-# 2. Reset the Todo list and rolled in the Goals to that.
-# 3. Moved the loader stuff (Array, Hash, String) in here.
-# 4. More changes to interfaces to reflect the change in 0.8.0 to interface arguments.
-# 0/1 (Mostly the changes have been to supporting libraries.)
-# 1/2
-# 5. ~ SimpleCSV.read, contains SimpleCSV.read_rows.
-# 6. ~ SimpleCSV.write, contains SimpleCSV.write_rows.
-# 7. ~ SimpleCSV.header_row, simplified.
-# 8. ~ SimpleCSV.first_row, simplified.
-# 9. ~ SimpleCSV.attributes, simplified.
-# 10. ~ SimpleCSV.columns, simplified.
-# 11. - attr_accessor :rows, :quote, not being used.
-# 12. - alias_method :lines, :rows, not being used.
-# 13. - SimpleCSV#each_with_columns, rolled into SimpleCSV#each.
-# 14. ~ SimpleCSV#each, rolled in SimpleCSV#each_with_columns and only output Hashes now.
-# 15. - alias_method :lines, :rows, since a line is an unparsed row.
-# 16. ~ SimpleCSV#initialize, it now makes use of SimpleCSV.source.
-# 17. + SimpleCSV.parse, since it behaves slightly differently now from when it was an alias of SimpleCSV.read.
-# 18. ~ SimpleCSV.read, is now tidier!
-# 19. ~ SimpleCSV.write, is also a bit tidier!
-# 20. + SimpleCSV.to_a, so as to give this sort of output.
-# 21. + SimpleCSV.source_type.
-# 22. + CSVFile#initialize.
-# 23. + CSVString#initialize.
-# 24. - require '_meta/default_to'.
-# 25. - SimpleCSV#columns?, and using @columns.empty? instead in SimpleCSV#parse_row, since it is faster not to make that method call every row.
-# 26. - SimpleCSV#read_row, now just SimpleCSV#parse_row.
-# 27. - SimpleCSV#read_header, since it wasn't being used.
-# 28. - SimpleCSV#rows?, using @rows[0] instead in SimpleCSV#each, since it is faster not to make that method call every row.
-# 29. + SimpleCSV#parse, so as to mirror the changes in the class interface.
-# 30. ~ SimpleCSV#read, so as to accommodate the creation of SimpleCSV#parse as per the class interface.
-# 31. - require 'Index' and the file from ./lib also, since it wasn't being used still.
-# 2/3
-# 32. ~ SimpleCSV#initialize, so as the default quoting is :none, not :double.
-# 33. + SimpleCSV#read_header, which I'd mistakenly taken out in the recent cull... for use with SimpleCSV#read.
-# 34. ~ SimpleCSV#read, calls read_header, so the first line isn't pulled in as data.
-# 35. ~ SimpleCSV#initialize, /use_array/as_array/.
-# 36. ~ SimpleCSV#initialize, compressed a couple of the if statements, since they weren't complicated enough to be over 7 lines each.
-# 37. ~ SimpleCSV#parse_row, logic was inverted for when @columns.blank? after a change in the logic for at 0.9.0!
-# 38. ~ SimpleCSV#attributes, /columns/@columns.blank?/, and switched the logic order(!), since this is a little more robust and probably slightly faster too.
-# 39. ~ SimpleCSV#to_a, so as it copes when there are not attributes (ie. no columns specified) and so it now uses each row's order value to sort by for the getting the correct column order.
-# 40. ~ SimpleCSV#initialize, fixed manual column setting, so as it makes use of SimpleCSV#column=.
-# 4/5
-# 41. ~ SimpleCSV#initialize, + options[:row_sep] as an optional key to set @row_separator with a view to some FasterCSV compatibility.
-# 42. ~ SimpleCSV#columns, so as to gather empty header columns.
-# 43. ~ SimpleCSV#attributes, so as it can handle the empty header columns compiled in columns().
-# 44. This was bumped from 0.9.4 to 0.9.5 and an intermediate version which was 0.9.4 was left at that version number.
-# 5/6
-# 45. + SimpleCSV.parse_line for FasterCSV compatibiity.
-# 46. ~ SimpleCSV#initialize, + @column_separator in part for FasterCSV compatibility.
-# 47. ~ SimpleCSV#columns, + @column_separator in part for FasterCSV compatibility.
-# 48. ~ SimpleCSV#parse_row, + @column_separator in part for FasterCSV compatibility.
-# 49. ~ SimpleCSV#initialize, ~ @source.
-# 50. ~ CSVFile#initialize moved @source to own method.
-# 51. + CSVFile#source.
-# 52. + CSVFile#mode.
-# 53. + CSVFile#permissions.
-# 54. + CSVFile#filename.
-# 55. ~ CSVString#initialize.
-# 56. + CSVString#source.
-# 6/7 (A better implementation of enabling @as_array)
-# 57. ~ SimpleCSV#read, so as the @as_array decisions are handled further down---in CSVFile#parse_row...
-# 58. ~ SimpleCSV#parse_row, so as it returns an array instead of a hash if so desired.
-# 59. ~ SimpleCSV#to_a, so as it handles the @as_array option.
-# 7/8 (1. Proper handling of @row_separator and 2. a more full implementation of the class method interfaces.)
-# 60. ~ SimpleCSVe#parse_row, so as it assigns the index variable in fewer places.
-# 61. Now using String#split_csv 0.7.0, which has an additional argument and associated code to handle the row_separator or the chomping that goes on in there...
-# 62. ~ SimpleCSV#columns, introduced @row_separator into the call to String#split_csv.
-# 63. ~ SimpleCSV#parse_row, introduced @row_separator into the calls to String#split_csv.
-# 64. ~ SimpleCSV#initialize so that @quote now defaults to nil, allowing String#split_csv to handle heterogenously quoted lines.
-# 65. ~ SimpleCSV.parse, so as the call to read() makes use of any block supplied.
-# 66. ~ SimpleCSV.header_row, so as arguments can be supplied to the constructor.
-# 67. ~ SimpleCSV.first_row, so as arguments can be supplied to the constructor.
-# 68. ~ SimpleCSV.attributes, so as arguments can be supplied to the constructor.
-# 69. ~ SimpleCSV.columns, so as arguments can be supplied to the constructor.
-# 8/9
-# 70. ~ SimpleCSV.parse, back to the way it was at 0.9.7, since the call to read will never require the block argument as it never makes it there.
-# 71. Simplified the SimpleCSV eigenclass methods which were using open() by using new() instead, since this is more correct, more succinct, and more efficient.
-# 72. Added SimpleCSV eigenclass collection methods: collect, select, reject, detect.  I couldn't simply mixin Enumerable as I had with the instance methods, because I needed to be able to supply arguments other than a block.
-# 73. + in SimpleCSV, alias_method :read_csv_header, :read_header in SimpleCSV.
-# 74. + in SimpleCSV, alias_method :write_csv_header, :write_header.
-# 75. + in SimpleCSV, alias_method :write_csv_row, :write_row.
-# 76. + in SimpleCSV, alias_method :each_row, :each.
-# 77. - CSVFile, attr_reader :filename, :args.
-# 78. ~ CSVFile#mode, so as it makes use of the instance variable rather than the removed reader method args.
-# 79. ~ CSVFile#mode, so it may accept hyphenated options for the mode aliases: read-only, read-write, write-only.
-# 80. ~ CSVFile#permissions, so as it makes use of the instance variable rather than the removed reader method args.
-# 81. ~ CSVFile#filename, by memoizing it.
-# 82. ~ SimpleCSV#each, /rows/@rows/, so as there are fewer method invocations.
-# 83. ~ SimpleCSV#columns, memozing first_row in the conditional, since this will be faster typically than doing the IO again.
-# 84. + alias_method :find_all, :select.
-# 85. + alias_method :find, :detect.
-# 9/10
-# 86. + attributes=(), so that the attributes from another instance of SimpleCSV can be copied across or just an array of attributes can be used.
+# Changes since 0.9:
+# 1. - SimpleCSV.rbd directory, moving everything up a directory, and SimpleCSV.rb inside the lib directory, so it now adheres to a more conventional Ruby library structure. May re-introduce .rbd, self-contained Ruby libraries one day, but will need to have the require overload work correctly and be able to load .rbd files correctly when presented. This may have changed sometime in the past quite a few years...
+# 2. + lib/Kernel/silently.rb which was used in the speed testing file, but had never been incorporated into the lib directory as it should.
 
 require 'stringio'
 
-$LOAD_PATH.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
+$LOAD_PATH.unshift(File.expand_path('..', __FILE__))
 
 require '_meta/blankQ'
 require 'Array/extract_optionsX'
@@ -388,10 +295,6 @@ class SimpleCSV
       else
         selected_columns.each{|column| collector << row[column] unless row[column].nil?}
       end
-      # p @quote
-      # p collector
-      # p collector.to_csv
-      # p collector.to_csv(@quote)
       @source.puts(collector.to_csv(@quote))
     end
   end
