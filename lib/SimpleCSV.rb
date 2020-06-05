@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20200606
-# 0.10.1
+# 0.10.2
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -34,8 +34,9 @@
 # 2. + ./Kernel/silently.rb which was used in the speed testing file, but had never been incorporated into the lib directory as it should.
 # 0/1
 # 3. - ./test until such time as they are half-decent, which they have never been!
-
-require 'stringio'
+# 1/2
+# 4. Separated CSVFile and CSVString into their own files.
+# 5. require 'stringio' --> CSVString.rb
 
 $LOAD_PATH.unshift(File.expand_path('..', __FILE__))
 
@@ -45,6 +46,9 @@ require 'Array/peek_options'
 require 'Array/to_csv'
 require 'Hash/to_csv'
 require 'String/split_csv'
+
+require 'CSVFile'
+require 'CSVString'
 
 class SimpleCSV
 
@@ -379,69 +383,3 @@ class SimpleCSV
   end
 
 end # class SimpleCSV
-
-class CSVFile < SimpleCSV
-
-  class << self
-
-    def open(source, *args, &block)
-      @csv_file = CSVFile.new(source, *args)
-      super(source, *args, &block)
-    end
-
-  end # class << self
-
-  def initialize(filename, *args)
-    @filename = filename
-    @args = args
-    super(source, *args)
-  end
-
-  def source
-    @source ||= File.new(filename, mode, permissions)
-  end
-
-  def mode
-    @mode ||= (
-      case @args.peek_options[:mode].to_s
-      when 'r', 'r+', 'w', 'w+', 'a', 'a+'; @args.peek_options[:mode].to_s
-      when 'read_only', 'read-only', 'readonly'; 'r'
-      when 'rw', 'read_write', 'read-write', 'readwrite'; 'r+'
-      when 'write_only', 'write-only', 'writeonly'; 'w'
-      when 'append'; 'a'
-      else 'r'
-      end
-    )
-  end
-
-  def permissions
-    @permissions ||= @args.peek_options[:permissions]
-  end
-
-  def filename
-    @filename ||= File.expand_path(@filename)
-  end
-
-end # class CSVFile
-
-class CSVString < SimpleCSV
-
-  class << self
-
-    def open(source, *args, &block)
-      @csv_file = CSVString.new(source, *args)
-      super(source, *args, &block)
-    end
-
-  end # class << self
-
-  def initialize(string, *args)
-    @string = string
-    super(source, *args)
-  end
-
-  def source
-    @source ||= StringIO.new(@string)
-  end
-
-end # class CSVString

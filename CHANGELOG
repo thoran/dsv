@@ -2,6 +2,12 @@
 
 ## 20200606
 
+0.10.2
+
+1. Separated CSVFile and CSVString into their own files.
+2. require 'stringio' --> CSVString.rb
+
+
 0.10.1: - ./test until such time as they are half-decent, which they have never been!
 
 1. - ./test until such time as they are half-decent, which they have never been!
