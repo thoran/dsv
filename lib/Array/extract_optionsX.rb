@@ -1,14 +1,7 @@
+# Array/extract_optionsX.rb
 # Array#extract_options!
 
-# 20090123
-# 0.0.0
+# 20180804
+# 0.2.0 (The same version number as the current version of Thoran/Array/ExtractOptions.)
 
-# History: Stolen wholesale from ActiveSupport.  
-
-class Array
-  
-  def extract_options!
-    last.is_a?(::Hash) ? pop : {}
-  end
-  
-end
+require 'Thoran/Array/ExtractOptionsX/extract_optionsX'

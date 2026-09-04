@@ -1,8 +1,8 @@
 # SimpleCSV.rb
 # SimpleCSV
 
-# 20200606
-# 0.10.3
+# 20260905
+# 0.10.4
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -41,6 +41,12 @@
 # 6. /CSVFile/SimpleCSV::File/
 # 7. /CSVString/SimpleCSV::String/
 # 8. Ensured that there are a number of leading class colon separators (::) in strategic places!
+# 3/4 (Updated lib dependencies.)
+# 9. ~ Array/to_csv.rb: the 2014 version, which delegates to to_csv_header_row and to_csv_row and no longer requires _meta/default_to.
+# 10. ~ Array/extract_optionsX.rb: a shim over Thoran/Array/ExtractOptionsX.
+# 11. + The seventeen files those two require: the to_csv_row and to_csv_header_row families across Array, Hash, Object, OpenStruct and Struct, Object/is_one_ofQ, Object/to_h, Struct/to_h, and the two Thoran/ files.
+# 12. - _meta/default_to, NilClass/default_to and Object/default_to, nothing requiring them any longer.
+# 13. ~ SimpleCSV.read, ~ SimpleCSV.parse: two comments, dated 20240826, noting that column selection belongs in the class interface as it does in #read.
 
 $LOAD_PATH.unshift(File.expand_path('..', __FILE__))
 
@@ -110,6 +116,7 @@ class SimpleCSV
     end
     alias_method :find, :detect
 
+    # 20240826: Be able to select columns from here. The #read interface has that ability and so should the class method.
     def read(source, *args, &block)
       if block
         parse(source, *args, &block)
@@ -119,6 +126,7 @@ class SimpleCSV
     end
     alias_method :read_csv, :read
 
+    # 20240826: Here to so as to be consistent. See .read() comment.
     def parse(source, *args, &block)
       if block
         each(source, *args, &block)

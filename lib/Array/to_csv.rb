@@ -1,41 +1,91 @@
+# Array/to_csv.rb
 # Array#to_csv
 
-# 20111211
-# 0.9.9
+# 20140331, 0402, 0404, 0405, 0419
+# 0.9.0
 
-# Todo: 
-# 1. Split all these up and move each method into Array...  Done as of 0.9.0.  
-# 2. ~ Array#to_csv, massive refactor, including getting rid of a lot of aliases for now at least.  Done as of 0.9.0.  
+# Description: Turn an array into a CSV string for single or for multiple rows.
 
-# Changes since 0.8: 
-# 1. Has it's own file now.  
-# 0/1
-# 2. Removed all the require lines for the array methods since these are simple operations.  So, I am now doing the quoting directly, since quote_each() which calls wrap_each() which in turn calls wrap() is lots of extra method calls.  
-# 2/3
-# 3. + require '_meta/default_to' && making use of it in the case test, since if I explicitly supply nil, then the quote is not set to double in the argument definition.  
-# 3/9
-# 4. Version number bump to 0.9.9.  
-# 5. /+ e +/+ e.to_s +/.  
+# Discussion:
+# 1. One of the downsides of handling either rows or whole CSV files with the one method is that I have to be explicit with determining what objects I will handle and this makes for the continual need to update this, at present anyway.
 
-require '_meta/default_to'
+# Changes since 0.8:
+# 1. - require 'Array/to_csv_row'.
+# 2. - require 'Hash/to_csv_row'.
+# 3. + require '_meta/to_csv_row'.
+# 3. + require '_meta/to_csv_header_row'.
+
+require '_meta/to_csv_header_row'
+require '_meta/to_csv_row'
+require 'Object/is_one_ofQ'
 
 class Array
-  
+
   def to_csv(quote = :double)
-    case quote.default_to(:double).to_sym
-    when :double
-      self.collect{|e| '"' + e.to_s + '"'}.join(',')
-    when :spacey_double
-      self.collect{|e| '"' + e.to_s + '"'}.join(', ')
-    when :single
-      self.collect{|e| "'" + e.to_s + "'"}.join(',')
-    when :spacey_single
-      self.collect{|e| "'" + e.to_s + "'"}.join(', ')
-    when :none, :unquoted
-      self.join(',')
-    when :spacey_none, :spacey_unquoted
-      self.join(', ')
+    if first.is_one_of?(Array, Hash, OpenStruct, Struct) || first.instance_variables.any?
+      header = first.to_csv_header_row(quote) + "\n"
+      body = self.collect{|item| item.to_csv_row(quote) + "\n"}.join
+      header + body
+    else
+      to_csv_row(quote) + "\n"
     end
   end
-  
+
+end
+
+if __FILE__ == $0
+  a = [{a: 1, b: 2}, {a: 3, b: 4}]
+  if a.to_csv == "\"a\",\"b\"\n\"1\",\"2\"\n\"3\",\"4\"\n"
+    print '.'
+  else
+    print 'x'
+  end
+
+  class A
+    attr_accessor :a, :b
+    def initialize(a, b)
+      @a, @b = a, b
+    end
+  end
+
+  a = [A.new(1,2), A.new(3,4)]
+  if a.to_csv == "\"a\",\"b\"\n\"1\",\"2\"\n\"3\",\"4\"\n"
+    print '.'
+  else
+    print 'x'
+  end
+
+  require 'ostruct'
+  a = [OpenStruct.new({a: 1, b: 2}), OpenStruct.new({a: 3, b: 4})]
+  if a.to_csv == "\"a\",\"b\"\n\"1\",\"2\"\n\"3\",\"4\"\n"
+    print '.'
+  else
+    print 'x'
+  end
+
+  a = [[[:a, 1], [:b, 2]], [[:a, 3], [:b, 4]]]
+  if a.to_csv == "\"a\",\"b\"\n\"1\",\"2\"\n\"3\",\"4\"\n"
+    print '.'
+  else
+    print 'x'
+  end
+
+  B = Struct.new(:a, :b)
+
+  a = [B.new(1, 2), B.new(3, 4)]
+  if a.to_csv == "\"a\",\"b\"\n\"1\",\"2\"\n\"3\",\"4\"\n"
+    print '.'
+  else
+    print 'x'
+  end
+
+
+  a = [1, 2, 3, 4]
+  if a.to_csv == "\"1\",\"2\",\"3\",\"4\"\n"
+    print '.'
+  else
+    print 'x'
+  end
+
+  puts
 end

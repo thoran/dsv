@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 20260905
+
+0.10.4: Updated lib dependencies.
+
+1. ~ Array/to_csv.rb: the 2014 version, which delegates to to_csv_header_row and to_csv_row and no longer requires _meta/default_to.
+2. ~ Array/extract_optionsX.rb: a shim over Thoran/Array/ExtractOptionsX.
+3. + The seventeen files those two require: the to_csv_row and to_csv_header_row families across Array, Hash, Object, OpenStruct and Struct, Object/is_one_ofQ, Object/to_h, Struct/to_h, and the two Thoran/ files.
+4. - _meta/default_to, NilClass/default_to and Object/default_to, nothing requiring them any longer.
+5. ~ SimpleCSV.read, ~ SimpleCSV.parse: two comments, dated 20240826, noting that column selection belongs in the class interface as it does in #read.
+
+
 ## 20200606
 
 0.10.3
