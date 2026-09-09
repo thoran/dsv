@@ -9,6 +9,16 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.6: ~ SimpleCSV#write_values, a row is rendered inside the class with the instance's separators, a quote inside a value doubled.
+
+1. + row_renderer(): chosen once in #initialize from the quote mode and held; #write_values renders each row with it. The column and row separators are the instance's, so writing takes column_separator: and row_separator: as reading does and a file round-trips through both (Finding 23); it had joined with a literal comma through Array#to_csv and ended with #puts.
+2. A quote inside a quoted value is doubled, "say ""hi""", as RFC 4180 has it and as #split_csv reads it since 0.11.4; it had been written once. Under :single the single quote is doubled likewise; under :none and :unquoted nothing is quoted or doubled.
+3. The spacey modes, :spacey_double, :spacey_single, :spacey_none and :spacey_unquoted, put a space after each separator as Array#to_csv_row did; all seven spellings are kept.
+4. The library no longer calls Array#to_csv; the require stays until Phase 4's scoping, with Hash#to_csv's.
+5. ~ test/SimpleCSV_test.rb: - two skips (Finding 23 and the doubled quote), + a round trip through a pipe and CRLF, + the spacey modes. Run to 107, 12 skipped.
+6. ~ lib/SimpleCSV.rb: /0.11.5/0.11.6/.
+
+
 0.11.5: ~ SimpleCSV#columns, a repeated header name keeps every position, and a row holds its values as an Array.
 
 1. ~ columns(): any name that occurs at more than one position maps to an Array of the positions, as an empty name alone did since 0.9.5; the special case goes. a,a,b gives {'a' => [0, 1], 'b' => 2} (Finding 5). columns=() given a list with a repeated name does the same.

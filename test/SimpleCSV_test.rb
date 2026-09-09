@@ -559,7 +559,6 @@ describe SimpleCSV do
     end
 
     it "doubles a quote inside a quoted value, per RFC 4180" do
-      skip "Observation: the write side of Finding 1; an embedded quote is written once"
       _(written(columns: [:a, :b]){|csv| csv.write_row('a' => 'say "hi"', 'b' => 'z')}).must_equal "\"say \"\"hi\"\"\",\"z\"\n"
     end
 
@@ -576,10 +575,16 @@ describe SimpleCSV do
       _(output).must_equal "\"1\",\"\",\"3\"\n"
     end
 
-    it "writes with the column and row separators given, as it reads with them" do
-      skip "Finding 23: the write path joins with a literal comma and ends with puts"
+    it "writes with the column and row separators given, as it reads with them, and round-trips them" do
       _(written(columns: [:a, :b], column_separator: "\t", quote: :none){|csv| csv.rows = [{'a' => 1, 'b' => 2}]; csv.write}).must_equal "1\t2\n"
       _(written(columns: [:a, :b], row_separator: "\r\n", quote: :none){|csv| csv.rows = [{'a' => 1, 'b' => 2}]; csv.write}).must_equal "1,2\r\n"
+      output = written(headers: true, columns: [:a, :b], column_separator: '|', row_separator: "\r\n"){|csv| csv.rows = [{'a' => 'x|y', 'b' => '2'}]; csv.write}
+      _(SimpleCSV.read(output, headers: true, column_separator: '|', row_separator: "\r\n")).must_equal [{'a' => 'x|y', 'b' => '2'}]
+    end
+
+    it "writes the spacey modes with a space after each separator" do
+      _(written(columns: [:a, :b], quote: :spacey_none){|csv| csv.write_row('a' => 1, 'b' => 2)}).must_equal "1, 2\n"
+      _(written(columns: [:a, :b], quote: :spacey_double){|csv| csv.write_row('a' => 1, 'b' => 2)}).must_equal "\"1\", \"2\"\n"
     end
   end
 

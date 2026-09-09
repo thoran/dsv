@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.5
+# 0.11.6
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -168,6 +168,7 @@ class SimpleCSV
     @column_separator = options[:column_separator] || options[:col_sep] || ','
     @selected_columns = options[:selected_columns]
     @as_array = options[:as_array] || false
+    @render_row = row_renderer
     if options[:columns]
       self.columns = options[:columns]
     else
@@ -333,7 +334,26 @@ class SimpleCSV
   alias_method :write_csv_row, :write_row
 
   def write_values(values)
-    @source.puts(values.to_csv(@quote))
+    @source.write(@render_row.call(values))
+  end
+
+  # Chosen once from the quote mode: how a row of values is rendered, with the instance's separators, a quote inside a quoted value doubled as RFC 4180 has it. The spacey modes put a space after each separator, as Array#to_csv_row did.
+  def row_renderer
+    quote, spacey = case @quote&.to_sym
+                    when :none, :unquoted then [nil, false]
+                    when :spacey_none, :spacey_unquoted then [nil, true]
+                    when :single then ["'", false]
+                    when :spacey_single then ["'", true]
+                    when :spacey_double then ['"', true]
+                    else ['"', false]
+                    end
+    joiner = spacey ? @column_separator + ' ' : @column_separator
+    if quote
+      doubled = quote * 2
+      ->(values){values.collect{|value| quote + value.to_s.gsub(quote, doubled) + quote}.join(joiner) + @row_separator}
+    else
+      ->(values){values.join(joiner) + @row_separator}
+    end
   end
 
   def each(*selected_columns)
