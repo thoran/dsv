@@ -606,23 +606,6 @@ describe DSV do
     end
   end
 
-  describe "the supporting to_csv methods" do
-    it "Array#to_csv writes an array of strings as one row, quoted by default and joined by comma" do
-      _(['1', 'x'].to_csv).must_equal "\"1\",\"x\"\n"
-      _(['1', 'x'].to_csv(:none)).must_equal "1,x\n"
-      _(['1', 'x'].to_csv(:spacey_double)).must_equal "\"1\", \"x\"\n"
-    end
-
-    it "Hash#to_csv writes the selected columns' values as one row" do
-      _({'a' => 1, 'b' => 2}.to_csv(selected_columns: ['b'])).must_equal "\"2\"\n"
-    end
-
-    it "Hash#to_csv writes every value as one row when no columns are selected" do
-      skip "Finding 20: the loop looks each value up as a key"
-      _({'a' => 1, 'b' => 2}.to_csv).must_equal "\"1\",\"2\"\n"
-    end
-  end
-
   describe "DSV::String" do
     it "reads a string, and .open behaves as DSV.open" do
       _(DSV::String.new(DATA, headers: true).read).must_equal KEYED

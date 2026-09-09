@@ -9,6 +9,13 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.12.1: lib/ scoped to what the gem ships: the three core files, with what they used from the supporting files moved inside the class.
+
+1. - the twenty-seven supporting files (_meta, Array, Hash, Object, OpenStruct, Struct, Thoran, and the blank? family), and their requires. Of them the library used four things: Array#extract_options!, now DSV.extract_options, the same line as a class method; Array#peek_options, now DSV::File#options; Object#blank?, asked of a Hash of columns, an Array of names and a selection, now the private blank?(value), nil? || empty?; and String#split_csv, the parser, now the private split_row taking the quote mode and separators from the instance, its reassembly loop as reassemble_quoted_fields, the same string operations, start_with? and end_with? in place of the four regex matches per piece. Array#to_csv and Hash#to_csv had not been called since 0.11.6 and 0.11.2; the other seventeen were reached only through Array#to_csv's object path, which the library never used. Nothing goes under Thoran::; there is nothing left to namespace. The originals stay in ~/lib/ruby for the live SimpleCSV and its other users.
+2. ~ test/dsv_test.rb: - the examples of Array#to_csv and Hash#to_csv, which tested the removed files, and with them the skip on Finding 20, closed by the deletion. Run to 108, 2 skipped.
+3. ~ lib/dsv.rb: /0.12.0/0.12.1/.
+
+
 0.12.0: /SimpleCSV/DSV/
 
 1. /SimpleCSV/DSV/, /SimpleCSV::File/DSV::File/, /SimpleCSV::String/DSV::String/; lib/SimpleCSV.rb --> lib/dsv.rb, lib/SimpleCSV/ --> lib/DSV/, test/SimpleCSV_test.rb --> test/dsv_test.rb; the requires to match. The supporting files are still required under their old paths, and 0.11.18 being the last SimpleCSV that worked in full, this is that library under its new name: the suite passes as before with only the names changed. Run to 111, 3 skipped.

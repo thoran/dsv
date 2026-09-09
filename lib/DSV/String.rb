@@ -1,8 +1,6 @@
 # DSV/String.rb
 # DSV::String
 
-require 'stringio'
-
 require_relative '../dsv'
 
 class DSV

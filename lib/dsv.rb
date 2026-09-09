@@ -2,18 +2,13 @@
 # DSV
 
 # 20260910
-# 0.12.0
+# 0.12.1
 
-# Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
+# Description: Delimiter-separated values: reading and writing CSV and its relatives, tabulated data to and from files and strings, with any delimiter on either side.
 
 $LOAD_PATH.unshift(File.expand_path('..', __FILE__))
 
-require '_meta/blankQ'
-require 'Array/extract_optionsX'
-require 'Array/peek_options'
-require 'Array/to_csv'
-require 'Hash/to_csv'
-require 'String/split_csv'
+require 'stringio'
 
 require 'DSV/File'
 require 'DSV/String'
@@ -21,6 +16,11 @@ require 'DSV/String'
 class DSV
 
   class << self
+
+    # The trailing Hash of an argument list, removed from it; or none.
+    def extract_options(args)
+      args.last.is_a?(::Hash) ? args.pop : {}
+    end
 
     # A mode as Ruby's File spells it, from any of the spellings the library accepts, a Symbol included; unspecified is r.
     def normalised_mode(mode)
@@ -58,7 +58,7 @@ class DSV
 
     # The class-level read, parse and each take a column selection before the options, as the instance-level ones take it as arguments.
     def each(source, *args, &block)
-      options = args.extract_options!
+      options = DSV.extract_options(args)
       new(source, options).each(*args, &block)
     end
     alias_method :foreach, :each
@@ -93,7 +93,7 @@ class DSV
       if block
         parse(source, *args, &block)
       else
-        options = args.extract_options!
+        options = DSV.extract_options(args)
         new(source, options).read_csv(*args)
       end
     end
@@ -131,7 +131,7 @@ class DSV
     end
 
     def parse_line(raw_row, *args) # For FasterCSV compatibility.
-      options = args.extract_options!
+      options = DSV.extract_options(args)
       row_separator = options[:row_separator] || options[:row_sep] || "\n"
       column_separator = options[:column_separator] || options[:col_sep] || ','
       sc = DSV.new(raw_row, :quote => nil, :as_array => true, :row_separator => row_separator, :column_separator => column_separator)
@@ -152,7 +152,7 @@ class DSV
         source
       end
     )
-    options = args.extract_options!
+    options = DSV.extract_options(args)
     @header_row = options[:header_row] || options[:headers] || options[:header] || false
     @mode = DSV.normalised_mode(options[:mode])
     @quote = options[:quote] || nil
@@ -216,7 +216,7 @@ class DSV
     @columns = (
       if header_row? && ['r', 'r+', 'a+'].include?(@mode) && (first_row = first_row?)
         columns, i = {}, -1
-        first_row.split_csv(@quote, @column_separator, @row_separator).each do |column_name|
+        split_row(first_row).each do |column_name|
           columns[column_name] = columns.key?(column_name) ? [*columns[column_name], i += 1] : (i += 1)
         end
         columns
@@ -263,6 +263,49 @@ class DSV
     end
   end
 
+  # nil or empty, which a Hash of columns, an Array of names and an unset selection all may be.
+  def blank?(value)
+    value.nil? || value.empty?
+  end
+
+  # One row into its fields, by the quote mode: :none splits; :double splits a wholly quoted row on quote-separator-quote and a wholly unquoted one plainly; unspecified splits and reassembles a quoted field that held the separator, a doubled quote inside it reading as one. Direct string operations throughout; the scanner-based parser is on the branch scanner-parser.
+  def split_row(raw_row)
+    row = raw_row.chomp(@row_separator)
+    case @quote
+    when :none, :unquoted
+      row.split(@column_separator, -1)
+    when :double, :double_quoted, :double_quotes
+      if row.start_with?('"')
+        row.delete_prefix('"').delete_suffix('"').split('"' + @column_separator + '"', -1).collect{|field| field.gsub('""', '"')}
+      else
+        row.split(@column_separator, -1)
+      end
+    else
+      reassemble_quoted_fields(row.split(@column_separator, -1))
+    end
+  end
+
+  # Pieces of a row split on the separator, the pieces of a quoted field that held the separator joined back with it; a piece that is a lone quote opens or closes a field.
+  def reassemble_quoted_fields(pieces)
+    fields = []
+    buffer = nil
+    pieces.each do |piece|
+      if buffer && !piece.end_with?('"')
+        buffer << @column_separator << piece
+      elsif buffer
+        fields << (buffer << @column_separator << piece.delete_suffix('"')).gsub('""', '"')
+        buffer = nil
+      elsif piece.start_with?('"') && (piece.length == 1 || !piece.end_with?('"'))
+        buffer = +piece.delete_prefix('"')
+      elsif piece.start_with?('"') && piece.end_with?('"')
+        fields << piece.delete_prefix('"').delete_suffix('"').gsub('""', '"')
+      else
+        fields << piece
+      end
+    end
+    fields
+  end
+
   # A quoted field may hold the row separator: while the quotes in a row are unbalanced the next line belongs to it.
   def complete_quoted_row(raw_row)
     raw_row << @source.gets(@row_separator).to_s while @quote.nil? && raw_row.count('"').odd? && !@source.eof?
@@ -273,24 +316,24 @@ class DSV
     parsed_row = {}
     i = -1
     if selected_columns.empty?
-      if @columns.blank?
-        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[i += 1] = column_value}
+      if blank?(@columns)
+        split_row(raw_row).each{|column_value| parsed_row[i += 1] = column_value}
       elsif repeated_names.empty?
-        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
+        split_row(raw_row).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
       else
-        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| store_field(parsed_row, attributes[i += 1], column_value)}
+        split_row(raw_row).each{|column_value| store_field(parsed_row, attributes[i += 1], column_value)}
       end
     else
       selected_columns.flatten!
       case selected_columns[0]
       when Integer
-        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
+        split_row(raw_row).each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
       else
-        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| store_field(parsed_row, attributes[i], column_value) unless !selected_columns.include?(attributes[i += 1])}
+        split_row(raw_row).each{|column_value| store_field(parsed_row, attributes[i], column_value) unless !selected_columns.include?(attributes[i += 1])}
       end
     end
     if @as_array
-      if @columns.blank?
+      if blank?(@columns)
         (0..(parsed_row.size - 1)).inject([]){|a,i| a << parsed_row[i]}
       else
         values_in_order(parsed_row)
@@ -303,7 +346,7 @@ class DSV
   # With no columns defined, rows keyed by name supply them, and the header, from the first row's keys; rows keyed by position write positionally and have no header to write.
   def write(*selected_columns)
     prepare_to_rewrite if @mode == 'r+'
-    self.columns = @rows[0].keys if columns.blank? && @rows[0].is_a?(::Hash) && @rows[0].keys[0].is_a?(::String)
+    self.columns = @rows[0].keys if blank?(columns) && @rows[0].is_a?(::Hash) && @rows[0].keys[0].is_a?(::String)
     write_header(*selected_columns) if header_row? && attributes
     each{|row| write_row(row, *selected_columns)}
   end
@@ -386,7 +429,7 @@ class DSV
 
   def attributes
     @attributes ||= (
-      if columns.blank?
+      if blank?(columns)
         nil
       else
         a = []
@@ -423,7 +466,7 @@ class DSV
     read_csv unless @rows[0]
     if @as_array
       @rows
-    elsif @columns.blank?
+    elsif blank?(@columns)
       @rows.collect(&:values)
     else
       @rows.collect{|row| values_in_order(row)}

@@ -17,11 +17,16 @@ class DSV
     end
 
     def mode
-      @mode ||= DSV.normalised_mode(@args.peek_options[:mode])
+      @mode ||= DSV.normalised_mode(options[:mode])
+    end
+
+    # The trailing Hash of the arguments, left in place for the parent to take.
+    def options
+      @args.last.is_a?(::Hash) ? @args.last : {}
     end
 
     def permissions
-      @permissions ||= @args.peek_options[:permissions]
+      @permissions ||= options[:permissions]
     end
 
     attr_reader :filename
