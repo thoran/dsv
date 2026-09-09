@@ -9,6 +9,13 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.10: ~ SimpleCSV.detect, nil when no row matches.
+
+1. ~ SimpleCSV.detect: returns nil when the block is true for no row (Finding 8); the fall-through had been .each's return value, every row.
+2. ~ test/SimpleCSV_test.rb: - the skip on the detect example. Run to 109, 8 skipped.
+3. ~ lib/SimpleCSV.rb: /0.11.9/0.11.10/.
+
+
 0.11.9: ~ SimpleCSV.read, .parse and .each, a column selection given before the options is honoured.
 
 1. ~ SimpleCSV.read, ~ .each: the arguments before the options are the selection and go to the instance's #read or #each, as the two comments of 20240826 asked: SimpleCSV.read(source, 'a', headers: true) reads the a column alone (Finding 7). The names had been passed into new, which discarded them. .parse, .collect, .select, .reject and .detect go through .each and gain it likewise; the two comments go.

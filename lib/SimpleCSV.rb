@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.9
+# 0.11.10
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -108,6 +108,7 @@ class SimpleCSV
 
     def detect(source, *args, &block)
       each(source, *args){|row| return row if block.call(row)}
+      nil
     end
     alias_method :find, :detect
 

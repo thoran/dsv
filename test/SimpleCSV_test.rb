@@ -168,7 +168,6 @@ describe SimpleCSV do
     end
 
     it "detects nil when no row matches" do
-      skip "Finding 8: the fall-through returns every row"
       _(SimpleCSV.detect(DATA, headers: true){|row| false}).must_be_nil
     end
   end
