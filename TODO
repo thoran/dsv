@@ -1,0 +1,26 @@
+# TODO
+
+## 0.12.0, decided
+
+1. The rename to DSV: the constant, DSV::File and DSV::String, lib/dsv.rb with lib/dsv/ beneath it, test/dsv_test.rb; the gem's shape, gemspec, LICENSE, README, .gitignore; and the scoping of lib/ to what the gem ships, the to_csv_row and to_csv_header_row families, is_one_of?, to_h and their requires gone, String/split_csv, extract_options!, peek_options and blank? kept or replaced by plain Ruby. No behaviour changes: the suite passes before and after with only the names changed.
+2. A path is told from content by the call, not by a guess: .read, .foreach, .open and the other path-taking class methods take a path, .parse takes text, new keeps the guess with a switch to say which, and a path under a read mode that names no file raises rather than being read as text.
+3. Selection as a keyword on the calls, only: or select:, columns: being taken; the positional form kept or retired; selected_columns: renamed to match.
+4. The instance-level header_row accessor renamed headers?, the class-level header_row now being the row.
+5. << to append a row and generate to build a string, the two writing calls a CSV user reaches for first.
+6. The README, written once under the DSV name, claiming what is true without a benchmark: small, keyed access, any delimiter both ways.
+
+## 0.13.0, speed
+
+7. The saved-up speed change, with the evidence in the reconciliation: two string predicates in place of four regex matches per piece in split_csv; rows built by zip.to_h; a benchmark script in the repository against stdlib CSV, and the README's speed sentence written from its output. The scanner-based parser on the branch scanner-parser is judged here, for the Regexp separator with a quoted field if for nothing else.
+
+## Features, after
+
+8. Guessing, as a mode that runs once at construction on a sample of the first rows and feeds the same chooser as an explicit option, scanner only: the column separator, the one whose count is the same on every sampled row; whether the first row is a header, its columns' types differing from the rows beneath in the same way across columns; and, where there is no header, a header made from the data, each column named for what its values look like, integer, decimal, date, email, URL, phone, with a positional fallback, column_0, for text and a suffix where two columns share a class. Names come from what values look like, not what they mean; anything more is a schema, and another library's.
+9. Templated ingestion: a template: option taking a whole-row Regexp with a capture per field, the group names being the column names, one match per row; an Array of separators as its writable special case, compiled into such a Regexp at construction and invertible for writing where a general template is not.
+10. The duplicate-header modes as an option: keep all as an Array, the default; index, a, a.1; first; last; error. All derivations of the same columns map at header time, none costing anything per row.
+11. Writing options: minimal quoting, a field quoted only where it holds a separator, a quote or a row terminator; a row terminator inside a field kept, quoted, or folded to a space; the encoding declared and a transcode offered with any loss marked.
+12. Symbols and Strings interchangeable for column names, in a selection, a columns: list and a row's keys; today a String is required.
+13. A strict: option, off by default, that raises on a row with more or fewer fields than the header; today a short row gets only the columns it has and a long row's excess lands under nil.
+14. A line number in each parse error, UnterminatedQuote first, found only when the error is raised, from the source's position at that moment; never counted as it goes, since counting costs time on every row for the sake of the rare one.
+15. Chunked processing of a large file: a bounded number of rows at a time handed to a block, so that nothing needs the whole file in memory and a partial result can be acted on before the rest is read.
+16. Checks, all of them after the above: strict: (13), column types, and whatever else proves wanted; correct and published comes first.

@@ -2,32 +2,9 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.17
+# 0.11.18
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
-
-# Todo:
-# 1. Have it be able to read mixed CSV files.  Done as of 0.9.0.
-# 2. Have it be able to read escaped and quoted delimeters.
-# 3. Separate out the different classes into separate files.  Done as of 0.8 I think, but taken further with 0.9.
-# 4. Create a gem and/or Rubylibify and/or
-# 5. Optionally do line counts.
-# 6. Optionally do column count checks.
-# 7. Optionally do data consistency checks for column length, type, and anything else that makes sense.
-# 8. Put the option to specify quoting into to_csv and possibly remove it from #init.  Done as of at least 0.8.
-# 9. Remove underscores when outputting the header line, but only if they were added---and only if they're wanting to be removed?...  As of 0.9.0, I just use strings anyway.
-# 10. Reorder the conditionals in #write_line and #write_header.  Done as of 0.9.0.
-# 11. Simplify some more!  Done as of 0.9.1.
-
-# Ideas:
-# 1. Standardize on either symbols or strings for column names, since presently one has to be consistent.  It would be nicer to be able to mix and match---if possible.
-# 2. Automatically detect as to whether there is a header line by taking the first line and comparing the types (alpha, numeric, alpha-numeric, etcetera) with each of the column values with those of the subsequent 2 or 3 or so lines and if there is a correspondence, then assume that there is a header line.  This would mean that the assumption that there is would change and that if the guess was wrong that it would need to be made explict.
-# 3. Have it #read a file automatically if any of 'r' or 'r+' or 'w+' is given as the mode.
-# 4. Finally try to make use of Index instead of Hash, since that library file is still hanging around.  Using this class may be simpler but not faster than using Hash and Array.
-
-# Bugs:
-# 1. This did cope with commas within a quoted CSV file, however while I think I broke this again with 0.9.0, I'm not sure that I ever had it working properly.  It works properly as of 0.9.3 at least.
-# 2. Does SimpleCSV#write_row handle it if there are no attributes/columns defined?  It needs to work with CSV files with no column names.
 
 $LOAD_PATH.unshift(File.expand_path('..', __FILE__))
 

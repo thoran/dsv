@@ -9,6 +9,12 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.18: + TODO, and the header's Todo, Ideas and Bugs sections retired into it.
+
+1. + TODO: what survives of the header's three sections and of _libraries/SimpleCSV/notes.txt, triaged: what is done or fixed is dropped with its version named in the reconciliation, and the rest is grouped as 0.12.0, decided; 0.13.0, speed; and features after, the guessing mode (separator, header, and a header made from the data where there is none), templated ingestion as a whole-row Regexp, the duplicate-header modes, the writing options, symbols and strings interchangeably, a strict: option, and a line number on parse errors.
+2. ~ lib/SimpleCSV.rb: - the Todo, Ideas and Bugs sections; the header is the name, the date, the version and the description. /0.11.17/0.11.18/.
+
+
 0.11.17: ~ SimpleCSV.header_row, the header row as names.
 
 1. ~ SimpleCSV.header_row: returns the header row parsed into its names, as .attributes does, or nil where there is no header row; it had returned the instance's header_row accessor, true or false, the only thing the name could mean at the class level being the row (Finding 9). .first_row remains the raw first line. The instance-level accessor of the same name, the headers: option's value, is unchanged and is a 0.12.0 naming question.
