@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.15
+# 0.11.16
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -195,7 +195,13 @@ class SimpleCSV
     @source.close
   end
 
+  # A call's own selection, or the instance's selected_columns: where the call gives none.
+  def selection(selected_columns)
+    selected_columns.empty? ? Array(@selected_columns) : selected_columns
+  end
+
   def read(*selected_columns, &block)
+    selected_columns = selection(selected_columns)
     if block
       parse(*selected_columns, &block)
     else
@@ -378,6 +384,7 @@ class SimpleCSV
 
   def each(*selected_columns)
     return to_enum(:each, *selected_columns) unless block_given?
+    selected_columns = selection(selected_columns)
     selected_columns.flatten!
     if @rows[0]
       if selected_columns.empty?

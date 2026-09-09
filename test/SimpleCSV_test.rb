@@ -293,6 +293,14 @@ describe SimpleCSV do
       _(SimpleCSV.new(StringIO.new(DATA), headers: true).read).must_equal KEYED
     end
 
+    it "reads only the selected_columns: given at construction when a call selects none, a call's own selection winning" do
+      csv = SimpleCSV.new(DATA, headers: true, selected_columns: ['a'])
+      _(csv.read).must_equal [{'a' => '1'}, {'a' => '4'}]
+      _(csv.read('b')).must_equal [{'b' => '2'}, {'b' => '5'}]
+      _(SimpleCSV.new(DATA, headers: true, selected_columns: 'c').each.to_a).must_equal [{'c' => '3'}, {'c' => '6'}]
+      _(SimpleCSV.read(DATA, headers: true, selected_columns: [0, 2])).must_equal [{0 => '1', 2 => '3'}, {0 => '4', 2 => '6'}]
+    end
+
     it "exposes the options as accessors, quote defaulting to nil" do
       csv = SimpleCSV.new(DATA, headers: true, mode: 'r', quote: :none, row_separator: "\n", as_array: false)
       _(csv.header_row).must_equal true

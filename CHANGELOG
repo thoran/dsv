@@ -9,6 +9,13 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.16: ~ SimpleCSV#read and #each, selected_columns: given at construction is the selection when a call gives none.
+
+1. + selection(): a call's own selection, or the instance's selected_columns: where the call gives none; #read and #each take theirs through it, and #parse, #to_a and the class methods follow. selected_columns: had been stored by #initialize and read by nothing (Finding 12). A single name or position is accepted as well as a list, and a call's own selection wins. Whether the selection becomes a keyword on the calls themselves is a 0.12.0 question; for now the option works under its name.
+2. ~ test/SimpleCSV_test.rb: + the option at construction, a call overriding it, an Enumerator under it, and positions through the class-level read. Run to 110, 3 skipped.
+3. ~ lib/SimpleCSV.rb: /0.11.15/0.11.16/.
+
+
 0.11.15: ~ SimpleCSV#read, a second read gives the rows once.
 
 1. ~ read(): the rows are those of this read, the source being rewound and read again; a second read had appended them to the first's, doubling them.
