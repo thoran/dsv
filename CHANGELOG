@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## How this history is kept
+
+The versions up to 0.10.4 predate the gem and stand as they were.
+The versions after it were reshaped before release, so that each correction sits at the version that should have made it; a date there is when the version was made, not when everything in it was written.
+Once a version is published, its history is fixed.
+
+
+## 20260909
+
+0.11.0: + test/SimpleCSV_test.rb, and the header's Changes section retired to CHANGELOG.
+
+1. + test/SimpleCSV_test.rb: MiniTest spec style, 102 examples. 76 pass and state the interface as it stands; 26 are skipped and state what the library should do and does not yet, each skip message naming its finding in the Handoff 0 closing note, so that the skip count is the fault list and each fix from here removes one skip. The RFC 4180 cases are rewritten from stdlib CSV's parsing tests. Run as `ruby test/SimpleCSV_test.rb`.
+2. ~ lib/SimpleCSV.rb: - the Changes section of the header, its entries being here from 0.10.0 on; the date and version lines stay. From here each entry is written by hand, one per commit.
+3. 0.10.4 was the last revision imported from the staging tree; from here every change is a commit.
+
+
 ## 20260905
 
 0.10.4: Updated lib dependencies.

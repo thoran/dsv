@@ -1,8 +1,8 @@
 # SimpleCSV.rb
 # SimpleCSV
 
-# 20260905
-# 0.10.4
+# 20260909
+# 0.11.0
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -28,25 +28,6 @@
 # Bugs:
 # 1. This did cope with commas within a quoted CSV file, however while I think I broke this again with 0.9.0, I'm not sure that I ever had it working properly.  It works properly as of 0.9.3 at least.
 # 2. Does SimpleCSV#write_row handle it if there are no attributes/columns defined?  It needs to work with CSV files with no column names.
-
-# Changes since 0.9:
-# 1. - SimpleCSV.rbd directory, moving everything up a directory, and SimpleCSV.rb inside the lib directory, so it now adheres to a more conventional Ruby library structure. May re-introduce .rbd, self-contained Ruby libraries one day, but will need to have the require overload work correctly and be able to load .rbd files correctly when presented. This may have changed sometime in the past quite a few years...
-# 2. + ./Kernel/silently.rb which was used in the speed testing file, but had never been incorporated into the lib directory as it should.
-# 0/1
-# 3. - ./test until such time as they are half-decent, which they have never been!
-# 1/2
-# 4. Separated CSVFile and CSVString into their own files.
-# 5. require 'stringio' --> CSVString.rb
-# 2/3
-# 6. /CSVFile/SimpleCSV::File/
-# 7. /CSVString/SimpleCSV::String/
-# 8. Ensured that there are a number of leading class colon separators (::) in strategic places!
-# 3/4 (Updated lib dependencies.)
-# 9. ~ Array/to_csv.rb: the 2014 version, which delegates to to_csv_header_row and to_csv_row and no longer requires _meta/default_to.
-# 10. ~ Array/extract_optionsX.rb: a shim over Thoran/Array/ExtractOptionsX.
-# 11. + The seventeen files those two require: the to_csv_row and to_csv_header_row families across Array, Hash, Object, OpenStruct and Struct, Object/is_one_ofQ, Object/to_h, Struct/to_h, and the two Thoran/ files.
-# 12. - _meta/default_to, NilClass/default_to and Object/default_to, nothing requiring them any longer.
-# 13. ~ SimpleCSV.read, ~ SimpleCSV.parse: two comments, dated 20240826, noting that column selection belongs in the class interface as it does in #read.
 
 $LOAD_PATH.unshift(File.expand_path('..', __FILE__))
 
