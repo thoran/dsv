@@ -203,7 +203,6 @@ describe SimpleCSV do
     end
 
     it "leaves the caller's string as it was" do
-      skip "Finding 13: split_csv chomps the receiver in place"
       line = "1,2,3\n"
       SimpleCSV.parse_line(line)
       _(line).must_equal "1,2,3\n"
@@ -239,7 +238,6 @@ describe SimpleCSV do
     end
 
     it "reads a doubled quote inside a quoted field as one quote" do
-      skip "Finding 1: doubled quotes are not unescaped"
       _(SimpleCSV.parse_line('"say ""hi""",2')).must_equal ['say "hi"', '2']
       _(SimpleCSV.parse_line('foo,"""bar""",baz')).must_equal ['foo', '"bar"', 'baz']
       _(SimpleCSV.parse_line('foo,"""",baz')).must_equal ['foo', '"', 'baz']
@@ -247,21 +245,18 @@ describe SimpleCSV do
     end
 
     it "reads a trailing empty field as an empty string" do
-      skip "Finding 2: a trailing empty field is dropped"
       _(SimpleCSV.parse_line('foo,bar,')).must_equal ['foo', 'bar', '']
       _(SimpleCSV.parse_line(',')).must_equal ['', '']
       _(SimpleCSV.parse_line(',,')).must_equal ['', '', '']
     end
 
     it "reads more than one separator inside a quoted field, and a field that is only a separator" do
-      skip "Finding 3: the pieces are reassembled without the separator between the middle ones"
       _(SimpleCSV.parse_line('"a, b, c",d')).must_equal ['a, b, c', 'd']
       _(SimpleCSV.parse_line('","')).must_equal [',']
       _(SimpleCSV.parse_line('",",","')).must_equal [',', ',']
     end
 
     it "reads a quoted field holding the row separator as one field across lines" do
-      skip "Decision point 5: the source is read line by line; a replacement parser would carry a quoted field across the separator"
       _(SimpleCSV.read("a,b\n\"x\ny\",2\n", headers: true)).must_equal [{'a' => "x\ny", 'b' => '2'}]
     end
   end
@@ -444,6 +439,11 @@ describe SimpleCSV do
     it "reads a regular expression separator" do
       _(SimpleCSV.read("a, b\n1,2\n", headers: true, column_separator: /,\s*/)).must_equal [{'a' => '1', 'b' => '2'}]
     end
+
+    it "reads a regular expression separator with a quoted field holding the separator" do
+      skip "Observation: reassembling a quoted field concatenates the separator back in, which a Regexp cannot be; the parked scanner parser handles it"
+      _(SimpleCSV.read("a,b\n\"x, y\",2\n", headers: true, column_separator: /,\s*/)).must_equal [{'a' => 'x, y', 'b' => '2'}]
+    end
   end
 
   describe "row separators on read" do
@@ -476,8 +476,9 @@ describe SimpleCSV do
       _(SimpleCSV.read("a,b\n\"x\",\"2\"\n", headers: true, quote: :none)).must_equal [{'a' => '"x"', 'b' => '"2"'}]
     end
 
-    it "strips the quotes under quote: :double" do
+    it "strips the quotes under quote: :double, a row being wholly quoted or, as a header row often is, wholly unquoted" do
       _(SimpleCSV.read("a,b\n\"x\",\"2\"\n", headers: true, quote: :double)).must_equal [{'a' => 'x', 'b' => '2'}]
+      _(SimpleCSV.read("\"a\",\"b\"\n\"say \"\"hi\"\"\",\"2\"\n", headers: true, quote: :double)).must_equal [{'a' => 'say "hi"', 'b' => '2'}]
     end
 
     it "gathers empty header names into one array-valued column" do
@@ -486,23 +487,19 @@ describe SimpleCSV do
     end
 
     it "reads a doubled quote as one quote in a row" do
-      skip "Finding 1: doubled quotes are not unescaped"
       _(SimpleCSV.read("a,b\n\"say \"\"hi\"\"\",2\n", headers: true)).must_equal [{'a' => 'say "hi"', 'b' => '2'}]
     end
 
     it "reads a trailing empty field as an empty string under its column" do
-      skip "Finding 2: a trailing empty field is dropped"
       _(SimpleCSV.read("a,b,c\n1,2,\n", headers: true)).must_equal [{'a' => '1', 'b' => '2', 'c' => ''}]
       _(SimpleCSV.read("1,2,\n")).must_equal [{0 => '1', 1 => '2', 2 => ''}]
     end
 
     it "keeps every separator inside a quoted field in a row" do
-      skip "Finding 3: the second of two separators is lost"
       _(SimpleCSV.read("\"x, y, z\",2\n")).must_equal [{0 => 'x, y, z', 1 => '2'}]
     end
 
     it "keeps a separator inside a quoted field under quote: :double" do
-      skip "Decision point 5: Finding 4, if the :double mode survives; that path strips quotes after splitting"
       _(SimpleCSV.read("a,b\n\"x, y\",\"2\"\n", headers: true, quote: :double)).must_equal [{'a' => 'x, y', 'b' => '2'}]
     end
   end

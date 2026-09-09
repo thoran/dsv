@@ -1,8 +1,8 @@
 # String/split_csv
 # String#split_csv
 
-# 20111110
-# 0.7.0
+# 20111110, 20260910
+# 0.8.0
 
 # History: Written for SimpleCSV.  
 
@@ -14,46 +14,40 @@
 
 # Changes since 0.6: 
 # 1. + row_separator.  
+# 0/1
+# 2. ~ split_csv, the receiver is no longer chomped in place; trailing empty fields are kept; a doubled quote inside a quoted field reads as one; the separator is kept between the pieces of a quoted field; under :double a wholly quoted row splits on quote-separator-quote.
 
 class String
   
   def split_csv(quote = nil, column_separator = ',', row_separator = nil)
+    row = row_separator ? self.chomp(row_separator) : self.chomp
     case quote
     when :none, :unquoted
-      if row_separator
-        self.chomp(row_separator).split(column_separator)
-      else
-        self.chomp.split(column_separator)
-      end
+      row.split(column_separator, -1)
     when :double, :double_quoted, :double_quotes
-      if row_separator
-        self.chomp(row_separator).split(column_separator).collect{|e| e.sub(/^"/, '').sub(/"$/, '')}
+      if row.start_with?('"')
+        row.delete_prefix('"').delete_suffix('"').split('"' + column_separator + '"', -1).collect{|e| e.gsub('""', '"')}
       else
-        self.chomp.split(column_separator).collect{|e| e.sub(/^"/, '').sub(/"$/, '')}
+        row.split(column_separator, -1)
       end
     else
       split_row = []
       assembling_column = false
-      buffer = ''
-      if row_separator
-        self.chomp!(row_separator)
-      else
-        self.chomp!
-      end
-      self.split(column_separator).each do |e|
+      buffer = +''
+      row.split(column_separator, -1).each do |e|
         if assembling_column && !(e =~ /"$/) # e.not_closing_quotes?
-          buffer << e
+          buffer << e << column_separator
         elsif assembling_column && e =~ /"$/ # e.closing_quotes?
           buffer << e.sub(/"$/, '') # remove the trailing quote
-          split_row << buffer
+          split_row << buffer.gsub('""', '"')
           assembling_column = false
-        elsif (e =~ /^"/) && !(e =~ /"$/) # e.opening_quotes_but_not_closing_quotes?
-          buffer = ''
-          buffer << e.sub(/^"/, '') + column_separator # remove leading quote and replace the column_separator
+        elsif (e =~ /^"/) && (e.length == 1 || !(e =~ /"$/)) # e.opening_quotes_but_not_closing_quotes?
+          buffer = +''
+          buffer << e.sub(/^"/, '') << column_separator # remove leading quote and replace the column_separator
           assembling_column = true
         else
-          if (e =~ /^"/) && (e =~ /"$/) # e.both_opening_and_closing_quotes?
-            split_row << e.sub(/^"/, '').sub(/"$/, '')
+          if (e =~ /^"/) && (e =~ /"$/) # e.both_opening_and_closing_quotes? (a lone quote having been taken as opening above)
+            split_row << e.sub(/^"/, '').sub(/"$/, '').gsub('""', '"')
           else
             split_row << e
           end

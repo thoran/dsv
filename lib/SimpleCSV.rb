@@ -1,8 +1,8 @@
 # SimpleCSV.rb
 # SimpleCSV
 
-# 20260909
-# 0.11.3
+# 20260910
+# 0.11.4
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -185,7 +185,7 @@ class SimpleCSV
       parse(*selected_columns, &block)
     else
       read_header
-      @source.each(@row_separator){|raw_row| @rows << parse_row(raw_row, *selected_columns)}
+      @source.each(@row_separator){|raw_row| @rows << parse_row(complete_quoted_row(raw_row), *selected_columns)}
       @rows
     end
   end
@@ -237,6 +237,12 @@ class SimpleCSV
       i = -1
       column_order.each{|column| @columns[column.to_s] = (i += 1)}
     end
+  end
+
+  # A quoted field may hold the row separator: while the quotes in a row are unbalanced the next line belongs to it.
+  def complete_quoted_row(raw_row)
+    raw_row << @source.gets(@row_separator).to_s while @quote.nil? && raw_row.count('"').odd? && !@source.eof?
+    raw_row
   end
 
   def parse_row(raw_row, *selected_columns)

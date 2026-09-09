@@ -7,6 +7,17 @@ The versions after it were reshaped before release, so that each correction sits
 Once a version is published, its history is fixed.
 
 
+## 20260910
+
+0.11.4: ~ String#split_csv, the smallest changes that make it read RFC 4180 quoting correctly.
+
+1. ~ String/split_csv.rb 0.8.0: the receiver is no longer chomped in place, a local copy being split (Finding 13); every path splits with -1 so a trailing empty field reads as "" (Finding 2); a doubled quote inside a quoted field reads as one quote (Finding 1); the separator is kept between the pieces of a quoted field that held more than one, and a piece that is a lone quote opens or closes a field rather than being an empty one, so a field that is only a separator reads (Finding 3); under :double a row that starts with a quote splits on quote-separator-quote and loses its outer quotes, so a separator inside a field is kept (Finding 4), and a row that does not start with one, a header row commonly, splits plainly. Direct string operations throughout, no scanner.
+2. + SimpleCSV#complete_quoted_row(): while the quotes in a row are unbalanced the next line belongs to it, so a quoted field holding the row separator reads as one field across lines; only in the unspecified quote mode, where quotes are structure.
+3. ~ test/SimpleCSV_test.rb: - seven skips (Findings 1, 2, 3, 4, 13 and the quoted field across lines), + :double with a wholly quoted header and a doubled quote, + one skip: a Regexp separator with a quoted field holding the separator still raises, reassembly concatenating the separator back in, which a Regexp cannot be. Run to 104, 14 skipped.
+4. A scanner-based parser chosen once at construction, which also reads the Regexp case and was measured faster than this on every row shape, is parked on the branch scanner-parser for a later, deliberate change; correctness first, speed saved.
+5. ~ lib/SimpleCSV.rb: /0.11.3/0.11.4/, and the date.
+
+
 ## 20260909
 
 0.11.3: - SimpleCSV::File.open and SimpleCSV::String.open, each of which constructed an instance and then had super construct another.
