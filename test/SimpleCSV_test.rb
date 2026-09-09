@@ -343,7 +343,6 @@ describe SimpleCSV do
     end
 
     it "returns the same rows when read again" do
-      skip "Observation: a second read appends the rows again"
       csv = SimpleCSV.new(DATA, headers: true)
       csv.read
       _(csv.read).must_equal KEYED

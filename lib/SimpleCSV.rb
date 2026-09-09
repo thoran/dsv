@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.14
+# 0.11.15
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -200,6 +200,7 @@ class SimpleCSV
       parse(*selected_columns, &block)
     else
       read_header
+      @rows = []
       @source.each(@row_separator){|raw_row| @rows << parse_row(complete_quoted_row(raw_row), *selected_columns)}
       @rows
     end

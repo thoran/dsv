@@ -9,6 +9,13 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.15: ~ SimpleCSV#read, a second read gives the rows once.
+
+1. ~ read(): the rows are those of this read, the source being rewound and read again; a second read had appended them to the first's, doubling them.
+2. ~ test/SimpleCSV_test.rb: - the skip on the read-twice example. Run to 109, 3 skipped.
+3. ~ lib/SimpleCSV.rb: /0.11.14/0.11.15/.
+
+
 0.11.14: ~ SimpleCSV.open, the instance is a local, not a class-level variable.
 
 1. ~ SimpleCSV.open: the instance it makes is held in a local for the block's duration and returned; it had been kept in the class's own @csv_file, shared across every call and every thread (Finding 22).
