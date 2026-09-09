@@ -307,7 +307,6 @@ describe SimpleCSV do
     end
 
     it "reads the header row under mode: given as a symbol or a long name" do
-      skip "Finding 6: columns tests the mode as given against the literal strings r, r+ and a+"
       _(SimpleCSV.new(DATA, headers: true, mode: :r).read).must_equal KEYED
       with_file{|path| _(SimpleCSV.new(path, headers: true, mode: :read_only).read).must_equal KEYED}
       with_file{|path| _(SimpleCSV.new(path, headers: true, mode: 'rw').read).must_equal KEYED}
@@ -632,9 +631,12 @@ describe SimpleCSV do
       with_file{|path| _(SimpleCSV::File.new(path, headers: true).read).must_equal KEYED}
     end
 
-    it "defaults the mode to r and takes permissions:" do
+    it "defaults the mode to r, reports it as Ruby's File spells it, and takes permissions:" do
       with_file do |path|
         _(SimpleCSV::File.new(path).mode).must_equal 'r'
+        _(SimpleCSV::File.new(path, mode: :read_only).mode).must_equal 'r'
+        _(SimpleCSV::File.new(path, mode: 'rw').mode).must_equal 'r+'
+        _(SimpleCSV.new(path, mode: 'append').mode).must_equal 'a'
         _(SimpleCSV::File.new(path, permissions: 0644).permissions).must_equal 0644
       end
     end

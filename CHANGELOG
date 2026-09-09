@@ -9,6 +9,14 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.8: ~ SimpleCSV#initialize, the mode is normalised to Ruby's spelling whatever spelling it was given.
+
+1. + SimpleCSV.normalised_mode(): the table that SimpleCSV::File#mode held, r, r+, w, w+, a and a+ as themselves and the long names read_only, rw, read_write, write_only and append to them, a Symbol as its String, unspecified as r. #initialize keeps @mode as that, so #columns's test of the mode against 'r', 'r+' and 'a+' holds for every spelling: mode: :r, :read_only and 'rw' read the header row (Finding 6). The parent had kept the option as given and SimpleCSV::File had normalised only its own copy, which the parent's #initialize then overwrote.
+2. ~ SimpleCSV::File#mode: the same table by the same method; #mode reports Ruby's spelling.
+3. ~ test/SimpleCSV_test.rb: - the skip on the mode example, + the reported mode for three spellings. Run to 109, 10 skipped.
+4. ~ lib/SimpleCSV.rb: /0.11.7/0.11.8/.
+
+
 0.11.7: ~ SimpleCSV#write_row, a nil value is an empty field, and a row with no columns defined is written from its own keys.
 
 1. ~ write_row(): a nil value is written as an empty field, quoted as the mode quotes, so the columns after it keep their places, "1","","3" by default and 1,,3 under :none (Finding 16); it had skipped the value and shifted the rest left. With no columns defined the row's values are written in the row's own order (Finding 17); it had written nothing, silently.

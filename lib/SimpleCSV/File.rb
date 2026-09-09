@@ -17,16 +17,7 @@ class SimpleCSV
     end
 
     def mode
-      @mode ||= (
-        case @args.peek_options[:mode].to_s
-        when 'r', 'r+', 'w', 'w+', 'a', 'a+'; @args.peek_options[:mode].to_s
-        when 'read_only', 'read-only', 'readonly'; 'r'
-        when 'rw', 'read_write', 'read-write', 'readwrite'; 'r+'
-        when 'write_only', 'write-only', 'writeonly'; 'w'
-        when 'append'; 'a'
-        else 'r'
-        end
-      )
+      @mode ||= SimpleCSV.normalised_mode(@args.peek_options[:mode])
     end
 
     def permissions

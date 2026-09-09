@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.7
+# 0.11.8
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -44,6 +44,18 @@ require 'SimpleCSV/String'
 class SimpleCSV
 
   class << self
+
+    # A mode as Ruby's File spells it, from any of the spellings the library accepts, a Symbol included; unspecified is r.
+    def normalised_mode(mode)
+      case mode.to_s
+      when 'r', 'r+', 'w', 'w+', 'a', 'a+' then mode.to_s
+      when 'read_only', 'read-only', 'readonly' then 'r'
+      when 'rw', 'read_write', 'read-write', 'readwrite' then 'r+'
+      when 'write_only', 'write-only', 'writeonly' then 'w'
+      when 'append' then 'a'
+      else 'r'
+      end
+    end
 
     def source_type(source)
       if ::File.exist?(source)
@@ -162,7 +174,7 @@ class SimpleCSV
     )
     options = args.extract_options!
     @header_row = options[:header_row] || options[:headers] || options[:header] || false
-    @mode = options[:mode] || 'r'
+    @mode = SimpleCSV.normalised_mode(options[:mode])
     @quote = options[:quote] || nil
     @row_separator = options[:row_separator] || options[:row_sep] || "\n"
     @column_separator = options[:column_separator] || options[:col_sep] || ','
