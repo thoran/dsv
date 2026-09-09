@@ -707,7 +707,6 @@ describe SimpleCSV do
     end
 
     it "expands the path it is given" do
-      skip "Finding 21: @filename is already set, so the ||= never expands it"
       with_file do |path, directory|
         _(SimpleCSV::File.new(File.join(directory, '.', 'data.csv')).filename).must_equal path
       end

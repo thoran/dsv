@@ -9,6 +9,13 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.13: ~ SimpleCSV::File#initialize, the path is expanded on construction.
+
+1. ~ SimpleCSV::File#initialize: the filename is ::File.expand_path of what was given, so #filename is absolute and the file is opened by it (Finding 21). #filename had been @filename ||= File.expand_path(@filename), which never ran, @filename being set already, and which would have called SimpleCSV::File.expand_path had it run, File resolving inside the class to the class itself. - #filename, + attr_reader :filename.
+2. ~ test/SimpleCSV_test.rb: - the skip on the expansion example. Run to 109, 5 skipped.
+3. ~ lib/SimpleCSV.rb: /0.11.12/0.11.13/.
+
+
 0.11.12: ~ SimpleCSV#each, an Enumerator without a block.
 
 1. ~ each(): returns an Enumerator over the rows, the selection included, when no block is given (Finding 11); it had yielded regardless and raised LocalJumpError, so Enumerable's methods that call each without a block, and each('a').to_a, failed. include Enumerable is honest now.

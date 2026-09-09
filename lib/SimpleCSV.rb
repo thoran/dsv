@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.12
+# 0.11.13
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 

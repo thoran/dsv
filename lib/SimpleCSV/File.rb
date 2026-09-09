@@ -7,7 +7,7 @@ class SimpleCSV
   class File < SimpleCSV
 
     def initialize(filename, *args)
-      @filename = filename
+      @filename = ::File.expand_path(filename)
       @args = args
       super(source, *args)
     end
@@ -24,9 +24,7 @@ class SimpleCSV
       @permissions ||= @args.peek_options[:permissions]
     end
 
-    def filename
-      @filename ||= File.expand_path(@filename)
-    end
+    attr_reader :filename
 
   end
 end
