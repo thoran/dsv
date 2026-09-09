@@ -9,6 +9,13 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.12: ~ SimpleCSV#each, an Enumerator without a block.
+
+1. ~ each(): returns an Enumerator over the rows, the selection included, when no block is given (Finding 11); it had yielded regardless and raised LocalJumpError, so Enumerable's methods that call each without a block, and each('a').to_a, failed. include Enumerable is honest now.
+2. ~ test/SimpleCSV_test.rb: - the skip on the enumerator example. Run to 109, 6 skipped.
+3. ~ lib/SimpleCSV.rb: /0.11.11/0.11.12/.
+
+
 0.11.11: ~ SimpleCSV#to_a, rows keyed by position come back as arrays in position order.
 
 1. ~ to_a(): with no columns each row's values in their order, a position-keyed row holding them in position order (Finding 10); the branch had built an array in an inject and thrown it away, giving an empty array per row.

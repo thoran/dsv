@@ -377,7 +377,6 @@ describe SimpleCSV do
     end
 
     it "returns an enumerator without a block" do
-      skip "Finding 11: each yields unconditionally and raises LocalJumpError"
       _(SimpleCSV.new(DATA, headers: true).each).must_be_kind_of Enumerator
       _(SimpleCSV.new(DATA, headers: true).each.to_a).must_equal KEYED
       _(SimpleCSV.new(DATA, headers: true).each('a').to_a).must_equal [{'a' => '1'}, {'a' => '4'}]
