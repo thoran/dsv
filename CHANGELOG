@@ -9,6 +9,14 @@ Once a version is published, its history is fixed.
 
 ## 20260909
 
+0.11.1: ~ SimpleCSV#write, the file is emptied at the first write under r+, not at the end of every read.
+
+1. + prepare_to_rewrite(): under r+ reads the rows if they have not been read, then rewinds and truncates the file, once, before the header and rows are written. This is what the 2006 rewind and truncate at the end of #read were for, a read-then-rewrite of one file, moved to the write that the read was preparing for.
+2. ~ SimpleCSV#read: - the rewind and truncate under r+. Reading no longer alters the file on disk, whether by #read, #each, #to_a, #count or any other Enumerable method, nor does a second #read find an empty file (Finding 15). A #write with the rows not yet read no longer loses its header to a truncate that followed it.
+3. ~ test/SimpleCSV_test.rb: - the skip on the r+ example, and + two examples: reading under r+ by #read and by #count leaves the file as it was; #write under r+ with the rows unread rewrites the file with its header, and with rows set replaces it. Run to 103, 25 skipped.
+4. ~ lib/SimpleCSV.rb: /0.11.0/0.11.1/.
+
+
 0.11.0: + test/SimpleCSV_test.rb, and the header's Changes section retired to CHANGELOG.
 
 1. + test/SimpleCSV_test.rb: MiniTest spec style, 102 examples. 76 pass and state the interface as it stands; 26 are skipped and state what the library should do and does not yet, each skip message naming its finding in the Handoff 0 closing note, so that the skip count is the fault list and each fix from here removes one skip. The RFC 4180 cases are rewritten from stdlib CSV's parsing tests. Run as `ruby test/SimpleCSV_test.rb`.

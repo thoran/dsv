@@ -652,11 +652,25 @@ describe SimpleCSV do
       end
     end
 
-    it "leaves a file as it was when read under r+ without a write" do
-      skip "Finding 15: read ends with truncate(0) under r+"
+    it "leaves a file as it was when read under r+ without a write, whichever way it is read" do
       with_file do |path|
         SimpleCSV.open(path, mode: 'r+', headers: true){|csv| csv.read}
         _(File.read(path)).must_equal DATA
+      end
+      with_file do |path|
+        _(SimpleCSV.new(path, mode: 'r+', headers: true).count).must_equal 2
+        _(File.read(path)).must_equal DATA
+      end
+    end
+
+    it "replaces the file under r+ on write, reading the rows first if they have not been read" do
+      with_file do |path|
+        SimpleCSV.open(path, mode: 'r+', headers: true, quote: :none){|csv| csv.write}
+        _(File.read(path)).must_equal DATA
+      end
+      with_file do |path|
+        SimpleCSV.open(path, mode: 'r+', headers: true, quote: :none){|csv| csv.rows = [{'a' => 'X', 'b' => 'Y', 'c' => 'Z'}]; csv.write}
+        _(File.read(path)).must_equal "a,b,c\nX,Y,Z\n"
       end
     end
 

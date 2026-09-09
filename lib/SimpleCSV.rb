@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260909
-# 0.11.0
+# 0.11.1
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -186,7 +186,6 @@ class SimpleCSV
     else
       read_header
       @source.each(@row_separator){|raw_row| @rows << parse_row(raw_row, *selected_columns)}
-      (@source.rewind; @source.truncate(0)) if @mode == 'r+'
       @rows
     end
   end
@@ -270,10 +269,18 @@ class SimpleCSV
   end
 
   def write(*selected_columns)
+    prepare_to_rewrite if @mode == 'r+'
     write_header(*selected_columns) if header_row?
     each{|row| write_row(row, *selected_columns)}
   end
   alias_method :write_csv, :write
+
+  # Under r+ a write replaces the file: the rows are read first if they have not been, then the file is emptied, once, here, rather than at the end of every read.
+  def prepare_to_rewrite
+    read_csv unless @rows[0]
+    @source.rewind
+    @source.truncate(0)
+  end
 
   def write_header(*selected_columns)
     selected_columns.flatten!
