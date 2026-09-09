@@ -9,6 +9,13 @@ Once a version is published, its history is fixed.
 
 ## 20260909
 
+0.11.3: - SimpleCSV::File.open and SimpleCSV::String.open, each of which constructed an instance and then had super construct another.
+
+1. - SimpleCSV::File.open, - SimpleCSV::String.open: each built an instance, kept it in @csv_file, and called super, which built a second one and used that; the first was never closed, so a file was opened twice (Finding 19). SimpleCSV.open already constructs through new on whichever class it is called on, so the overrides added nothing but the leak.
+2. ~ test/SimpleCSV_test.rb: - the two skips, one per class; each example now counts one construction. Run to 103, 22 skipped.
+3. ~ lib/SimpleCSV.rb: /0.11.2/0.11.3/.
+
+
 0.11.2: ~ SimpleCSV#write_header, the header row is the column names, selected or all, written as a row.
 
 1. ~ write_header(): the names are written through the same path as a row's values, whether all the attributes or the selected columns. It had handed write_row() a String, the CSV rendering of the attributes, which worked only because String#[] finds each name inside its own rendering; and with columns selected it had handed Hash#to_csv the columns Hash, name to position, which wrote a blank line (Finding 18).

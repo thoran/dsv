@@ -6,15 +6,6 @@ require_relative File.join('..', 'SimpleCSV')
 class SimpleCSV
   class File < SimpleCSV
 
-    class << self
-
-      def open(source, *args, &block)
-        @csv_file = new(source, *args)
-        super(source, *args, &block)
-      end
-
-    end # class << self
-
     def initialize(filename, *args)
       @filename = filename
       @args = args

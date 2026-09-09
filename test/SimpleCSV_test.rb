@@ -594,7 +594,6 @@ describe SimpleCSV do
     end
 
     it ".open constructs one instance" do
-      skip "Finding 19: .open constructs an instance and then super constructs another"
       _(constructions(SimpleCSV::String){SimpleCSV::String.open(DATA){|csv| }}).must_equal 1
     end
   end
@@ -676,7 +675,6 @@ describe SimpleCSV do
     end
 
     it ".open constructs one instance, opening the file once" do
-      skip "Finding 19: .open constructs an instance and then super constructs another"
       with_file{|path| _(constructions(SimpleCSV::File){SimpleCSV::File.open(path){|csv| }}).must_equal 1}
     end
 
