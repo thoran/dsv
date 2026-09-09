@@ -551,7 +551,8 @@ describe SimpleCSV do
     end
 
     it "writes the selected column names as the header row" do
-      skip "Finding 18: write_header hands columns, a Hash, to Hash#to_csv and a blank line results"
+      output = written(headers: true, columns: [:a, :b, :c], quote: :none){|csv| csv.rows = [{'a' => 1, 'b' => 2, 'c' => 3}]; csv.write('a', 'c')}
+      _(output).must_equal "a,c\n1,3\n"
       output = written(headers: true, columns: [:a, :b, :c]){|csv| csv.rows = [{'a' => 1, 'b' => 2, 'c' => 3}]; csv.write('a', 'c')}
       _(output).must_equal "\"a\",\"c\"\n\"1\",\"3\"\n"
     end

@@ -9,6 +9,15 @@ Once a version is published, its history is fixed.
 
 ## 20260909
 
+0.11.2: ~ SimpleCSV#write_header, the header row is the column names, selected or all, written as a row.
+
+1. ~ write_header(): the names are written through the same path as a row's values, whether all the attributes or the selected columns. It had handed write_row() a String, the CSV rendering of the attributes, which worked only because String#[] finds each name inside its own rendering; and with columns selected it had handed Hash#to_csv the columns Hash, name to position, which wrote a blank line (Finding 18).
+2. + write_values(): writes one row of values, quoted as @quote says; write_row() and write_header() both end here, so that the write path has one place to take the separators from when it does (Finding 23).
+3. The library no longer calls Hash#to_csv anywhere; the require stays until Phase 4's scoping.
+4. ~ test/SimpleCSV_test.rb: - the skip on the selected header example, and + the same under quote: :none. Run to 103, 24 skipped.
+5. ~ lib/SimpleCSV.rb: /0.11.1/0.11.2/.
+
+
 0.11.1: ~ SimpleCSV#write, the file is emptied at the first write under r+, not at the end of every read.
 
 1. + prepare_to_rewrite(): under r+ reads the rows if they have not been read, then rewinds and truncates the file, once, before the header and rows are written. This is what the 2006 rewind and truncate at the end of #read were for, a read-then-rewrite of one file, moved to the write that the read was preparing for.

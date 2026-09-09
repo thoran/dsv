@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260909
-# 0.11.1
+# 0.11.2
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -284,11 +284,8 @@ class SimpleCSV
 
   def write_header(*selected_columns)
     selected_columns.flatten!
-    if selected_columns.empty?
-      write_row(attributes.to_csv)
-    else
-      write_row(columns.to_csv)
-    end
+    names = selected_columns.empty? ? attributes : selected_columns
+    write_values(names)
   end
   alias_method :write_csv_header, :write_header
 
@@ -301,10 +298,14 @@ class SimpleCSV
       else
         selected_columns.each{|column| collector << row[column] unless row[column].nil?}
       end
-      @source.puts(collector.to_csv(@quote))
+      write_values(collector)
     end
   end
   alias_method :write_csv_row, :write_row
+
+  def write_values(values)
+    @source.puts(values.to_csv(@quote))
+  end
 
   def each(*selected_columns)
     selected_columns.flatten!
