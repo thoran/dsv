@@ -9,6 +9,15 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.7: ~ SimpleCSV#write_row, a nil value is an empty field, and a row with no columns defined is written from its own keys.
+
+1. ~ write_row(): a nil value is written as an empty field, quoted as the mode quotes, so the columns after it keep their places, "1","","3" by default and 1,,3 under :none (Finding 16); it had skipped the value and shifted the rest left. With no columns defined the row's values are written in the row's own order (Finding 17); it had written nothing, silently.
+2. ~ write(): with no columns defined and rows keyed by name, the columns, and the header when headers: is on, are taken from the first row's keys; rows keyed by position write positionally and have no header to write.
+3. ~ columns(): memoised upon whether the header has been looked for rather than upon what it gave, a source with no header row yielding nil legitimately; ||= had looked again on every call, reading and rewinding the source, which when the source is the file being written read the rows just written back as a header. ~ columns=(): clears attributes and repeated_names, which are derived from it.
+4. ~ test/SimpleCSV_test.rb: - the skip on the nil example, + nil under :none, + position-keyed and name-keyed rows written with no columns defined. Run to 109, 11 skipped.
+5. ~ lib/SimpleCSV.rb: /0.11.6/0.11.7/.
+
+
 0.11.6: ~ SimpleCSV#write_values, a row is rendered inside the class with the instance's separators, a quote inside a value doubled.
 
 1. + row_renderer(): chosen once in #initialize from the quote mode and held; #write_values renders each row with it. The column and row separators are the instance's, so writing takes column_separator: and row_separator: as reading does and a file round-trips through both (Finding 23); it had joined with a literal comma through Array#to_csv and ended with #puts.

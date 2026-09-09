@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.6
+# 0.11.7
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -211,8 +211,10 @@ class SimpleCSV
   end
   alias_method :parse_csv, :parse
 
+  # Memoised upon whether the header has been looked for rather than upon what it gave, since a source with no header row yields nil legitimately and ||= would look again, reading and rewinding the source, on every call.
   def columns
-    @columns ||= (
+    return @columns if defined?(@columns)
+    @columns = (
       if header_row? && ['r', 'r+', 'a+'].include?(@mode) && (first_row = first_row?)
         columns, i = {}, -1
         first_row.split_csv(@quote, @column_separator, @row_separator).each do |column_name|
@@ -227,6 +229,7 @@ class SimpleCSV
 
   def columns=(*column_order)
     @columns = {}
+    @attributes = @repeated_names = nil
     column_order.flatten!
     if column_order[0].is_a?(Hash)
       column_order[0].each{|column_name, column_position| @columns[column_name.to_s] = column_position}
@@ -298,9 +301,11 @@ class SimpleCSV
     end
   end
 
+  # With no columns defined, rows keyed by name supply them, and the header, from the first row's keys; rows keyed by position write positionally and have no header to write.
   def write(*selected_columns)
     prepare_to_rewrite if @mode == 'r+'
-    write_header(*selected_columns) if header_row?
+    self.columns = @rows[0].keys if columns.blank? && @rows[0].is_a?(::Hash) && @rows[0].keys[0].is_a?(::String)
+    write_header(*selected_columns) if header_row? && attributes
     each{|row| write_row(row, *selected_columns)}
   end
   alias_method :write_csv, :write
@@ -319,17 +324,17 @@ class SimpleCSV
   end
   alias_method :write_csv_header, :write_header
 
+  # A nil value is an empty field, so the columns after it keep their places; with no columns defined a row's values are written in the row's own order.
   def write_row(row, *selected_columns)
-    collector = []
     selected_columns.flatten!
-    unless attributes.blank?
-      if selected_columns.blank?
-        values_in_order(row).each{|value| collector << value unless value.nil?}
-      else
-        selected_columns.each{|column| collector << row[column] unless row[column].nil?}
-      end
-      write_values(collector)
-    end
+    values = if !selected_columns.empty?
+               selected_columns.collect{|column| row[column]}
+             elsif attributes
+               values_in_order(row)
+             else
+               row.values
+             end
+    write_values(values)
   end
   alias_method :write_csv_row, :write_row
 

@@ -570,9 +570,19 @@ describe SimpleCSV do
     end
 
     it "writes a nil value as an empty field, keeping the columns in place" do
-      skip "Decision point 7: Finding 16, a nil value is skipped and the columns after it shift; the note takes an empty field as the obvious answer"
       output = written(columns: [:a, :b, :c]){|csv| csv.rows = [{'a' => 1, 'b' => nil, 'c' => 3}]; csv.write}
       _(output).must_equal "\"1\",\"\",\"3\"\n"
+      _(written(columns: [:a, :b, :c], quote: :none){|csv| csv.rows = [{'a' => 1, 'b' => nil, 'c' => 3}]; csv.write}).must_equal "1,,3\n"
+    end
+
+    it "writes rows keyed by position in their own order when no columns are defined, with no header" do
+      _(written(quote: :none){|csv| csv.rows = [{0 => 1, 1 => 2}]; csv.write}).must_equal "1,2\n"
+      _(written(headers: true, quote: :none){|csv| csv.rows = SimpleCSV.read("1,2\n3,4\n"); csv.write}).must_equal "1,2\n3,4\n"
+    end
+
+    it "takes the columns, and the header, from the first row's keys when rows are keyed by name and no columns are defined" do
+      _(written(headers: true, quote: :none){|csv| csv.rows = [{'a' => 1, 'b' => 2}, {'a' => 3, 'b' => 4}]; csv.write}).must_equal "a,b\n1,2\n3,4\n"
+      _(written(quote: :none){|csv| csv.rows = [{'a' => 1, 'b' => 2}]; csv.write}).must_equal "1,2\n"
     end
 
     it "writes with the column and row separators given, as it reads with them, and round-trips them" do
