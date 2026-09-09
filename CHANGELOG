@@ -9,6 +9,13 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.14: ~ SimpleCSV.open, the instance is a local, not a class-level variable.
+
+1. ~ SimpleCSV.open: the instance it makes is held in a local for the block's duration and returned; it had been kept in the class's own @csv_file, shared across every call and every thread (Finding 22).
+2. ~ test/SimpleCSV_test.rb: - the skip on the open example. Run to 109, 4 skipped.
+3. ~ lib/SimpleCSV.rb: /0.11.13/0.11.14/.
+
+
 0.11.13: ~ SimpleCSV::File#initialize, the path is expanded on construction.
 
 1. ~ SimpleCSV::File#initialize: the filename is ::File.expand_path of what was given, so #filename is absolute and the file is opened by it (Finding 21). #filename had been @filename ||= File.expand_path(@filename), which never ran, @filename being set already, and which would have called SimpleCSV::File.expand_path had it run, File resolving inside the class to the class itself. - #filename, + attr_reader :filename.

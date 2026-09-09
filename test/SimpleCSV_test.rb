@@ -276,7 +276,6 @@ describe SimpleCSV do
     end
 
     it "keeps no instance in the class between calls" do
-      skip "Finding 22: the instance is kept in SimpleCSV's own @csv_file"
       SimpleCSV.open(DATA)
       _(SimpleCSV.instance_variable_defined?(:@csv_file)).must_equal false
     end

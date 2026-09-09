@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.13
+# 0.11.14
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -66,16 +66,16 @@ class SimpleCSV
     end
 
     def open(source, *args, &block)
-      @csv_file = new(source, *args)
+      csv_file = new(source, *args)
       if block
         begin
-          yield @csv_file
-          @csv_file
+          yield csv_file
+          csv_file
         ensure
-          @csv_file.close
+          csv_file.close
         end
       else
-        @csv_file
+        csv_file
       end
     end
 
