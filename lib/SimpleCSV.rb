@@ -1,8 +1,8 @@
 # SimpleCSV.rb
 # SimpleCSV
 
-# 20260909
-# 0.11.3
+# 20260910
+# 0.11.4
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -36,12 +36,18 @@ require 'Array/extract_optionsX'
 require 'Array/peek_options'
 require 'Array/to_csv'
 require 'Hash/to_csv'
+require 'strscan'
+
 require 'String/split_csv'
 
 require 'SimpleCSV/File'
 require 'SimpleCSV/String'
 
 class SimpleCSV
+
+  class UnterminatedQuote < StandardError; end
+
+  QUOTED_FIELD = /(?:[^"]|"")*"/
 
   class << self
 
@@ -168,6 +174,7 @@ class SimpleCSV
     @column_separator = options[:column_separator] || options[:col_sep] || ','
     @selected_columns = options[:selected_columns]
     @as_array = options[:as_array] || false
+    @split_fields = field_splitter
     if options[:columns]
       self.columns = options[:columns]
     else
@@ -185,7 +192,7 @@ class SimpleCSV
       parse(*selected_columns, &block)
     else
       read_header
-      @source.each(@row_separator){|raw_row| @rows << parse_row(raw_row, *selected_columns)}
+      @source.each_line(@row_separator){|raw_row| @rows << parse_row_across_lines(raw_row, *selected_columns)}
       @rows
     end
   end
@@ -214,7 +221,7 @@ class SimpleCSV
     @columns ||= (
       if header_row? && ['r', 'r+', 'a+'].include?(@mode) && (first_row = first_row?)
         columns, i = {}, -1
-        first_row.split_csv(@quote, @column_separator, @row_separator).each do |column_name|
+        fields_of(first_row).each do |column_name|
           if column_name.empty?
             columns[column_name].blank? ? columns[column_name] = [i += 1] : columns[column_name] << (i += 1)
           else
@@ -244,17 +251,17 @@ class SimpleCSV
     i = -1
     if selected_columns.empty?
       if @columns.blank?
-        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[i += 1] = column_value}
+        fields_of(raw_row).each{|column_value| parsed_row[i += 1] = column_value}
       else
-        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
+        fields_of(raw_row).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
       end
     else
       selected_columns.flatten!
       case selected_columns[0]
       when Integer
-        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
+        fields_of(raw_row).each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
       else
-        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[attributes[i]] = column_value unless !selected_columns.include?(attributes[i += 1])}
+        fields_of(raw_row).each{|column_value| parsed_row[attributes[i]] = column_value unless !selected_columns.include?(attributes[i += 1])}
       end
     end
     if @as_array
@@ -266,6 +273,87 @@ class SimpleCSV
     else
       parsed_row
     end
+  end
+
+  # A quoted field may hold the row separator; the parser says so by raising, and the next line is added and the row parsed again, so that the ordinary row costs nothing for it.
+  def parse_row_across_lines(raw_row, *selected_columns)
+    parse_row(raw_row, *selected_columns)
+  rescue UnterminatedQuote
+    continuation = @source.gets(@row_separator) or raise(UnterminatedQuote, 'a quoted field is not closed before the end of the source')
+    raw_row << continuation
+    retry
+  end
+
+  # The splitter is chosen once, from the separator's kind and the quote mode, and thereafter runs with no further decision: a named mode is a direct string operation on the contract it names, and no mode is the automatic path, which scans only a row that holds a quote.
+  def field_splitter
+    return method(:scan_fields) if @column_separator.is_a?(::Array)
+    case @quote&.to_sym
+    when :none, :unquoted then method(:split_unquoted_fields)
+    when :double, :double_quoted, :double_quotes then @column_separator.is_a?(::String) ? quoted_field_splitter('"') : method(:scan_fields)
+    when :single, :single_quoted, :single_quotes then @column_separator.is_a?(::String) ? quoted_field_splitter("'") : method(:scan_fields)
+    else @column_separator.is_a?(::String) ? method(:split_fields_or_scan) : method(:scan_fields)
+    end
+  end
+
+  def fields_of(raw_row)
+    @split_fields.call(raw_row.chomp(@row_separator))
+  end
+
+  def split_unquoted_fields(row)
+    row.split(@column_separator, -1)
+  end
+
+  # A row under a quoted mode is wholly quoted or wholly unquoted, a header row commonly being the latter: a quoted row splits on quote-separator-quote, loses the outer quotes at its ends, and folds a doubled quote to one; an unquoted row splits plainly.
+  def quoted_field_splitter(quote)
+    boundary = quote + @column_separator + quote
+    doubled = quote * 2
+    ->(row){row.start_with?(quote) ? row.delete_prefix(quote).delete_suffix(quote).split(boundary, -1).collect{|field| field.gsub(doubled, quote)} : row.split(@column_separator, -1)}
+  end
+
+  def split_fields_or_scan(row)
+    row.include?('"') ? scan_fields(row) : row.split(@column_separator, -1)
+  end
+
+  def scan_fields(row)
+    scanner = StringScanner.new(row)
+    fields = []
+    index = -1
+    until scanner.eos? && index >= 0 && !scanner.matched?
+      separator = scan_separator_at(index += 1)
+      fields << (scanner.peek(1) == '"' ? scan_quoted_field(scanner, separator) : scan_unquoted_field(scanner, separator))
+      break unless scanner.matched?
+    end
+    fields
+  end
+
+  def scan_separator_at(index)
+    @scan_separators ||= scan_separators
+    @scan_separators.is_a?(::Array) ? (@scan_separators[index] || @scan_separators.last) : @scan_separators
+  end
+
+  def scan_separators
+    separators = @column_separator.is_a?(::Array) ? @column_separator : [@column_separator]
+    patterns = separators.collect{|separator| separator.is_a?(::Regexp) ? separator : Regexp.new(Regexp.escape(separator))}
+    @column_separator.is_a?(::Array) ? patterns : patterns.first
+  end
+
+  # An unquoted field runs to the next separator, or to the end of the row, in which case nothing is matched and the caller stops.
+  def scan_unquoted_field(scanner, separator)
+    start = scanner.pos
+    if scanner.scan_until(separator)
+      scanner.string[start, scanner.pos - scanner.matched_size - start]
+    else
+      scanner.terminate
+      scanner.string[start..]
+    end
+  end
+
+  # A quoted field runs to the closing quote, a doubled quote within it being one quote, taken in one scan; the separator after it is consumed so that the caller continues, and its absence at the end of the row is the end.
+  def scan_quoted_field(scanner, separator)
+    scanner.getch
+    chunk = scanner.scan(QUOTED_FIELD) or raise UnterminatedQuote
+    scanner.scan(separator) || scanner.terminate
+    chunk.chomp('"').gsub('""', '"')
   end
 
   def write(*selected_columns)

@@ -7,6 +7,19 @@ The versions after it were reshaped before release, so that each correction sits
 Once a version is published, its history is fixed.
 
 
+## 20260910
+
+0.11.4: ~ SimpleCSV#parse_row, a parser chosen once at construction in place of String#split_csv.
+
+1. + field_splitter(): chosen once in #initialize from the separator's kind and the quote mode, and held; #parse_row and #columns call it with no further decision. quote: :none is a split, keeping quotes and trailing empties; :double and :single split on quote-separator-quote and take the outer quotes off, a doubled quote folding to one, a wholly unquoted row (a header row, commonly) splitting plainly; no mode is the automatic path, a split for a row holding no quote character and a scan for one that does; a Regexp separator with a quote in the row, or an Array of per-position separators, always scans.
+2. + scan_fields(), scan_unquoted_field(), scan_quoted_field(): StringScanner over the row, one mechanism for a String, a Regexp or an Array separator. A doubled quote inside a quoted field reads as one quote (Finding 1); a trailing empty field reads as "" (Finding 2); any number of separators inside a quoted field are kept, and a field that is only a separator (Finding 3); a separator inside a quoted field under :double (Finding 4); a Regexp separator no longer raises on a quoted field, which had concatenated the Regexp into the reassembled field.
+3. + parse_row_across_lines(), + UnterminatedQuote: a quoted field holding the row separator is read as one field across lines; the parser raises, #read appends the next line and parses again, so the ordinary row pays nothing for it; at the end of the source the error stands, named.
+4. ~ fields_of(): the row separator is removed with #chomp, not #chomp!, so a caller's string is left as it was (Finding 13). String/split_csv.rb is no longer called and stays in lib/ until the scoping; the two frozen-literal warnings it raised under Ruby 4 are gone with it.
+5. ~ test/SimpleCSV_test.rb: - seven skips (Findings 1, 2, 3, 4, 13 and the quoted field across lines), + a Regexp separator with a quoted field, an Array of per-position separators, :double with a wholly quoted header and a doubled quote, and UnterminatedQuote at the end of the source. Run to 105, 13 skipped.
+6. Reading 20,000 rows of ten fields with headers, seconds, 0.11.3 then 0.11.4: plain rows 0.164 to about 0.07, quoted rows 0.333 to about 0.21; quote: :none unchanged at 0.06 and 0.08. stdlib CSV on the same: about 0.095 and 0.18, so the automatic path is ahead on plain rows and level to slightly behind on quoted ones, the remaining quoted cost being in building a Hash per row; the README's speed claim wants remeasuring against that in Phase 3. A quoted field is taken in one scan (QUOTED_FIELD) and #read iterates with #each_line, each worth about a tenth on quoted rows.
+7. ~ lib/SimpleCSV.rb: /0.11.3/0.11.4/, and the date.
+
+
 ## 20260909
 
 0.11.3: - SimpleCSV::File.open and SimpleCSV::String.open, each of which constructed an instance and then had super construct another.
