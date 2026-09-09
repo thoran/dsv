@@ -1,8 +1,8 @@
-# SimpleCSV.rb
-# SimpleCSV
+# dsv.rb
+# DSV
 
 # 20260910
-# 0.11.18
+# 0.12.0
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -15,10 +15,10 @@ require 'Array/to_csv'
 require 'Hash/to_csv'
 require 'String/split_csv'
 
-require 'SimpleCSV/File'
-require 'SimpleCSV/String'
+require 'DSV/File'
+require 'DSV/String'
 
-class SimpleCSV
+class DSV
 
   class << self
 
@@ -36,9 +36,9 @@ class SimpleCSV
 
     def source_type(source)
       if ::File.exist?(source)
-        SimpleCSV::File
+        DSV::File
       else
-        SimpleCSV::String
+        DSV::String
       end
     end
 
@@ -134,7 +134,7 @@ class SimpleCSV
       options = args.extract_options!
       row_separator = options[:row_separator] || options[:row_sep] || "\n"
       column_separator = options[:column_separator] || options[:col_sep] || ','
-      sc = SimpleCSV.new(raw_row, :quote => nil, :as_array => true, :row_separator => row_separator, :column_separator => column_separator)
+      sc = DSV.new(raw_row, :quote => nil, :as_array => true, :row_separator => row_separator, :column_separator => column_separator)
       sc.parse_row(raw_row)
     end
 
@@ -147,14 +147,14 @@ class SimpleCSV
   def initialize(source, *args)
     @source = (
       if source.is_a?(::String)
-        SimpleCSV.source_type(source).new(source, *args).source
+        DSV.source_type(source).new(source, *args).source
       else
         source
       end
     )
     options = args.extract_options!
     @header_row = options[:header_row] || options[:headers] || options[:header] || false
-    @mode = SimpleCSV.normalised_mode(options[:mode])
+    @mode = DSV.normalised_mode(options[:mode])
     @quote = options[:quote] || nil
     @row_separator = options[:row_separator] || options[:row_sep] || "\n"
     @column_separator = options[:column_separator] || options[:col_sep] || ','
@@ -430,4 +430,4 @@ class SimpleCSV
     end
   end
 
-end # class SimpleCSV
+end # class DSV

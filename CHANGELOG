@@ -9,6 +9,12 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.12.0: /SimpleCSV/DSV/
+
+1. /SimpleCSV/DSV/, /SimpleCSV::File/DSV::File/, /SimpleCSV::String/DSV::String/; lib/SimpleCSV.rb --> lib/dsv.rb, lib/SimpleCSV/ --> lib/DSV/, test/SimpleCSV_test.rb --> test/dsv_test.rb; the requires to match. The supporting files are still required under their old paths, and 0.11.18 being the last SimpleCSV that worked in full, this is that library under its new name: the suite passes as before with only the names changed. Run to 111, 3 skipped.
+2. ~ lib/dsv.rb: /0.11.18/0.12.0/.
+
+
 0.11.18: + TODO, and the header's Todo, Ideas and Bugs sections retired into it.
 
 1. + TODO: what survives of the header's three sections and of _libraries/SimpleCSV/notes.txt, triaged: what is done or fixed is dropped with its version named in the reconciliation, and the rest is grouped as 0.12.0, decided; 0.13.0, speed; and features after, the guessing mode (separator, header, and a header made from the data where there is none), templated ingestion as a whole-row Regexp, the duplicate-header modes, the writing options, symbols and strings interchangeably, a strict: option, and a line number on parse errors.

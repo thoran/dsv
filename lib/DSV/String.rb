@@ -1,12 +1,12 @@
-# SimpleCSV/String.rb
-# SimpleCSV::String
+# DSV/String.rb
+# DSV::String
 
 require 'stringio'
 
-require_relative File.join('..', 'SimpleCSV')
+require_relative '../dsv'
 
-class SimpleCSV
-  class String < SimpleCSV
+class DSV
+  class String < DSV
 
     def initialize(string, *args)
       @string = string

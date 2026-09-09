@@ -1,10 +1,10 @@
-# SimpleCSV/File.rb
-# SimpleCSV::File
+# DSV/File.rb
+# DSV::File
 
-require_relative File.join('..', 'SimpleCSV')
+require_relative '../dsv'
 
-class SimpleCSV
-  class File < SimpleCSV
+class DSV
+  class File < DSV
 
     def initialize(filename, *args)
       @filename = ::File.expand_path(filename)
@@ -17,7 +17,7 @@ class SimpleCSV
     end
 
     def mode
-      @mode ||= SimpleCSV.normalised_mode(@args.peek_options[:mode])
+      @mode ||= DSV.normalised_mode(@args.peek_options[:mode])
     end
 
     def permissions
