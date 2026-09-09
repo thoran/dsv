@@ -172,7 +172,12 @@ describe SimpleCSV do
     end
   end
 
-  describe ".first_row, .attributes and .columns" do
+  describe ".header_row, .first_row, .attributes and .columns" do
+    it "header_row returns the header row as names, or nil without one" do
+      _(SimpleCSV.header_row(DATA, headers: true)).must_equal ['a', 'b', 'c']
+      _(SimpleCSV.header_row(DATA)).must_be_nil
+    end
+
     it "first_row returns the first line, separator included" do
       _(SimpleCSV.first_row(DATA, headers: true)).must_equal "a,b,c\n"
     end

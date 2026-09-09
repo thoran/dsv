@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.16
+# 0.11.17
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -136,8 +136,9 @@ class SimpleCSV
     end
     alias_method :write_csv, :write
 
+    # The header row as names, or nil where there is none; first_row is the raw line.
     def header_row(source, *args)
-      new(source, *args).header_row
+      new(source, *args).attributes
     end
 
     def first_row(source, *args)

@@ -9,6 +9,13 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.17: ~ SimpleCSV.header_row, the header row as names.
+
+1. ~ SimpleCSV.header_row: returns the header row parsed into its names, as .attributes does, or nil where there is no header row; it had returned the instance's header_row accessor, true or false, the only thing the name could mean at the class level being the row (Finding 9). .first_row remains the raw first line. The instance-level accessor of the same name, the headers: option's value, is unchanged and is a 0.12.0 naming question.
+2. ~ test/SimpleCSV_test.rb: + the class-level header_row with and without a header. Run to 111, 3 skipped.
+3. ~ lib/SimpleCSV.rb: /0.11.16/0.11.17/.
+
+
 0.11.16: ~ SimpleCSV#read and #each, selected_columns: given at construction is the selection when a call gives none.
 
 1. + selection(): a call's own selection, or the instance's selected_columns: where the call gives none; #read and #each take theirs through it, and #parse, #to_a and the class methods follow. selected_columns: had been stored by #initialize and read by nothing (Finding 12). A single name or position is accepted as well as a list, and a call's own selection wins. Whether the selection becomes a keyword on the calls themselves is a 0.12.0 question; for now the option works under its name.
