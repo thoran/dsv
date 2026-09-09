@@ -112,9 +112,10 @@ describe SimpleCSV do
     end
 
     it "selects columns given as arguments, as #read does" do
-      skip "Finding 7: the class method discards the selection"
       _(SimpleCSV.read(DATA, 'a', headers: true)).must_equal [{'a' => '1'}, {'a' => '4'}]
       _(SimpleCSV.read(DATA, ['a', 'c'], headers: true)).must_equal [{'a' => '1', 'c' => '3'}, {'a' => '4', 'c' => '6'}]
+      _(yielded(:each, DATA, 'a', headers: true)).must_equal [{'a' => '1'}, {'a' => '4'}]
+      _(yielded(:parse, DATA, 'b', headers: true)).must_equal [{'b' => '2'}, {'b' => '5'}]
     end
   end
 

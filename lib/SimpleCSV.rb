@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.8
+# 0.11.9
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -79,8 +79,10 @@ class SimpleCSV
       end
     end
 
+    # The class-level read, parse and each take a column selection before the options, as the instance-level ones take it as arguments.
     def each(source, *args, &block)
-      new(source, *args).each(&block)
+      options = args.extract_options!
+      new(source, options).each(*args, &block)
     end
     alias_method :foreach, :each
 
@@ -109,17 +111,16 @@ class SimpleCSV
     end
     alias_method :find, :detect
 
-    # 20240826: Be able to select columns from here. The #read interface has that ability and so should the class method.
     def read(source, *args, &block)
       if block
         parse(source, *args, &block)
       else
-        new(source, *args).read_csv
+        options = args.extract_options!
+        new(source, options).read_csv(*args)
       end
     end
     alias_method :read_csv, :read
 
-    # 20240826: Here to so as to be consistent. See .read() comment.
     def parse(source, *args, &block)
       if block
         each(source, *args, &block)

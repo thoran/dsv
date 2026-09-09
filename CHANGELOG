@@ -9,6 +9,13 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.9: ~ SimpleCSV.read, .parse and .each, a column selection given before the options is honoured.
+
+1. ~ SimpleCSV.read, ~ .each: the arguments before the options are the selection and go to the instance's #read or #each, as the two comments of 20240826 asked: SimpleCSV.read(source, 'a', headers: true) reads the a column alone (Finding 7). The names had been passed into new, which discarded them. .parse, .collect, .select, .reject and .detect go through .each and gain it likewise; the two comments go.
+2. ~ test/SimpleCSV_test.rb: - the skip on the selection example, + the selection through .each and .parse. Run to 109, 9 skipped.
+3. ~ lib/SimpleCSV.rb: /0.11.8/0.11.9/.
+
+
 0.11.8: ~ SimpleCSV#initialize, the mode is normalised to Ruby's spelling whatever spelling it was given.
 
 1. + SimpleCSV.normalised_mode(): the table that SimpleCSV::File#mode held, r, r+, w, w+, a and a+ as themselves and the long names read_only, rw, read_write, write_only and append to them, a Symbol as its String, unspecified as r. #initialize keeps @mode as that, so #columns's test of the mode against 'r', 'r+' and 'a+' holds for every spelling: mode: :r, :read_only and 'rw' read the header row (Finding 6). The parent had kept the option as given and SimpleCSV::File had normalised only its own copy, which the parent's #initialize then overwrote.
