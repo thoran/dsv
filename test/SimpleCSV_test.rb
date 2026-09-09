@@ -394,7 +394,6 @@ describe SimpleCSV do
     end
 
     it "returns the rows as arrays in position order when there are no columns" do
-      skip "Finding 10: the positional branch builds an array and discards it"
       _(SimpleCSV.new("1,2\n3,4\n").to_a).must_equal [['1', '2'], ['3', '4']]
     end
   end

@@ -9,6 +9,13 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.11: ~ SimpleCSV#to_a, rows keyed by position come back as arrays in position order.
+
+1. ~ to_a(): with no columns each row's values in their order, a position-keyed row holding them in position order (Finding 10); the branch had built an array in an inject and thrown it away, giving an empty array per row.
+2. ~ test/SimpleCSV_test.rb: - the skip on the to_a example. Run to 109, 7 skipped.
+3. ~ lib/SimpleCSV.rb: /0.11.10/0.11.11/.
+
+
 0.11.10: ~ SimpleCSV.detect, nil when no row matches.
 
 1. ~ SimpleCSV.detect: returns nil when the block is true for no row (Finding 8); the fall-through had been .each's return value, every row.

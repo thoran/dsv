@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.10
+# 0.11.11
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -437,13 +437,7 @@ class SimpleCSV
     if @as_array
       @rows
     elsif @columns.blank?
-      result = []
-      @rows.each do |row|
-        a = []
-        (0..(row.size - 1)).inject([]){|a,i| a << row[i]}
-        result << a
-      end
-      result
+      @rows.collect(&:values)
     else
       @rows.collect{|row| values_in_order(row)}
     end
