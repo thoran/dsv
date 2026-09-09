@@ -9,6 +9,17 @@ Once a version is published, its history is fixed.
 
 ## 20260910
 
+0.11.5: ~ SimpleCSV#columns, a repeated header name keeps every position, and a row holds its values as an Array.
+
+1. ~ columns(): any name that occurs at more than one position maps to an Array of the positions, as an empty name alone did since 0.9.5; the special case goes. a,a,b gives {'a' => [0, 1], 'b' => 2} (Finding 5). columns=() given a list with a repeated name does the same.
+2. ~ attributes(): a repeated name is the name at each of its positions, ['a', 'a', 'b'], where it had been '' at each.
+3. + repeated_names(), + store_field(): a row's value under a repeated name is an Array, one value per position, in order: a,a,b over 1,2,3 reads {'a' => ['1', '2'], 'b' => '3'}, and row['a'][1] is the second. A file without a repeated name keeps the plain assignment loop, chosen per row by whether repeated_names is empty, so it pays nothing.
+4. + values_in_order(): a row's values in position order, an Array under a repeated name spread back over its positions and a single value under one written at each; to_a, as_array and write_row all use it, so a repeated column round-trips.
+5. The rule, for the README: a value is a String, or an Array where the header repeats the name; columns says which. Keying the repeats as distinct suffixed names (a, a.1), and keeping only the first or the last or refusing, are derivations of the same columns map and arrive later as options.
+6. ~ test/SimpleCSV_test.rb: the empty-name example generalised to any repeated name, + reading, selecting, to_a, as_array and writing under one. Run to 106, 14 skipped.
+7. ~ lib/SimpleCSV.rb: /0.11.4/0.11.5/.
+
+
 0.11.4: ~ String#split_csv, the smallest changes that make it read RFC 4180 quoting correctly.
 
 1. ~ String/split_csv.rb 0.8.0: the receiver is no longer chomped in place, a local copy being split (Finding 13); every path splits with -1 so a trailing empty field reads as "" (Finding 2); a doubled quote inside a quoted field reads as one quote (Finding 1); the separator is kept between the pieces of a quoted field that held more than one, and a piece that is a lone quote opens or closes a field rather than being an empty one, so a field that is only a separator reads (Finding 3); under :double a row that starts with a quote splits on quote-separator-quote and loses its outer quotes, so a separator inside a field is kept (Finding 4), and a row that does not start with one, a header row commonly, splits plainly. Direct string operations throughout, no scanner.

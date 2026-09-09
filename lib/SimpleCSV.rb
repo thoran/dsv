@@ -2,7 +2,7 @@
 # SimpleCSV
 
 # 20260910
-# 0.11.4
+# 0.11.5
 
 # Description: A CSV object for reading and writing CSV (and similar) text files with tabulated data to and from files and strings.
 
@@ -215,11 +215,7 @@ class SimpleCSV
       if header_row? && ['r', 'r+', 'a+'].include?(@mode) && (first_row = first_row?)
         columns, i = {}, -1
         first_row.split_csv(@quote, @column_separator, @row_separator).each do |column_name|
-          if column_name.empty?
-            columns[column_name].blank? ? columns[column_name] = [i += 1] : columns[column_name] << (i += 1)
-          else
-            columns[column_name] = (i += 1)
-          end
+          columns[column_name] = columns.key?(column_name) ? [*columns[column_name], i += 1] : (i += 1)
         end
         columns
       else
@@ -235,7 +231,32 @@ class SimpleCSV
       column_order[0].each{|column_name, column_position| @columns[column_name.to_s] = column_position}
     else
       i = -1
-      column_order.each{|column| @columns[column.to_s] = (i += 1)}
+      column_order.each{|column| @columns[column.to_s] = @columns.key?(column.to_s) ? [*@columns[column.to_s], i += 1] : (i += 1)}
+    end
+  end
+
+  # The names that occur at more than one position; under such a name a row holds an Array of values, one per position, in order.
+  def repeated_names
+    @repeated_names ||= (columns || {}).select{|name, position| position.is_a?(::Array)}.keys
+  end
+
+  # A row's value for a name, keyed for the row: assigned where the name occurs once, gathered where it repeats.
+  def store_field(parsed_row, name, value)
+    if repeated_names.include?(name)
+      (parsed_row[name] ||= []) << value
+    else
+      parsed_row[name] = value
+    end
+  end
+
+  # A row's values in position order: an Array under a repeated name is spread back over its positions, and a single value under one is written at each.
+  def values_in_order(row)
+    occurrence = ::Hash.new(0)
+    attributes.collect do |name|
+      value = row[name]
+      value = value[occurrence[name]] if value.is_a?(::Array) && repeated_names.include?(name)
+      occurrence[name] += 1
+      value
     end
   end
 
@@ -251,8 +272,10 @@ class SimpleCSV
     if selected_columns.empty?
       if @columns.blank?
         raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[i += 1] = column_value}
-      else
+      elsif repeated_names.empty?
         raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
+      else
+        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| store_field(parsed_row, attributes[i += 1], column_value)}
       end
     else
       selected_columns.flatten!
@@ -260,14 +283,14 @@ class SimpleCSV
       when Integer
         raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
       else
-        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| parsed_row[attributes[i]] = column_value unless !selected_columns.include?(attributes[i += 1])}
+        raw_row.split_csv(@quote, @column_separator, @row_separator).each{|column_value| store_field(parsed_row, attributes[i], column_value) unless !selected_columns.include?(attributes[i += 1])}
       end
     end
     if @as_array
       if @columns.blank?
         (0..(parsed_row.size - 1)).inject([]){|a,i| a << parsed_row[i]}
       else
-        attributes.collect{|attribute| parsed_row[attribute]}
+        values_in_order(parsed_row)
       end
     else
       parsed_row
@@ -300,7 +323,7 @@ class SimpleCSV
     selected_columns.flatten!
     unless attributes.blank?
       if selected_columns.blank?
-        attributes.each{|attribute| collector << row[attribute] unless row[attribute].nil?}
+        values_in_order(row).each{|value| collector << value unless value.nil?}
       else
         selected_columns.each{|column| collector << row[column] unless row[column].nil?}
       end
@@ -344,7 +367,7 @@ class SimpleCSV
         columns.each do |k,v|
           case v
           when Array
-            v.each{|e| a << ['', e]}
+            v.each{|e| a << [k, e]}
           else
             a << [k, v]
           end
@@ -383,9 +406,7 @@ class SimpleCSV
       end
       result
     else
-      @rows.collect do |row|
-        attributes.collect{|attribute| row[attribute]}
-      end
+      @rows.collect{|row| values_in_order(row)}
     end
   end
 

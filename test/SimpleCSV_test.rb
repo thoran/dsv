@@ -481,9 +481,25 @@ describe SimpleCSV do
       _(SimpleCSV.read("\"a\",\"b\"\n\"say \"\"hi\"\"\",\"2\"\n", headers: true, quote: :double)).must_equal [{'a' => 'say "hi"', 'b' => '2'}]
     end
 
-    it "gathers empty header names into one array-valued column" do
+    it "keeps every position of a repeated header name in columns, the name at each position in attributes" do
+      _(SimpleCSV.columns("a,a,b\n1,2,3\n", headers: true)).must_equal({'a' => [0, 1], 'b' => 2})
+      _(SimpleCSV.attributes("a,a,b\n1,2,3\n", headers: true)).must_equal ['a', 'a', 'b']
       _(SimpleCSV.columns(",,b\n1,2,3\n", headers: true)).must_equal({'' => [0, 1], 'b' => 2})
       _(SimpleCSV.attributes(",,b\n1,2,3\n", headers: true)).must_equal ['', '', 'b']
+    end
+
+    it "reads the values under a repeated header name as an Array, one per position, in order" do
+      _(SimpleCSV.read("a,a,b\n1,2,3\n4,5,6\n", headers: true)).must_equal [{'a' => ['1', '2'], 'b' => '3'}, {'a' => ['4', '5'], 'b' => '6'}]
+      _(SimpleCSV.read(",,b\n1,2,3\n", headers: true)).must_equal [{'' => ['1', '2'], 'b' => '3'}]
+      _(SimpleCSV.new("a,a,b\n1,2,3\n", headers: true).read('a')).must_equal [{'a' => ['1', '2']}]
+    end
+
+    it "spreads a repeated name's Array back over its positions in to_a, as_array and write" do
+      _(SimpleCSV.new("a,a,b\n1,2,3\n", headers: true).to_a).must_equal [['1', '2', '3']]
+      _(SimpleCSV.read("a,a,b\n1,2,3\n", headers: true, as_array: true)).must_equal [['1', '2', '3']]
+      output = written(headers: true, columns: ['a', 'a', 'b'], quote: :none){|csv| csv.rows = [{'a' => ['1', '2'], 'b' => '3'}]; csv.write}
+      _(output).must_equal "a,a,b\n1,2,3\n"
+      _(written(columns: ['a', 'a', 'b'], quote: :none){|csv| csv.write_row('a' => 'x', 'b' => '3')}).must_equal "x,x,3\n"
     end
 
     it "reads a doubled quote as one quote in a row" do
