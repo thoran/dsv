@@ -9,6 +9,13 @@ Once a version is published, its history is fixed.
 
 ## 20260913
 
+0.12.3: + README.md.
+
+1. + README.md, written once under the DSV name: what it is, reading, selecting columns, enumerating from the class, any delimiter, quoting, writing, r+, repeated header names, parse_line, and what it is not. It claims small, keyed access and any delimiter; speed is measured in 0.13.0 and reported there.
+2. ~ TODO: the rename and the README done.
+3. ~ lib/DSV/VERSION.rb: /0.12.2/0.12.3/.
+
+
 0.12.2: + DSV::VERSION.
 
 1. + lib/DSV/VERSION.rb, DSV::VERSION, the one place the version is stated, as http.rb has it; the date and version lines leave lib/dsv.rb's header for it and this CHANGELOG, and the $LOAD_PATH line goes with them, the gem and the test helper to come putting lib/ upon the path.
