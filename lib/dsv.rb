@@ -1,15 +1,11 @@
 # dsv.rb
 # DSV
 
-# 20260910
-# 0.12.1
-
 # Description: Delimiter-separated values: reading and writing CSV and its relatives, tabulated data to and from files and strings, with any delimiter on either side.
-
-$LOAD_PATH.unshift(File.expand_path('..', __FILE__))
 
 require 'stringio'
 
+require 'DSV/VERSION'
 require 'DSV/File'
 require 'DSV/String'
 

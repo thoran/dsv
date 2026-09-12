@@ -7,6 +7,13 @@ The versions after it were reshaped before release, so that each correction sits
 Once a version is published, its history is fixed.
 
 
+## 20260913
+
+0.12.2: + DSV::VERSION.
+
+1. + lib/DSV/VERSION.rb, DSV::VERSION, the one place the version is stated, as http.rb has it; the date and version lines leave lib/dsv.rb's header for it and this CHANGELOG, and the $LOAD_PATH line goes with them, the gem and the test helper to come putting lib/ upon the path.
+
+
 ## 20260910
 
 0.12.1: lib/ scoped to what the gem ships: the three core files, with what they used from the supporting files moved inside the class.
