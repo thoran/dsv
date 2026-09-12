@@ -20,14 +20,7 @@
 # than nil, as it does in DSV today.  Whether that stays is part of the
 # open question of surface compatibility with CSV.
 
-require 'minitest/autorun'
-require 'minitest/mock'
-require 'stringio'
-require 'tmpdir'
-
-$LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
-
-require 'dsv'
+require_relative './helper'
 
 DATA = "a,b,c\n1,2,3\n4,5,6\n"
 KEYED = [{'a' => '1', 'b' => '2', 'c' => '3'}, {'a' => '4', 'b' => '5', 'c' => '6'}]
