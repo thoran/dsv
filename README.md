@@ -76,7 +76,7 @@ DSV.read('people.txt', headers: true, column_separator: /,\s*/)
 DSV.read('people.csv', headers: true, row_separator: "\r\n")
 ```
 
-`col_sep:` and `row_sep:` are accepted as spellings of those. Writing takes the same two options, so a file round-trips through whatever it was read with.
+`col_sep:` and `row_sep:` are accepted as spellings of those. Writing takes the same two options, so a file round-trips through whatever it was read with. A Regexp says what may be read as a separator, not what to write, so writing with one raises `ArgumentError`; give a String to write.
 
 ### Quoting
 
@@ -86,6 +86,8 @@ Unspecified, quoting follows RFC 4180: a quoted field may hold the separator or 
 DSV.read('plain.csv', headers: true, quote: :none)    # no field is quoted; quotes are data
 DSV.read('quoted.csv', headers: true, quote: :double)  # every field is quoted, as DSV writes them
 ```
+
+Under `:double` a row that is wholly unquoted, as a header row often is, is split plainly, and a row that is neither wholly quoted nor wholly unquoted is read as it would be with no mode named, so naming the mode never costs a correct read.
 
 ### Writing
 

@@ -442,8 +442,21 @@ describe DSV do
     end
 
     it "reads a regular expression separator with a quoted field holding the separator" do
-      skip "Observation: reassembling a quoted field concatenates the separator back in, which a Regexp cannot be; the parked scanner parser handles it"
       _(DSV.read("a,b\n\"x, y\",2\n", headers: true, column_separator: /,\s*/)).must_equal [{'a' => 'x, y', 'b' => '2'}]
+      _(DSV.read("\"x,  y\",2\n", column_separator: /,\s*/)).must_equal [{0 => 'x,  y', 1 => '2'}]
+    end
+
+    it "reads a regular expression separator under quote: :double" do
+      _(DSV.read("\"a\"; \"b\"\n\"x; y\";\"2\"\n", headers: true, quote: :double, column_separator: /;\s*/)).must_equal [{'a' => 'x; y', 'b' => '2'}]
+    end
+
+    it "reads a regular expression separator that captures, without the captures becoming fields" do
+      _(DSV.read("1;2,3\n", quote: :none, column_separator: /(;|,)/)).must_equal [{0 => '1', 1 => '2', 2 => '3'}]
+      _(DSV.read("\"x;y\",2\n", column_separator: /(;|,)/)).must_equal [{0 => 'x;y', 1 => '2'}]
+    end
+
+    it "reads with a regular expression separator under the spacey quote modes" do
+      _(DSV.read("1, 2\n", quote: :spacey_none, column_separator: /,\s*/)).must_equal [{0 => '1', 1 => '2'}]
     end
   end
 
@@ -518,6 +531,20 @@ describe DSV do
 
     it "keeps a separator inside a quoted field under quote: :double" do
       _(DSV.read("a,b\n\"x, y\",\"2\"\n", headers: true, quote: :double)).must_equal [{'a' => 'x, y', 'b' => '2'}]
+    end
+
+    it "reads a row that is neither wholly quoted nor wholly unquoted under quote: :double as it would unspecified" do
+      _(DSV.read("\"a\",b,\"c\"\n", quote: :double)).must_equal [{0 => 'a', 1 => 'b', 2 => 'c'}]
+      _(DSV.read("1,\"x\"\n", quote: :double)).must_equal [{0 => '1', 1 => 'x'}]
+      _(DSV.read("\"a\",\"b\",c\n", quote: :double)).must_equal [{0 => 'a', 1 => 'b', 2 => 'c'}]
+      _(DSV.read("a,b\n1,\"x, y\"\n", headers: true, quote: :double)).must_equal [{'a' => '1', 'b' => 'x, y'}]
+    end
+
+    it "reads a quoted field holding the row separator as one field across lines under quote: :double, as DSV writes it" do
+      _(DSV.read("\"x\ny\",\"2\"\n\"z\",\"3\"\n", quote: :double)).must_equal [{0 => "x\ny", 1 => '2'}, {0 => 'z', 1 => '3'}]
+      _(DSV.read("1,\"x\ny\"\n", quote: :double)).must_equal [{0 => '1', 1 => "x\ny"}]
+      output = written(headers: true, columns: ['a', 'b']){|csv| csv.rows = [{'a' => "x\ny", 'b' => '2'}]; csv.write}
+      _(DSV.read(output, headers: true, quote: :double)).must_equal [{'a' => "x\ny", 'b' => '2'}]
     end
   end
 
@@ -596,6 +623,11 @@ describe DSV do
     it "writes the spacey modes with a space after each separator" do
       _(written(columns: [:a, :b], quote: :spacey_none){|csv| csv.write_row('a' => 1, 'b' => 2)}).must_equal "1, 2\n"
       _(written(columns: [:a, :b], quote: :spacey_double){|csv| csv.write_row('a' => 1, 'b' => 2)}).must_equal "\"1\", \"2\"\n"
+    end
+
+    it "refuses to write with a regular expression separator, there being no one string to write between fields" do
+      error = _{written(columns: [:a, :b], column_separator: /,\s*/){|csv| csv.write_row('a' => 1, 'b' => 2)}}.must_raise ArgumentError
+      _(error.message).must_match(/Regexp/)
     end
   end
 

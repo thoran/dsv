@@ -1,5 +1,19 @@
 # dsv/CHANGELOG
 
+## 20261016
+
+0.12.5: Regexp separators and quote: :double made to do what the README says.
+
+1. ~ split_row(): a Regexp separator reads a quoted field holding it, rejoined with the text matched; + pieces_and_separators(), + separator_before(), + split_on(). It had raised TypeError.
+2. ~ split_row() under :double: + split_double_quoted(), wholly quoted or wholly unquoted rows split fast, any other row read as with no mode named; + split_quoted(), + unescaped_fields(), + quoted_separator. "a",b,"c" had been read as one field.
+3. ~ complete_quoted_row(): carries a quoted field across lines under :double too.
+4. ~ writing with a Regexp separator raises ArgumentError; + writable_column_separator. The row renderer is chosen at the first write.
+5. ~ test/dsv_test.rb: - the skip on a Regexp separator with a quoted field; + examples of the above.
+6. ~ README.md: writing with a Regexp raises; how :double reads a row it does not promise.
+7. ~ TODO: 5, - the Regexp separator as a reason for the scanner parser.
+8. ~ lib/DSV/VERSION.rb: /0.12.4/0.12.5/.
+
+
 ## 20260913, 1005
 
 0.12.4: + dsv(.rb).gemspec, Gemfile, Rakefile, .gitignore and LICENSE.
@@ -41,7 +55,7 @@
 
 0.11.18: + TODO, and the header's Todo, Ideas and Bugs sections retired into it.
 
-1. + TODO: what survives of the header's three sections and of _libraries/SimpleCSV/notes.txt, triaged: what is done or fixed is dropped with its version named in the reconciliation, and the rest is grouped as 0.12.0, decided; 0.13.0, speed; and features after, the guessing mode (separator, header, and a header made from the data where there is none), templated ingestion as a whole-row Regexp, the duplicate-header modes, the writing options, symbols and strings interchangeably, a strict: option, and a line number on parse errors.
+1. + TODO: what survives of the header's three sections and of SimpleCSV's notes, triaged: what is done or fixed is dropped with its version named in the reconciliation, and the rest is grouped as 0.12.0, decided; 0.13.0, speed; and features after, the guessing mode (separator, header, and a header made from the data where there is none), templated ingestion as a whole-row Regexp, the duplicate-header modes, the writing options, symbols and strings interchangeably, a strict: option, and a line number on parse errors.
 2. ~ lib/SimpleCSV.rb: - the Todo, Ideas and Bugs sections; the header is the name, the date, the version and the description. /0.11.17/0.11.18/.
 
 0.11.17: ~ SimpleCSV.header_row, the header row as names.
@@ -168,7 +182,7 @@
 
 1. + test/SimpleCSV_test.rb: MiniTest spec style, 102 examples. 76 pass and state the interface as it stands; 26 are skipped and state what the library should do and does not yet, each skip message naming its finding in the Handoff 0 closing note, so that the skip count is the fault list and each fix from here removes one skip. The RFC 4180 cases are rewritten from stdlib CSV's parsing tests. Run as `ruby test/SimpleCSV_test.rb`.
 2. ~ lib/SimpleCSV.rb: - the Changes section of the header, its entries being here from 0.10.0 on; the date and version lines stay. From here each entry is written by hand, one per commit.
-3. 0.10.4 was the last revision imported from the staging tree; from here every change is a commit.
+3. 0.10.4 was the last imported version; from here every change is a commit.
 
 ### Note that prior to 0.10.4 predates this being in git.
 

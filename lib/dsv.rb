@@ -156,7 +156,6 @@ class DSV
     @column_separator = options[:column_separator] || options[:col_sep] || ','
     @selected_columns = options[:selected_columns]
     @as_array = options[:as_array] || false
-    @render_row = row_renderer
     if options[:columns]
       self.columns = options[:columns]
     else
@@ -264,32 +263,84 @@ class DSV
     value.nil? || value.empty?
   end
 
-  # One row into its fields, by the quote mode: :none splits; :double splits a wholly quoted row on quote-separator-quote and a wholly unquoted one plainly; unspecified splits and reassembles a quoted field that held the separator, a doubled quote inside it reading as one. Direct string operations throughout; the scanner-based parser is on the branch scanner-parser.
+  # One row into its fields, by the quote mode: :none splits; :double splits a row as it promises, wholly quoted or wholly unquoted, and one that is neither as unspecified would; unspecified splits and reassembles a quoted field that held the separator, a doubled quote inside it reading as one. Direct string operations throughout; the scanner-based parser is on the branch scanner-parser.
   def split_row(raw_row)
     row = raw_row.chomp(@row_separator)
     case @quote
     when :none, :unquoted
-      row.split(@column_separator, -1)
+      split_on(row, @column_separator)
     when :double, :double_quoted, :double_quotes
-      if row.start_with?('"')
-        row.delete_prefix('"').delete_suffix('"').split('"' + @column_separator + '"', -1).collect{|field| field.gsub('""', '"')}
-      else
-        row.split(@column_separator, -1)
-      end
+      split_double_quoted(row) || split_quoted(row)
+    else
+      split_quoted(row)
+    end
+  end
+
+  # A row split on a separator, String or Regexp; a Regexp's matches divide it, since String#split would also return any groups it captures.
+  def split_on(row, separator)
+    separator.is_a?(::Regexp) ? pieces_and_separators(row, separator).first : row.split(separator, -1)
+  end
+
+  # A row's pieces between a Regexp's matches, with the text of each match, so that a quoted field may be joined back with the separator it held.
+  def pieces_and_separators(row, separator)
+    pieces, separators, position = [], [], 0
+    row.scan(separator) do
+      match = ::Regexp.last_match
+      pieces << row[position...match.begin(0)]
+      separators << match[0]
+      position = match.end(0)
+    end
+    [pieces << row[position..], separators]
+  end
+
+  # Unspecified quoting: the row split on the separator, a quoted field that held it joined back with the separator's own text.
+  def split_quoted(row)
+    if @column_separator.is_a?(::Regexp)
+      reassemble_quoted_fields(*pieces_and_separators(row, @column_separator))
     else
       reassemble_quoted_fields(row.split(@column_separator, -1))
     end
   end
 
-  # Pieces of a row split on the separator, the pieces of a quoted field that held the separator joined back with it; a piece that is a lone quote opens or closes a field.
-  def reassemble_quoted_fields(pieces)
+  # The :double contract: a wholly quoted row split on quote-separator-quote, a wholly unquoted one plainly; nil for a row that is neither.
+  def split_double_quoted(row)
+    if row.start_with?('"')
+      unescaped_fields(split_on(row.delete_prefix('"').delete_suffix('"'), quoted_separator))
+    else
+      split_on(row, @column_separator) unless row.include?('"')
+    end
+  end
+
+  # The fields of a row split as wholly quoted, a doubled quote read as one; nil where a field holds a lone quote, the mark of a row that was not. A field has twice the quotes it has unescaped exactly when every quote in it is one of a doubled pair.
+  def unescaped_fields(fields)
+    fields.collect do |field|
+      next field unless field.include?('"')
+      unescaped = field.gsub('""', '"')
+      return nil unless field.count('"') == 2 * unescaped.count('"')
+      unescaped
+    end
+  end
+
+  # Quote, separator, quote: what divides the fields of a wholly quoted row.
+  def quoted_separator
+    @quoted_separator ||= (
+      if @column_separator.is_a?(::Regexp)
+        ::Regexp.new('"(?:' + @column_separator.source + ')"', @column_separator.options)
+      else
+        '"' + @column_separator + '"'
+      end
+    )
+  end
+
+  # Pieces of a row split on the separator, the pieces of a quoted field that held the separator joined back with it, or with the text it matched where the separator is a Regexp; a piece that is a lone quote opens or closes a field.
+  def reassemble_quoted_fields(pieces, separators = nil)
     fields = []
     buffer = nil
-    pieces.each do |piece|
+    pieces.each_with_index do |piece, i|
       if buffer && !piece.end_with?('"')
-        buffer << @column_separator << piece
+        buffer << separator_before(i, separators) << piece
       elsif buffer
-        fields << (buffer << @column_separator << piece.delete_suffix('"')).gsub('""', '"')
+        fields << (buffer << separator_before(i, separators) << piece.delete_suffix('"')).gsub('""', '"')
         buffer = nil
       elsif piece.start_with?('"') && (piece.length == 1 || !piece.end_with?('"'))
         buffer = +piece.delete_prefix('"')
@@ -302,9 +353,14 @@ class DSV
     fields
   end
 
-  # A quoted field may hold the row separator: while the quotes in a row are unbalanced the next line belongs to it.
+  # What stood between a piece and the one before it: the separator, or the text a Regexp separator matched there.
+  def separator_before(i, separators)
+    separators ? separators[i - 1] : @column_separator
+  end
+
+  # A quoted field may hold the row separator: while the quotes in a row are unbalanced the next line belongs to it, in every quote mode which reads quotes as structure, :none and :unquoted reading them as data.
   def complete_quoted_row(raw_row)
-    raw_row << @source.gets(@row_separator).to_s while @quote.nil? && raw_row.count('"').odd? && !@source.eof?
+    raw_row << @source.gets(@row_separator).to_s while @quote != :none && @quote != :unquoted && raw_row.count('"').odd? && !@source.eof?
     raw_row
   end
 
@@ -377,10 +433,17 @@ class DSV
   alias_method :write_csv_row, :write_row
 
   def write_values(values)
+    @render_row ||= row_renderer
     @source.write(@render_row.call(values))
   end
 
-  # Chosen once from the quote mode: how a row of values is rendered, with the instance's separators, a quote inside a quoted value doubled as RFC 4180 has it. The spacey modes put a space after each separator, as Array#to_csv_row did.
+  # The column separator a row is written with: a Regexp says what may be read as one, not what to write.
+  def writable_column_separator
+    raise ::ArgumentError, "a Regexp column separator can be read with, not written with; give a String to write" if @column_separator.is_a?(::Regexp)
+    @column_separator
+  end
+
+  # Chosen once, at the first write, from the quote mode: how a row of values is rendered, with the instance's separators, a quote inside a quoted value doubled as RFC 4180 has it. The spacey modes put a space after each separator, as Array#to_csv_row did.
   def row_renderer
     quote, spacey = case @quote&.to_sym
                     when :none, :unquoted then [nil, false]
@@ -390,7 +453,7 @@ class DSV
                     when :spacey_double then ['"', true]
                     else ['"', false]
                     end
-    joiner = spacey ? @column_separator + ' ' : @column_separator
+    joiner = spacey ? writable_column_separator + ' ' : writable_column_separator
     if quote
       doubled = quote * 2
       ->(values){values.collect{|value| quote + value.to_s.gsub(quote, doubled) + quote}.join(joiner) + @row_separator}

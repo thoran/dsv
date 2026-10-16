@@ -9,7 +9,7 @@
 
 ## 0.13.0, speed
 
-5. The saved-up speed change, with the evidence in the reconciliation: two string predicates in place of four regex matches per piece in split_csv; rows built by zip.to_h; a benchmark script in the repository against stdlib CSV, and the README's speed sentence written from its output. The scanner-based parser on the branch scanner-parser is judged here, for the Regexp separator with a quoted field if for nothing else.
+5. The saved-up speed change, with the evidence in the reconciliation: two string predicates in place of four regex matches per piece in split_csv; rows built by zip.to_h; a benchmark script in the repository against stdlib CSV, and the README's speed sentence written from its output. The scanner-based parser on the branch scanner-parser is judged here.
 
 ## Features, after
 
