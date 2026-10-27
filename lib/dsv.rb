@@ -332,25 +332,32 @@ class DSV
     )
   end
 
-  # Pieces of a row split on the separator, the pieces of a quoted field that held the separator joined back with it, or with the text it matched where the separator is a Regexp; a piece that is a lone quote opens or closes a field.
+  # Pieces of a row split on the separator, the pieces of a quoted field that held the separator joined back with it, or with the text it matched where the separator is a Regexp; a piece closes a field where it ends in an odd run of quotes, a doubled quote being escaped, and a piece that is a lone quote opens or closes one.
   def reassemble_quoted_fields(pieces, separators = nil)
     fields = []
     buffer = nil
     pieces.each_with_index do |piece, i|
-      if buffer && !piece.end_with?('"')
+      if buffer && trailing_quotes(piece, -1).even?
         buffer << separator_before(i, separators) << piece
       elsif buffer
         fields << (buffer << separator_before(i, separators) << piece.delete_suffix('"')).gsub('""', '"')
         buffer = nil
-      elsif piece.start_with?('"') && (piece.length == 1 || !piece.end_with?('"'))
+      elsif piece.start_with?('"') && trailing_quotes(piece, 0).even?
         buffer = +piece.delete_prefix('"')
-      elsif piece.start_with?('"') && piece.end_with?('"')
+      elsif piece.start_with?('"')
         fields << piece.delete_prefix('"').delete_suffix('"').gsub('""', '"')
       else
         fields << piece
       end
     end
     fields
+  end
+
+  # How many quotes a piece ends with, counting back to but not including the byte given, so that a field's opening quote is not taken for part of its closing. Read by byte, a quote being 34 in any ASCII-compatible encoding, so that nothing is allocated per character.
+  def trailing_quotes(piece, floor)
+    i = piece.bytesize - 1
+    i -= 1 while i > floor && piece.getbyte(i) == 34
+    piece.bytesize - 1 - i
   end
 
   # What stood between a piece and the one before it: the separator, or the text a Regexp separator matched there.

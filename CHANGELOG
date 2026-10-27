@@ -2,6 +2,12 @@
 
 ## 20261027
 
+0.12.7: ~ reassemble_quoted_fields(): an escaped quote before a separator no longer closes a quoted field.
+
+1. ~ reassemble_quoted_fields(): a piece closes a field where it ends in an odd run of quotes; + trailing_quotes().
+2. ~ test/dsv_test.rb: - the skip on a doubled quote before a separator.
+3. ~ lib/DSV/VERSION.rb: /0.12.6/0.12.7/.
+
 0.12.6: + quoting examples.
 
 1. ~ test/dsv_test.rb: + a doubled quote before a separator, skipped; + a quote not opening a field read as data; + a stray quote not taking in the next line, skipped; + an unclosed quoted field raising UnterminatedQuote, skipped.

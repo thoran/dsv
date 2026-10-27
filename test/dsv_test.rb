@@ -243,7 +243,6 @@ describe DSV do
     end
 
     it "reads a doubled quote just before a separator inside a quoted field" do
-      skip "Observation: a piece of a quoted field ending in a quote is taken as the field's end, an escaped quote ending in one as a closing quote does"
       _(DSV.parse_line('"He said ""no"", then left",x')).must_equal ['He said "no", then left', 'x']
       _(DSV.parse_line('"a"",""b",c')).must_equal ['a","b', 'c']
       _(DSV.read("\"a\"\",\"\"b\",\"c\"\n", quote: :double)).must_equal [{0 => 'a","b', 1 => 'c'}]
