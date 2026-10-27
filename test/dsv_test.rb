@@ -242,6 +242,13 @@ describe DSV do
       _(DSV.parse_line('foo,"""""",baz')).must_equal ['foo', '""', 'baz']
     end
 
+    it "reads a doubled quote just before a separator inside a quoted field" do
+      skip "Observation: a piece of a quoted field ending in a quote is taken as the field's end, an escaped quote ending in one as a closing quote does"
+      _(DSV.parse_line('"He said ""no"", then left",x')).must_equal ['He said "no", then left', 'x']
+      _(DSV.parse_line('"a"",""b",c')).must_equal ['a","b', 'c']
+      _(DSV.read("\"a\"\",\"\"b\",\"c\"\n", quote: :double)).must_equal [{0 => 'a","b', 1 => 'c'}]
+    end
+
     it "reads a trailing empty field as an empty string" do
       _(DSV.parse_line('foo,bar,')).must_equal ['foo', 'bar', '']
       _(DSV.parse_line(',')).must_equal ['', '']
@@ -545,6 +552,26 @@ describe DSV do
       _(DSV.read("1,\"x\ny\"\n", quote: :double)).must_equal [{0 => '1', 1 => "x\ny"}]
       output = written(headers: true, columns: ['a', 'b']){|csv| csv.rows = [{'a' => "x\ny", 'b' => '2'}]; csv.write}
       _(DSV.read(output, headers: true, quote: :double)).must_equal [{'a' => "x\ny", 'b' => '2'}]
+    end
+  end
+
+  # Input which is not RFC 4180, read to one rule provisionally, until a policy for malformed quoting is decided: a quote is structure only where it opens a field, and a field it opens which does not close raises UnterminatedQuote.
+  describe "quoting on read, where the input is malformed" do
+    it "reads a quote which does not open a field as data" do
+      _(DSV.parse_line('a"b"c,d')).must_equal ['a"b"c', 'd']
+      _(DSV.parse_line('a, "b,c"')).must_equal ['a', ' "b', 'c"']
+    end
+
+    it "reads a stray quote in an unquoted field as data, without taking in the next line" do
+      skip "Observation: the quotes in a row are counted, so a stray quote leaves them unbalanced and the next line is taken into the row; unspecified since 0.11.4, :double since 0.12.5"
+      _(DSV.read("12\" pizza,9.99\nnext,row\n", as_array: true)).must_equal [['12" pizza', '9.99'], ['next', 'row']]
+      _(DSV.read("12\" pizza,9.99\nnext,row\n", as_array: true, quote: :double)).must_equal [['12" pizza', '9.99'], ['next', 'row']]
+    end
+
+    it "raises UnterminatedQuote on a quoted field which does not close" do
+      skip "Observation: a quoted field which does not close is dropped silently, with the rest of its row"
+      _{DSV.read("\"abc,d\n")}.must_raise DSV::UnterminatedQuote
+      _{DSV.read("\"ab\"c,d\n")}.must_raise DSV::UnterminatedQuote
     end
   end
 

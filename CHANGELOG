@@ -1,5 +1,13 @@
 # dsv/CHANGELOG
 
+## 20261027
+
+0.12.6: + quoting examples.
+
+1. ~ test/dsv_test.rb: + a doubled quote before a separator, skipped; + a quote not opening a field read as data; + a stray quote not taking in the next line, skipped; + an unclosed quoted field raising UnterminatedQuote, skipped.
+2. ~ lib/DSV/VERSION.rb: /0.12.5/0.12.6/.
+
+
 ## 20261016
 
 0.12.5: Regexp separators and quote: :double made to do what the README says.
