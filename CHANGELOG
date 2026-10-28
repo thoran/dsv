@@ -1,5 +1,15 @@
 # dsv/CHANGELOG
 
+## 20261029
+
+0.12.10: ~ TODO, by release to 1.0 and after; + ROADMAP.md.
+
+1. ~ TODO: the fixes left for 0.12.x; modes as declarations in 0.13.0; streaming in 0.14.0; what 1.0 needs; speed and new options in 1.x; the path-or-text guess in 2.0.
+2. ~ TODO: 11, strict:, and 15, the malformed-quoting option, superseded by field_count:, :rfc_4180 and on_error:; 13, chunks, by a streaming each.
+3. + ROADMAP.md: the design, the boundary for 1.0, the version rule, the release sequence, and the questions open. Not in the gemspecs.
+4. ~ lib/DSV/VERSION.rb: /0.12.9/0.12.10/.
+
+
 ## 20261028
 
 0.12.9: + DSV::UnterminatedQuote, raised where a quoted field does not close.

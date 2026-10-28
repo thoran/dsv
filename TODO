@@ -1,25 +1,57 @@
 # TODO
 
-## 0.12.x, before the gem is published
+## 0.12.x, fixes
 
-1. A path is told from content by the call, not by a guess: .read, .foreach, .open and the other path-taking class methods take a path, .parse takes text, new keeps the guess with a switch to say which, and a path under a read mode that names no file raises rather than being read as text.
-2. Selection as a keyword on the calls, only: or select:, columns: being taken; the positional form kept or retired; selected_columns: renamed to match.
-3. The instance-level header_row accessor renamed headers?, the class-level header_row now being the row.
-4. << to append a row and generate to build a string, the two writing calls a CSV user reaches for first.
+1. The class methods close what they open, an early exit included, and without a block return an Enumerator which opens the source afresh on each pass, as CSV.foreach does; collect, select, reject and detect without a block no longer raise.
+2. as_array: with a column selection: each('name') no longer raises TypeError, and read('name', as_array: true) gives only the columns selected. as_array: in the README, as the way to get Arrays as CSV gives them.
+3. Reading honours quote: given as a String, as writing does; DSV.parse_line honours quote:.
+4. A space as the column separator splits on each space, not as String#split(' ') does.
+5. :double back to 0.12.4's reading, undoing 0.12.5 item 2: a row not starting with a quote split plainly, one starting with a quote split on quote-separator-quote, and one which leaves a lone quote in a field read in full as wholly quoted. The README back to 0.12.3's wording.
+6. :single read, as :double is with a single quote.
+7. filter, a class-level alias of select.
+8. A String under a write mode taken as a path, so that a file not yet there can be written by name.
+9. The internals private.
 
-## 0.13.0, speed
+## 0.13.0, modes as declarations
 
-5. The saved-up speed change, with the evidence in the reconciliation: two string predicates in place of four regex matches per piece in split_csv; rows built by zip.to_h; a benchmark script in the repository against stdlib CSV, and the README's speed sentence written from its output. The scanner-based parser on the branch scanner-parser is judged here.
+10. An unknown quote mode, file mode or option raises ArgumentError, where each is ignored today.
+11. :mixed, the name of the default.
+12. A mode raises on a contradiction which costs nothing to see, every row alike, header included: under :double, a row not starting with a quote, and a bare field in a row read in full. Declaring :mixed reads such a row. The exception's class to be settled, UnterminatedQuote perhaps beneath it, carrying the line as UnterminatedQuote does.
 
-## Features, after
+## 0.14.0, streaming
 
-6. Guessing, as a mode that runs once at construction on a sample of the first rows and feeds the same chooser as an explicit option, scanner only: the column separator, the one whose count is the same on every sampled row; whether the first row is a header, its columns' types differing from the rows beneath in the same way across columns; and, where there is no header, a header made from the data, each column named for what its values look like, integer, decimal, date, email, URL, phone, with a positional fallback, column_0, for text and a suffix where two columns share a class. Names come from what values look like, not what they mean; anything more is a schema, and another library's.
-7. Templated ingestion: a template: option taking a whole-row Regexp with a capture per field, the group names being the column names, one match per row; an Array of separators as its writable special case, compiled into such a Regexp at construction and invertible for writing where a general template is not.
-8. The duplicate-header modes as an option: keep all as an Array, the default; index, a, a.1; first; last; error. All derivations of the same columns map at header time, none costing anything per row.
-9. Writing options: minimal quoting, a field quoted only where it holds a separator, a quote or a row terminator; a row terminator inside a field kept, quoted, or folded to a space; the encoding declared and a transcode offered with any loss marked.
-10. Symbols and Strings interchangeable for column names, in a selection, a columns: list and a row's keys; today a String is required.
-11. A strict: option, off by default, that raises on a row with more or fewer fields than the header; today a short row gets only the columns it has and a long row's excess lands under nil.
-12. A line number in each parse error, found only when the error is raised, from the source's position at that moment, as UnterminatedQuote finds its; never counted as it goes, since counting costs time on every row for the sake of the rare one.
-13. Chunked processing of a large file: a bounded number of rows at a time handed to a block, so that nothing needs the whole file in memory and a partial result can be acted on before the rest is read.
-14. Checks, all of them after the above: strict: (13), column types, and whatever else proves wanted; correct and published comes first.
-15. The rule for malformed quoting as an option, its name to be settled, perhaps one with strict: (11): the default, as now; a stricter one, under which a quote that does not open a field raises too, and :double raises on a row which is not what it promises rather than reading it as unspecified quoting does; and a lenient one, never raising, text after a closing quote kept and a field which does not close running to the end of the source.
+13. each yields each row as it is read and returns its receiver, so that detect and break stop reading and memory does not grow with the file; rows is no longer filled by each. Chunks come from each_slice. A source read once, start to end, with no rewind, so that a pipe or $stdin can be read: the header from the first row read, and the line of an error found by seeking only where the source can; a rewind left to r+ rewriting and first_row called alone.
+
+## 1.0
+
+14. A corpus in the tests, a day of NEMWEB's dispatch files trimmed and the RFC 4180 cases, each checked against stdlib CSV's rows.
+15. A benchmark script against stdlib CSV, and the README's speed sentence written from its output.
+16. README: every mode by example, and a table matching each to stdlib CSV's and Python's settings.
+
+## 1.x, speed, results unchanged
+
+17. A per-row fast path for the default: split, the fields bare or wrapped in two quotes unwrapped, any other row read in full.
+18. as_array: returning the split fields, rather than building a Hash and then an Array from it.
+19. The splitter chosen once, at construction, as row_renderer is for writing.
+20. Two string predicates in place of four regex matches per piece; rows built by zip.to_h; the scanner-based parser, at the tag scanner-parser-20261006, judged against the rest.
+
+## 1.x, features
+
+21. on_error:, its name to be settled, what to do with a row which contradicts its declaration: :raise, the default; :skip; a mode to fall back to; or a block.
+22. quote_char:, the quote character apart from the mode.
+23. :rfc_4180, a quote mode reading what RFC 4180 allows as :mixed does and raising on what it forbids.
+24. field_count:, :header or an Integer, off by default: a row of another width a contradiction.
+25. An option reading an unquoted empty field as nil, named as stdlib's nil_value: and empty_value: are.
+26. Writing: minimal quoting, a field quoted only where it holds a separator, a quote or a row terminator; a row terminator inside a field kept, quoted, or folded to a space; the encoding declared and a transcode offered with any loss marked.
+27. A line number in each parse error, found only when the error is raised, as UnterminatedQuote finds its, where the source can seek. line_numbers:, off by default, counts lines as it reads instead, for any source a pipe included: the read loop chosen once, at construction, as row_renderer is for writing, so that without it no row pays for the count.
+28. Selection as a keyword, only: or select:; the instance-level header_row renamed headers?, kept as an alias; << to append a row and generate to build a string.
+29. Symbols and Strings interchangeable for column names, in a selection, a columns: list and a row's keys.
+30. The duplicate-header modes as an option: keep all as an Array, the default; index, a, a.1; first; last; error.
+31. A BOM read past; a lone CR as row separator.
+32. Guessing, as a mode run once at construction on a sample of the first rows: the column separator; whether the first row is a header; and, without one, a header named for what each column's values look like.
+33. Templated ingestion: a template: option taking a whole-row Regexp, a capture per field named for its column; an Array of separators as its writable special case.
+34. DSV::CSV, an entry point taking stdlib CSV's calls and option names, with its defaults, once the above it depends on are in.
+
+## 2.0
+
+35. Whether a String is still told to be a path or text by a guess.
