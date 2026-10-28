@@ -562,13 +562,17 @@ describe DSV do
     end
 
     it "reads a stray quote in an unquoted field as data, without taking in the next line" do
-      skip "Observation: the quotes in a row are counted, so a stray quote leaves them unbalanced and the next line is taken into the row; unspecified since 0.11.4, :double since 0.12.5"
       _(DSV.read("12\" pizza,9.99\nnext,row\n", as_array: true)).must_equal [['12" pizza', '9.99'], ['next', 'row']]
       _(DSV.read("12\" pizza,9.99\nnext,row\n", as_array: true, quote: :double)).must_equal [['12" pizza', '9.99'], ['next', 'row']]
     end
 
+    it "reads a quoted field across lines after a stray quote in the same row" do
+      _(DSV.read("a\"b,\"c\nd\"\n", as_array: true)).must_equal [['a"b', "c\nd"]]
+      _(DSV.read("a\"b,\"c\nd\"\n", as_array: true, quote: :double)).must_equal [['a"b', "c\nd"]]
+    end
+
     it "raises UnterminatedQuote on a quoted field which does not close" do
-      skip "Observation: a quoted field which does not close is dropped silently, with the rest of its row"
+      skip "Observation: a quoted field which does not close is dropped silently, with its row"
       _{DSV.read("\"abc,d\n")}.must_raise DSV::UnterminatedQuote
       _{DSV.read("\"ab\"c,d\n")}.must_raise DSV::UnterminatedQuote
     end

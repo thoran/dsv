@@ -180,7 +180,7 @@ class DSV
     else
       read_header
       @rows = []
-      @source.each(@row_separator){|raw_row| @rows << parse_row(complete_quoted_row(raw_row), *selected_columns)}
+      @source.each(@row_separator){|raw_row| @rows << parse_fields(row_fields(raw_row), *selected_columns)}
       @rows
     end
   end
@@ -211,7 +211,7 @@ class DSV
     @columns = (
       if header_row? && ['r', 'r+', 'a+'].include?(@mode) && (first_row = first_row?)
         columns, i = {}, -1
-        split_row(first_row).each do |column_name|
+        (split_row(first_row) || []).each do |column_name|
           columns[column_name] = columns.key?(column_name) ? [*columns[column_name], i += 1] : (i += 1)
         end
         columns
@@ -263,7 +263,7 @@ class DSV
     value.nil? || value.empty?
   end
 
-  # One row into its fields, by the quote mode: :none splits; :double splits a row as it promises, wholly quoted or wholly unquoted, and one that is neither as unspecified would; unspecified splits and reassembles a quoted field that held the separator, a doubled quote inside it reading as one. Direct string operations throughout; the scanner-based parser is on the branch scanner-parser.
+  # One row into its fields, by the quote mode: :none splits; :double splits a row as it promises, wholly quoted or wholly unquoted, and one that is neither as unspecified would; unspecified splits and reassembles a quoted field that held the separator, a doubled quote inside it reading as one. nil where a quoted field in the row is still open at its end. Direct string operations throughout; the scanner-based parser is on the branch scanner-parser.
   def split_row(raw_row)
     row = raw_row.chomp(@row_separator)
     case @quote
@@ -302,10 +302,10 @@ class DSV
     end
   end
 
-  # The :double contract: a wholly quoted row split on quote-separator-quote, a wholly unquoted one plainly; nil for a row that is neither.
+  # The :double contract: a wholly quoted row split on quote-separator-quote, a wholly unquoted one plainly; nil for a row that is neither, or whose last field does not close.
   def split_double_quoted(row)
     if row.start_with?('"')
-      unescaped_fields(split_on(row.delete_prefix('"').delete_suffix('"'), quoted_separator))
+      unescaped_fields(split_on(row.delete_prefix('"').delete_suffix('"'), quoted_separator)) if trailing_quotes(row, 0).odd?
     else
       split_on(row, @column_separator) unless row.include?('"')
     end
@@ -332,7 +332,7 @@ class DSV
     )
   end
 
-  # Pieces of a row split on the separator, the pieces of a quoted field that held the separator joined back with it, or with the text it matched where the separator is a Regexp; a piece closes a field where it ends in an odd run of quotes, a doubled quote being escaped, and a piece that is a lone quote opens or closes one.
+  # Pieces of a row split on the separator, the pieces of a quoted field that held the separator joined back with it, or with the text it matched where the separator is a Regexp; a piece closes a field where it ends in an odd run of quotes, a doubled quote being escaped, and a piece that is a lone quote opens or closes one; nil where a field is still open after the last piece.
   def reassemble_quoted_fields(pieces, separators = nil)
     fields = []
     buffer = nil
@@ -350,7 +350,7 @@ class DSV
         fields << piece
       end
     end
-    fields
+    fields unless buffer
   end
 
   # How many quotes a piece ends with, counting back to but not including the byte given, so that a field's opening quote is not taken for part of its closing. Read by byte, a quote being 34 in any ASCII-compatible encoding, so that nothing is allocated per character.
@@ -365,30 +365,34 @@ class DSV
     separators ? separators[i - 1] : @column_separator
   end
 
-  # A quoted field may hold the row separator: while the quotes in a row are unbalanced the next line belongs to it, in every quote mode which reads quotes as structure, :none and :unquoted reading them as data.
-  def complete_quoted_row(raw_row)
-    raw_row << @source.gets(@row_separator).to_s while @quote != :none && @quote != :unquoted && raw_row.count('"').odd? && !@source.eof?
-    raw_row
+  # A row's fields, the next line taken into the row while a quoted field in it is open, a quoted field being able to hold the row separator; a field still open at the end of the source is dropped, with its row.
+  def row_fields(raw_row)
+    raw_row << @source.gets(@row_separator) until (fields = split_row(raw_row)) || @source.eof?
+    fields || []
   end
 
   def parse_row(raw_row, *selected_columns)
+    parse_fields(split_row(raw_row) || [], *selected_columns)
+  end
+
+  def parse_fields(fields, *selected_columns)
     parsed_row = {}
     i = -1
     if selected_columns.empty?
       if blank?(@columns)
-        split_row(raw_row).each{|column_value| parsed_row[i += 1] = column_value}
+        fields.each{|column_value| parsed_row[i += 1] = column_value}
       elsif repeated_names.empty?
-        split_row(raw_row).each{|column_value| parsed_row[attributes[i += 1]] = column_value}
+        fields.each{|column_value| parsed_row[attributes[i += 1]] = column_value}
       else
-        split_row(raw_row).each{|column_value| store_field(parsed_row, attributes[i += 1], column_value)}
+        fields.each{|column_value| store_field(parsed_row, attributes[i += 1], column_value)}
       end
     else
       selected_columns.flatten!
       case selected_columns[0]
       when Integer
-        split_row(raw_row).each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
+        fields.each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
       else
-        split_row(raw_row).each{|column_value| store_field(parsed_row, attributes[i], column_value) unless !selected_columns.include?(attributes[i += 1])}
+        fields.each{|column_value| store_field(parsed_row, attributes[i], column_value) unless !selected_columns.include?(attributes[i += 1])}
       end
     end
     if @as_array

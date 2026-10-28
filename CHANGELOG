@@ -1,5 +1,17 @@
 # dsv/CHANGELOG
 
+## 20261028
+
+0.12.8: a stray quote no longer takes in the next line.
+
+1. /complete_quoted_row()/row_fields()/: takes the next line into a row while a quoted field in it is open, rather than while its quotes are odd in number. A stray quote had made the count odd, and one beside an open field even.
+2. ~ reassemble_quoted_fields(), split_row(): nil where a quoted field is still open at the end of the row.
+3. ~ split_double_quoted(): takes a row as wholly quoted only where it ends in a closing quote.
+4. + parse_fields(), from parse_row(), so that the read loop splits each row once.
+5. ~ test/dsv_test.rb: - the skip on a stray quote; + a quoted field across lines after a stray quote.
+6. ~ lib/DSV/VERSION.rb: /0.12.7/0.12.8/.
+
+
 ## 20261027
 
 0.12.7: ~ reassemble_quoted_fields(): an escaped quote before a separator no longer closes a quoted field.
