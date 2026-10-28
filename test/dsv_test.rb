@@ -554,7 +554,7 @@ describe DSV do
     end
   end
 
-  # Input which is not RFC 4180, read to one rule provisionally, until a policy for malformed quoting is decided: a quote is structure only where it opens a field, and a field it opens which does not close raises UnterminatedQuote.
+  # Input which is not RFC 4180, read to the default rule: a quote is structure only where it opens a field, and a field it opens which does not close raises UnterminatedQuote.
   describe "quoting on read, where the input is malformed" do
     it "reads a quote which does not open a field as data" do
       _(DSV.parse_line('a"b"c,d')).must_equal ['a"b"c', 'd']
@@ -572,9 +572,18 @@ describe DSV do
     end
 
     it "raises UnterminatedQuote on a quoted field which does not close" do
-      skip "Observation: a quoted field which does not close is dropped silently, with its row"
       _{DSV.read("\"abc,d\n")}.must_raise DSV::UnterminatedQuote
       _{DSV.read("\"ab\"c,d\n")}.must_raise DSV::UnterminatedQuote
+      _{DSV.read("x,\"abc\n", quote: :double)}.must_raise DSV::UnterminatedQuote
+      _{DSV.parse_line('x,"abc')}.must_raise DSV::UnterminatedQuote
+    end
+
+    it "names the line on which the row holding the unterminated field began" do
+      error = _{DSV.read("a,b\n\"c\nd\",e\nf,\"g\nh\n")}.must_raise DSV::UnterminatedQuote
+      _(error.line).must_equal 4
+      _(error.message).must_include 'line 4'
+      error = _{DSV.read("name,note\nAda,\"unclosed\n", headers: true)}.must_raise DSV::UnterminatedQuote
+      _(error.line).must_equal 2
     end
   end
 

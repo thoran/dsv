@@ -89,6 +89,8 @@ DSV.read('quoted.csv', headers: true, quote: :double)  # every field is quoted, 
 
 Under `:double` a row that is wholly unquoted, as a header row often is, is split plainly, and a row that is neither wholly quoted nor wholly unquoted is read as it would be with no mode named, so naming the mode never costs a correct read.
 
+Input which isn't RFC 4180 is read to one rule. A quote opens a field only at the start of one, so a quote anywhere else, as in `12" pizza`, is data. A quoted field closes only at a quote followed by the separator or the end of the row, so one which doesn't close by the end of the source, as `"abc` or `"ab"c` doesn't, raises `DSV::UnterminatedQuote`, whose `line` is the line its row began on.
+
 ### Writing
 
 Set the columns, give the rows as Hashes, and write:

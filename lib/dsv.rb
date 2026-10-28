@@ -8,6 +8,7 @@ require 'stringio'
 require 'DSV/VERSION'
 require 'DSV/File'
 require 'DSV/String'
+require 'DSV/UnterminatedQuote'
 
 class DSV
 
@@ -211,7 +212,7 @@ class DSV
     @columns = (
       if header_row? && ['r', 'r+', 'a+'].include?(@mode) && (first_row = first_row?)
         columns, i = {}, -1
-        (split_row(first_row) || []).each do |column_name|
+        (split_row(first_row) || raise(UnterminatedQuote.new(1))).each do |column_name|
           columns[column_name] = columns.key?(column_name) ? [*columns[column_name], i += 1] : (i += 1)
         end
         columns
@@ -365,14 +366,21 @@ class DSV
     separators ? separators[i - 1] : @column_separator
   end
 
-  # A row's fields, the next line taken into the row while a quoted field in it is open, a quoted field being able to hold the row separator; a field still open at the end of the source is dropped, with its row.
+  # A row's fields, the next line taken into the row while a quoted field in it is open, a quoted field being able to hold the row separator; a field still open at the end of the source raises UnterminatedQuote.
   def row_fields(raw_row)
     raw_row << @source.gets(@row_separator) until (fields = split_row(raw_row)) || @source.eof?
-    fields || []
+    fields || raise(UnterminatedQuote.new(line_of(raw_row)))
+  end
+
+  # The line on which a row read up to the source's position began, counted only when an error wants it, by reading the source again up to the row, so that no row which closes pays for it.
+  def line_of(raw_row)
+    start = @source.pos - raw_row.bytesize
+    @source.rewind
+    @source.read(start).to_s.scan(@row_separator).length + 1
   end
 
   def parse_row(raw_row, *selected_columns)
-    parse_fields(split_row(raw_row) || [], *selected_columns)
+    parse_fields(split_row(raw_row) || raise(UnterminatedQuote.new(1)), *selected_columns)
   end
 
   def parse_fields(fields, *selected_columns)

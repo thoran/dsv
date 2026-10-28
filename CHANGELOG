@@ -2,6 +2,16 @@
 
 ## 20261028
 
+0.12.9: + DSV::UnterminatedQuote, raised where a quoted field does not close.
+
+1. + lib/DSV/UnterminatedQuote.rb: DSV::UnterminatedQuote, with line, the line on which the field's row began.
+2. ~ row_fields(), parse_row(), columns(): raise it where a quoted field is still open at the end of the source, or of the line or header given. Such a field had been dropped silently, with its row.
+3. + line_of(): counts the lines before the row only when raising.
+4. ~ test/dsv_test.rb: - the skip on a quoted field which does not close; + the line it names; the malformed examples now state the default rule.
+5. ~ README.md: Quoting, the rule for input which isn't RFC 4180.
+6. ~ TODO: 12, as UnterminatedQuote finds its line; + 15, the rule as an option.
+7. ~ lib/DSV/VERSION.rb: /0.12.8/0.12.9/.
+
 0.12.8: a stray quote no longer takes in the next line.
 
 1. /complete_quoted_row()/row_fields()/: takes the next line into a row while a quoted field in it is open, rather than while its quotes are odd in number. A stray quote had made the count odd, and one beside an open field even.
