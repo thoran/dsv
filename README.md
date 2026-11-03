@@ -40,6 +40,13 @@ DSV.read("1,2,3\n4,5,6\n")
 # => [{0 => "1", 1 => "2", 2 => "3"}, {0 => "4", 1 => "5", 2 => "6"}]
 ```
 
+With `as_array: true` each row is an Array of its values in column order, the form stdlib CSV gives:
+
+```ruby
+DSV.read("1,2,3\n4,5,6\n", as_array: true)
+# => [["1", "2", "3"], ["4", "5", "6"]]
+```
+
 A String that names an existing file is read as a file; any other String is read as text.
 
 ### Selecting columns
@@ -52,6 +59,8 @@ DSV.read('people.csv', 'name', headers: true)
 
 DSV.read('people.csv', headers: true, selected_columns: ['name'])
 ```
+
+Under `as_array:` the Arrays hold the columns selected, in column order.
 
 ### Enumerating from the class
 

@@ -118,6 +118,15 @@ describe DSV do
       _(yielded(:each, DATA, 'a', headers: true)).must_equal [{'a' => '1'}, {'a' => '4'}]
       _(yielded(:parse, DATA, 'b', headers: true)).must_equal [{'b' => '2'}, {'b' => '5'}]
     end
+
+    it "gives only the columns selected under as_array:, in column order" do
+      _(DSV.read(DATA, 'a', headers: true, as_array: true)).must_equal [['1'], ['4']]
+      _(DSV.read(DATA, ['c', 'a'], headers: true, as_array: true)).must_equal [['1', '3'], ['4', '6']]
+      _(DSV.read(DATA, headers: true, as_array: true, selected_columns: ['b'])).must_equal [['2'], ['5']]
+      _(DSV.read("1,2,3\n4,5,6\n", 1, as_array: true)).must_equal [['2'], ['5']]
+      _(DSV.read("a,a,b\n1,2,3\n", 'a', headers: true, as_array: true)).must_equal [['1', '2']]
+      _(yielded(:each, DATA, 'a', headers: true, as_array: true)).must_equal [['1'], ['4']]
+    end
   end
 
   describe ".parse" do
@@ -415,6 +424,12 @@ describe DSV do
   end
 
   describe "#each" do
+    it "selects from rows already read under as_array:, in column order" do
+      csv = DSV.new(DATA, headers: true, as_array: true)
+      csv.read
+      _(csv.each(['c', 'a']).to_a).must_equal [['1', '3'], ['4', '6']]
+    end
+
     it "yields each row, reading the source first if it has not been read" do
       rows = []
       DSV.new(DATA, headers: true).each{|row| rows << row}

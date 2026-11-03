@@ -2,6 +2,15 @@
 
 ## 20261103
 
+0.12.12: as_array: with a column selection gives the columns selected.
+
+1. ~ parse_fields(): under as_array:, a selection gives the selected fields; + positions(). Each column not selected had come back as nil, and a selection by position had lost its values.
+2. ~ DSV#each: under as_array:, selects by position. A selection by name had raised TypeError.
+3. ~ test/dsv_test.rb: + selections under as_array:, by name, by position, by a repeated name, and from rows already read.
+4. ~ README.md: + as_array:, and a selection under it.
+5. ~ TODO: - 1.
+6. ~ lib/DSV/VERSION.rb: /0.12.11/0.12.12/.
+
 0.12.11: the class methods close the files they open, and return an Enumerator without a block.
 
 1. ~ DSV.each, .read, .write, .header_row, .first_row, .attributes, .columns: + opened(), so that a path or text given is closed after the call, an early exit included; an IO given is left open. Each had left its file open.

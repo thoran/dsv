@@ -388,6 +388,8 @@ class DSV
   end
 
   def parse_fields(fields, *selected_columns)
+    selected_columns.flatten!
+    return fields.values_at(*positions(selected_columns)) if @as_array && !selected_columns.empty?
     parsed_row = {}
     i = -1
     if selected_columns.empty?
@@ -399,7 +401,6 @@ class DSV
         fields.each{|column_value| store_field(parsed_row, attributes[i += 1], column_value)}
       end
     else
-      selected_columns.flatten!
       case selected_columns[0]
       when Integer
         fields.each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
@@ -417,6 +418,11 @@ class DSV
       parsed_row
     end
   end
+
+# The positions of the columns selected, in column order, a repeated name giving each of its own.
+def positions(selected_columns)
+  selected_columns.flat_map{|column| column.is_a?(::Integer) ? column : Array((columns || {})[column])}.sort
+end
 
   # With no columns defined, rows keyed by name supply them, and the header, from the first row's keys; rows keyed by position write positionally and have no header to write.
   def write(*selected_columns)
@@ -492,14 +498,16 @@ class DSV
     if @rows[0]
       if selected_columns.empty?
         @rows.each{|row| yield row}
+      elsif @as_array
+        @rows.each{|row| yield row.values_at(*positions(selected_columns))}
       else
         @rows.each do |row|
           yield selected_columns.inject({}){|hash, column_name| hash[column_name] = row[column_name]; hash}
         end
       end
     else
-      if selected_columns.empty?
-        read_csv.each{|row| yield row}
+      if selected_columns.empty? || @as_array
+        read_csv(selected_columns).each{|row| yield row}
       else
         read_csv(selected_columns).each do |row|
           yield selected_columns.inject({}){|hash, column_name| hash[column_name] = row[column_name]; hash}
