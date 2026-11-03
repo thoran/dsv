@@ -60,6 +60,14 @@ describe DSV do
     count
   end
 
+  # The files opened while the block runs.
+  def files_opened
+    files = []
+    original = File.method(:new)
+    File.stub(:new, ->(*arguments){original.call(*arguments).tap{|file| files << file}}){yield}
+    files
+  end
+
   describe ".read" do
     it "reads rows keyed by position when there is no header row" do
       _(DSV.read("1,2,3\n4,5,6\n")).must_equal POSITIONAL
@@ -162,6 +170,51 @@ describe DSV do
 
     it "detects nil when no row matches" do
       _(DSV.detect(DATA, headers: true){|row| false}).must_be_nil
+    end
+
+    it "returns an Enumerator without a block" do
+      [:collect, :select, :reject, :detect].each{|method| _(DSV.send(method, DATA, headers: true)).must_be_instance_of Enumerator}
+      _(DSV.select(DATA, headers: true).each{|row| row['a'] == '4'}).must_equal [KEYED.last]
+      _(DSV.detect(DATA, headers: true).each{|row| row['a'] == '4'}).must_equal KEYED.last
+    end
+  end
+
+  describe "the class methods, given a path" do
+    it "close the file they open" do
+      with_file do |path|
+        [:each, :collect, :select, :reject, :detect, :read].each do |method|
+          _(files_opened{DSV.send(method, path, headers: true){|row| true}}.map(&:closed?)).must_equal [true]
+        end
+        [:read, :header_row, :first_row, :attributes, :columns].each do |method|
+          _(files_opened{DSV.send(method, path, headers: true)}.map(&:closed?)).must_equal [true]
+        end
+        _(files_opened{DSV.write(path, mode: 'r+', headers: true)}.map(&:closed?)).must_equal [true]
+      end
+    end
+
+    it "close the file they open where the block leaves early" do
+      with_file do |path|
+        _(files_opened{DSV.each(path, headers: true){|row| break}}.map(&:closed?)).must_equal [true]
+      end
+    end
+
+    it "return an Enumerator without a block, opening the file afresh on each pass and closing it" do
+      with_file do |path|
+        rows = nil
+        files = files_opened do
+          rows = DSV.each(path, headers: true)
+          _(rows).must_be_instance_of Enumerator
+          _(rows.to_a).must_equal KEYED
+          _(rows.first).must_equal KEYED.first
+        end
+        _(files.map(&:closed?)).must_equal [true, true]
+      end
+    end
+
+    it "leave open an IO given rather than a path" do
+      io = StringIO.new(DATA)
+      DSV.each(io, headers: true){|row| }
+      _(io.closed?).must_equal false
     end
   end
 

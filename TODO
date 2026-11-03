@@ -2,45 +2,44 @@
 
 ## 0.12.x, fixes
 
-1. The class methods close what they open, an early exit included, and without a block return an Enumerator which opens the source afresh on each pass, as CSV.foreach does; collect, select, reject and detect without a block no longer raise.
-2. as_array: with a column selection: each('name') no longer raises TypeError, and read('name', as_array: true) gives only the columns selected. as_array: in the README, as the way to get Arrays as CSV gives them.
-3. Reading honours quote: given as a String, as writing does; DSV.parse_line honours quote:.
-4. A space as the column separator splits on each space, not as String#split(' ') does.
-5. :double back to 0.12.4's reading, undoing 0.12.5 item 2: a row not starting with a quote split plainly, one starting with a quote split on quote-separator-quote, and one which leaves a lone quote in a field read in full as wholly quoted. The README back to 0.12.3's wording.
-6. :single read, as :double is with a single quote.
-7. filter, a class-level alias of select.
-8. A String under a write mode taken as a path, so that a file not yet there can be written by name.
-9. The internals private.
+1. as_array: with a column selection: each('name') no longer raises TypeError, and read('name', as_array: true) gives only the columns selected. as_array: in the README, as the way to get Arrays as CSV gives them.
+2. Reading honours quote: given as a String, as writing does; DSV.parse_line honours quote:.
+3. A space as the column separator splits on each space, not as String#split(' ') does.
+4. :double back to 0.12.4's reading, undoing 0.12.5 item 2: a row not starting with a quote split plainly, one starting with a quote split on quote-separator-quote, and one which leaves a lone quote in a field read in full as wholly quoted. The README back to 0.12.3's wording.
+5. :single read, as :double is with a single quote.
+6. filter, a class-level alias of select.
+7. A String under a write mode taken as a path, so that a file not yet there can be written by name.
+8. The internals private.
 
 ## 0.13.0, modes as declarations
 
-10. An unknown quote mode, file mode or option raises ArgumentError, where each is ignored today.
-11. :mixed, the name of the default.
-12. A mode raises on a contradiction which costs nothing to see, every row alike, header included: under :double, a row not starting with a quote, and a bare field in a row read in full. Declaring :mixed reads such a row.
+9. An unknown quote mode, file mode or option raises ArgumentError, where each is ignored today.
+10. :mixed, the name of the default.
+11. A mode raises on a contradiction which costs nothing to see, every row alike, header included: under :double, a row not starting with a quote, and a bare field in a row read in full. Declaring :mixed reads such a row.
 
 ## 0.14.0, streaming
 
-13. each yields each row as it is read and returns its receiver, so that detect and break stop reading and memory does not grow with the file; rows is no longer filled by each. Chunks come from each_slice. A source read once, start to end, with no rewind, so that a pipe or $stdin can be read: the header from the first row read, and the line of an error found by seeking only where the source can; a rewind left to r+ rewriting and first_row called alone.
+12. each yields each row as it is read and returns its receiver, so that detect and break stop reading and memory does not grow with the file; rows is no longer filled by each. Chunks come from each_slice. A source read once, start to end, with no rewind, so that a pipe or $stdin can be read: the header from the first row read, and the line of an error found by seeking only where the source can; a rewind left to r+ rewriting and first_row called alone.
 
 ## 1.0
 
-14. A corpus in the tests, a day of NEMWEB's dispatch files trimmed and the RFC 4180 cases, each checked against stdlib CSV's rows.
-15. A benchmark script against stdlib CSV, and the README's speed sentence written from its output.
-16. README: every mode by example, and a table matching each to stdlib CSV's and Python's settings.
+13. A corpus in the tests, a day of NEMWEB's dispatch files trimmed and the RFC 4180 cases, each checked against stdlib CSV's rows.
+14. A benchmark script against stdlib CSV, and the README's speed sentence written from its output.
+15. README: every mode by example, and a table matching each to stdlib CSV's and Python's settings.
 
 ## 1.x, speed, results unchanged
 
-17. A per-row fast path for the default: split, the fields bare or wrapped in two quotes unwrapped, any other row read in full.
-18. as_array: returning the split fields, rather than building a Hash and then an Array from it.
-19. The splitter chosen once, at construction, as row_renderer is for writing.
-20. Two string predicates in place of four regex matches per piece; rows built by zip.to_h; the scanner-based parser, at the tag scanner-parser-20261006, judged against the rest.
+16. A per-row fast path for the default: split, the fields bare or wrapped in two quotes unwrapped, any other row read in full.
+17. as_array: returning the split fields, rather than building a Hash and then an Array from it.
+18. The splitter chosen once, at construction, as row_renderer is for writing.
+19. Two string predicates in place of four regex matches per piece; rows built by zip.to_h; the scanner-based parser, at the tag scanner-parser-20261006, judged against the rest.
 
 ## 1.x, features
 
-21. :rfc_4180, a quote mode reading what RFC 4180 allows as :mixed does and raising on what it forbids.
-22. field_count:, :header or an Integer, off by default: a row of another width raises.
-23. Writing: minimal quoting, a field quoted only where it holds a separator, a quote or a row terminator; a row terminator inside a field kept, quoted, or folded to a space; the encoding declared and a transcode offered with any loss marked.
-24. A line number in each parse error, found only when the error is raised, as UnterminatedQuote finds its, where the source can seek. line_numbers:, off by default, counts lines as it reads instead, for any source a pipe included: the read loop chosen once, at construction, as row_renderer is for writing, so that without it no row pays for the count.
-25. The instance-level header_row renamed headers?, kept as an alias; << to append a row and generate to build a string.
-26. Symbols and Strings interchangeable for column names, in a selection, a columns: list and a row's keys.
-27. The duplicate-header modes as an option: keep all as an Array, the default; index, a, a.1; first; last; error.
+20. :rfc_4180, a quote mode reading what RFC 4180 allows as :mixed does and raising on what it forbids.
+21. field_count:, :header or an Integer, off by default: a row of another width raises.
+22. Writing: minimal quoting, a field quoted only where it holds a separator, a quote or a row terminator; a row terminator inside a field kept, quoted, or folded to a space; the encoding declared and a transcode offered with any loss marked.
+23. A line number in each parse error, found only when the error is raised, as UnterminatedQuote finds its, where the source can seek. line_numbers:, off by default, counts lines as it reads instead, for any source a pipe included: the read loop chosen once, at construction, as row_renderer is for writing, so that without it no row pays for the count.
+24. The instance-level header_row renamed headers?, kept as an alias; << to append a row and generate to build a string.
+25. Symbols and Strings interchangeable for column names, in a selection, a columns: list and a row's keys.
+26. The duplicate-header modes as an option: keep all as an Array, the default; index, a, a.1; first; last; error.

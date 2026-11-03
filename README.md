@@ -64,7 +64,7 @@ DSV.detect('people.csv', headers: true){|row| row['name'] == 'Ada'}
 DSV.collect('people.csv', headers: true){|row| row['name'].upcase}
 ```
 
-`foreach`, `map`, `find_all` and `find` are aliases.
+`foreach`, `map`, `find_all` and `find` are aliases. Each closes the file it opens. Without a block, each returns an Enumerator, which opens the file again on each pass, so `DSV.each('people.csv', headers: true).each_slice(100)` works as it would on any Enumerable.
 
 ### Any delimiter
 

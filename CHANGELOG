@@ -2,6 +2,16 @@
 
 ## 20261103
 
+0.12.11: the class methods close the files they open, and return an Enumerator without a block.
+
+1. ~ DSV.each, .read, .write, .header_row, .first_row, .attributes, .columns: + opened(), so that a path or text given is closed after the call, an early exit included; an IO given is left open. Each had left its file open.
+2. ~ DSV.each: without a block, returns an Enumerator which opens the source afresh on each pass.
+3. ~ DSV.collect, .select, .reject, .detect: by way of the Enumerator. Without a block each had raised NoMethodError.
+4. ~ test/dsv_test.rb: + files_opened(); + the class methods closing what they open, on an early exit too, and leaving an IO open; + the Enumerators.
+5. ~ README.md: Enumerating from the class, closing and the Enumerator.
+6. ~ TODO: - 1.
+7. ~ lib/DSV/VERSION.rb: /0.12.10/0.12.11/.
+
 0.12.10: ~ TODO, now grouped by release; + ROADMAP.md.
 
 1. ~ TODO: the jobs decided, by release: the fixes left for 0.12.x; modes as declarations in 0.13.0; streaming in 0.14.0; what 1.0 needs; speed and new options in 1.x.

@@ -53,36 +53,30 @@ class DSV
       end
     end
 
-    # The class-level read, parse and each take a column selection before the options, as the instance-level ones take it as arguments.
+    # The class-level read, parse and each take a column selection before the options, as the instance-level ones take it as arguments. Each closes what it opens; without a block, each returns an Enumerator which opens the source afresh on each pass.
     def each(source, *args, &block)
+      return to_enum(:each, source, *args) unless block
       options = DSV.extract_options(args)
-      new(source, options).each(*args, &block)
+      opened(source, options){|dsv| dsv.each(*args, &block)}
     end
     alias_method :foreach, :each
 
     def collect(source, *args, &block)
-      new_collection = []
-      each(source, *args){|row| new_collection << block.call(row)}
-      new_collection
+      each(source, *args).collect(&block)
     end
     alias_method :map, :collect
 
     def select(source, *args, &block)
-      new_collection = []
-      each(source, *args){|row| new_collection << row if block.call(row)}
-      new_collection
+      each(source, *args).select(&block)
     end
     alias_method :find_all, :select
 
     def reject(source, *args, &block)
-      new_collection = []
-      each(source, *args){|row| new_collection << row unless block.call(row)}
-      new_collection
+      each(source, *args).reject(&block)
     end
 
     def detect(source, *args, &block)
-      each(source, *args){|row| return row if block.call(row)}
-      nil
+      each(source, *args).detect(&block)
     end
     alias_method :find, :detect
 
@@ -91,7 +85,7 @@ class DSV
         parse(source, *args, &block)
       else
         options = DSV.extract_options(args)
-        new(source, options).read_csv(*args)
+        opened(source, options){|dsv| dsv.read_csv(*args)}
       end
     end
     alias_method :read_csv, :read
@@ -106,25 +100,25 @@ class DSV
     alias_method :parse_csv, :parse
 
     def write(source, *args)
-      new(source, *args).write_csv
+      opened(source, *args, &:write_csv)
     end
     alias_method :write_csv, :write
 
     # The header row as names, or nil where there is none; first_row is the raw line.
     def header_row(source, *args)
-      new(source, *args).attributes
+      opened(source, *args, &:attributes)
     end
 
     def first_row(source, *args)
-      new(source, *args).first_row
+      opened(source, *args, &:first_row)
     end
 
     def attributes(source, *args)
-      new(source, *args).attributes
+      opened(source, *args, &:attributes)
     end
 
     def columns(source, *args)
-      new(source, *args).columns
+      opened(source, *args, &:columns)
     end
 
     def parse_line(raw_row, *args) # For FasterCSV compatibility.
@@ -133,6 +127,16 @@ class DSV
       column_separator = options[:column_separator] || options[:col_sep] || ','
       sc = DSV.new(raw_row, :quote => nil, :as_array => true, :row_separator => row_separator, :column_separator => column_separator)
       sc.parse_row(raw_row)
+    end
+
+    private
+
+    # A DSV on the source, given to the block and closed after it, an early exit included, where the source is a path or text and so was opened here; an IO given is the caller's to close.
+    def opened(source, *args)
+      dsv = new(source, *args)
+      yield dsv
+    ensure
+      dsv.close if dsv && source.is_a?(::String)
     end
 
   end # class << self
