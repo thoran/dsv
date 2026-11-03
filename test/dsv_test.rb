@@ -262,6 +262,12 @@ describe DSV do
       _(DSV.parse_line("1,2,3\r\n", row_sep: "\r\n")).must_equal ['1', '2', '3']
     end
 
+    it "takes quote:" do
+      _(DSV.parse_line("\"a\",b\n", quote: :none)).must_equal ['"a"', 'b']
+      _(DSV.parse_line("\"a\",b\n", quote: 'none')).must_equal ['"a"', 'b']
+      _(DSV.parse_line("\"a,b\",\"c\"\n", quote: :double)).must_equal ['a,b', 'c']
+    end
+
     it "leaves the caller's string as it was" do
       line = "1,2,3\n"
       DSV.parse_line(line)
@@ -562,6 +568,11 @@ describe DSV do
 
     it "keeps the quotes under quote: :none" do
       _(DSV.read("a,b\n\"x\",\"2\"\n", headers: true, quote: :none)).must_equal [{'a' => '"x"', 'b' => '"2"'}]
+    end
+
+    it "reads a quote mode given as a String as its Symbol, as writing does" do
+      _(DSV.read("a,b\n\"x\",\"2\"\n", headers: true, quote: 'none')).must_equal [{'a' => '"x"', 'b' => '"2"'}]
+      _(DSV.read("\"a\",\"b\"\n\"x\",\"2\"\n", headers: true, quote: 'double')).must_equal [{'a' => 'x', 'b' => '2'}]
     end
 
     it "strips the quotes under quote: :double, a row being wholly quoted or, as a header row often is, wholly unquoted" do

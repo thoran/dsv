@@ -125,7 +125,7 @@ class DSV
       options = DSV.extract_options(args)
       row_separator = options[:row_separator] || options[:row_sep] || "\n"
       column_separator = options[:column_separator] || options[:col_sep] || ','
-      sc = DSV.new(raw_row, :quote => nil, :as_array => true, :row_separator => row_separator, :column_separator => column_separator)
+      sc = DSV.new(raw_row, quote: options[:quote], as_array: true, row_separator: row_separator, column_separator: column_separator)
       sc.parse_row(raw_row)
     end
 
@@ -271,7 +271,7 @@ class DSV
   # One row into its fields, by the quote mode: :none splits; :double splits a row as it promises, wholly quoted or wholly unquoted, and one that is neither as unspecified would; unspecified splits and reassembles a quoted field that held the separator, a doubled quote inside it reading as one. nil where a quoted field in the row is still open at its end. Direct string operations throughout; the scanner-based parser is on the branch scanner-parser.
   def split_row(raw_row)
     row = raw_row.chomp(@row_separator)
-    case @quote
+    case @quote&.to_sym
     when :none, :unquoted
       split_on(row, @column_separator)
     when :double, :double_quoted, :double_quotes

@@ -2,6 +2,14 @@
 
 ## 20261103
 
+0.12.13: reading honours quote:, given as a String or to DSV.parse_line.
+
+1. ~ split_row(): reads a quote mode given as a String as its Symbol, as row_renderer() does. A String mode had been read as unspecified.
+2. ~ DSV.parse_line: passes quote: on, rather than always reading as unspecified; its options to DSV.new written key: value, not with hashrockets.
+3. ~ test/dsv_test.rb: + quote: given as a String on read; + parse_line with quote:.
+4. ~ TODO: - 1.
+5. ~ lib/DSV/VERSION.rb: /0.12.12/0.12.13/.
+
 0.12.12: as_array: with a column selection gives the columns selected.
 
 1. ~ parse_fields(): under as_array:, a selection gives the selected fields; + positions(). Each column not selected had come back as nil, and a selection by position had lost its values.
