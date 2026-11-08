@@ -1,5 +1,18 @@
 # dsv/CHANGELOG
 
+## 20261108
+
+0.12.14: A space as the column separator splits on each space.
+
+1. ~ split_on(): A single space is split on as / /. String#split had taken ' ' as runs of whitespace, dropping any leading run, so empty fields were lost and a tab split as a space.
+2. ~ split_quoted(): A String separator is split on by split_on().
+3. ~ test/dsv_test.rb: A space separator is tested, under each quote mode, and with a tab.
+4. ~ README.md: A String separator is split on as given.
+5. ~ TODO: One job to a line, each marked with its release, the reasons moved to ROADMAP.md and what is undecided to PROPOSED.md. The space separator is done, and the string predicates were done in 0.12.0. The layout of normalised_mode, row_renderer and write_row, and the renaming of split_quoted() and split_double_quoted(), are added.
+6. ~ ROADMAP.md: Each release is stated as what it does and why; what is undecided is moved to PROPOSED.md.
+7. + PROPOSED.md: What is undecided, under a heading for each theme or change.
+8. ~ lib/DSV/VERSION.rb: /0.12.13/0.12.14/.
+
 ## 20261103
 
 0.12.13: reading honours quote:, given as a String or to DSV.parse_line.

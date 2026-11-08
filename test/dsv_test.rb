@@ -517,6 +517,18 @@ describe DSV do
       _(DSV.read("a::b\n1::2\n", headers: true, column_separator: '::')).must_equal [{'a' => '1', 'b' => '2'}]
     end
 
+    it "splits on each space where the separator is a space, an empty field between two and at either end" do
+      _(DSV.read(" a  b \n", quote: :none, column_separator: ' ')).must_equal [{0 => '', 1 => 'a', 2 => '', 3 => 'b', 4 => ''}]
+      _(DSV.read("a  b\n", column_separator: ' ')).must_equal [{0 => 'a', 1 => '', 2 => 'b'}]
+      _(DSV.read("\"x y\"  2\n", column_separator: ' ')).must_equal [{0 => 'x y', 1 => '', 2 => '2'}]
+      _(DSV.read("\"a\" \"\" \"b\"\n", quote: :double, column_separator: ' ')).must_equal [{0 => 'a', 1 => '', 2 => 'b'}]
+      _(DSV.read("a  b\n", quote: :double, column_separator: ' ')).must_equal [{0 => 'a', 1 => '', 2 => 'b'}]
+    end
+
+    it "does not split on a tab where the separator is a space" do
+      _(DSV.read("a\tb c\n", column_separator: ' ')).must_equal [{0 => "a\tb", 1 => 'c'}]
+    end
+
     it "reads a regular expression separator" do
       _(DSV.read("a, b\n1,2\n", headers: true, column_separator: /,\s*/)).must_equal [{'a' => '1', 'b' => '2'}]
     end

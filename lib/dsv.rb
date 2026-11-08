@@ -281,9 +281,13 @@ class DSV
     end
   end
 
-  # A row split on a separator, String or Regexp; a Regexp's matches divide it, since String#split would also return any groups it captures.
+  # A row split on a separator, String or Regexp; a Regexp's matches divide it, since String#split would also return any groups it captures. A single space is split on as / /, since String#split takes ' ' to mean runs of whitespace, any leading run dropped.
   def split_on(row, separator)
-    separator.is_a?(::Regexp) ? pieces_and_separators(row, separator).first : row.split(separator, -1)
+    case separator
+    when ::Regexp; pieces_and_separators(row, separator).first
+    when ' '; row.split(/ /, -1)
+    else row.split(separator, -1)
+    end
   end
 
   # A row's pieces between a Regexp's matches, with the text of each match, so that a quoted field may be joined back with the separator it held.
@@ -303,7 +307,7 @@ class DSV
     if @column_separator.is_a?(::Regexp)
       reassemble_quoted_fields(*pieces_and_separators(row, @column_separator))
     else
-      reassemble_quoted_fields(row.split(@column_separator, -1))
+      reassemble_quoted_fields(split_on(row, @column_separator))
     end
   end
 
