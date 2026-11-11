@@ -1,5 +1,19 @@
 # dsv/CHANGELOG
 
+## 20261111
+
+0.13.0: The internals are private, and each quote mode's reading is named for the fields it gives.
+
+1. ~ lib/dsv.rb: The instance methods SimpleCSV had are public, as is repeated_names, which the README documents; the rest are private, below initialize.
+2. /split_quoted()/quoted_fields()/.
+3. /split_double_quoted()/double_quoted_fields()/.
+4. ~ split_on(), quoted_fields(), double_quoted_fields(): Each comment says what its level of row splitting does.
+5. ~ test/dsv_test.rb: Which instance methods are public and which private is tested.
+6. ~ TODO: - 6, 7. The fixes are now 0.13.x, the modes 0.14.0 and streaming 0.15.0. A job is added: attributes independent of columns, as before 0.11.7.
+7. ~ ROADMAP.md: The releases are renumbered to match, and 0.13.x lists attributes independent of columns.
+8. ~ PROPOSED.md: The version rule is asked of :single and filter alone.
+9. ~ lib/DSV/VERSION.rb: /0.12.14/0.13.0/.
+
 ## 20261108
 
 0.12.14: A space as the column separator splits on each space.
