@@ -1,6 +1,6 @@
 # dsv/ROADMAP.md
 
-Date: 20261110
+Date: 20261111
 
 What each release does, and why, and the themes beyond them. The jobs, one to a line, are in TODO; what is undecided is in PROPOSED.md. Not listed in the gemspec, so it does not ship with the gem.
 
@@ -30,7 +30,7 @@ A fix is a patch. Anything which is not a fix is at least a minor, as is a fix w
 
 ## Releases
 
-### 0.12.x: fixes
+### 0.13.x: fixes
 
 What SimpleCSV meant, without its bugs.
 
@@ -39,9 +39,9 @@ What SimpleCSV meant, without its bugs.
 - `:single`, read as `:double` is.
 - `filter`, beside `select`.
 - A String under a write mode taken as a path, so that a file not yet there can be written by name.
-- The internals private, and the two levels of row splitting named apart: `split_on()` cuts a row at its separators, and each quote mode reads a row into its `*_fields()`.
+- `attributes` independent of `columns` again, as before 0.11.7, so that what is written, such as a column added, can differ from what was read.
 
-### 0.13.0: modes as declarations
+### 0.14.0: modes as declarations
 
 A mode is held to what it declares, and so is everything else given to dsv.
 
@@ -49,7 +49,7 @@ A mode is held to what it declares, and so is everything else given to dsv.
 - `:mixed` names the default.
 - A mode raises on a contradiction which costs nothing to see, every row alike, the header included: under `:double`, a row not starting with a quote, and a bare field in a row read in full. Declaring `:mixed` reads such a row. What else may be done with it comes after 1.0, under Rows which contradict their declaration.
 
-### 0.14.0: streaming
+### 0.15.0: streaming
 
 `each` yields each row as it is read, so that `detect` and `break` stop reading and memory does not grow with the file, and returns its receiver. `rows` is no longer filled as a side effect. The source is read once, start to end, with no rewind, so that a pipe or `$stdin` can be read.
 
@@ -77,7 +77,7 @@ Path or text reconsidered, under Path or text in PROPOSED.md.
 
 ### Rows which contradict their declaration
 
-From 0.13.0 such a row raises. After 1.0, an option orthogonal to the mode says what else to do with it: `:raise`, the default; `:skip`; a mode to fall back to, `:mixed` or `:none`, which cannot fail; or a block. Mistakes in the options themselves stay `ArgumentError`.
+From 0.14.0 such a row raises. After 1.0, an option orthogonal to the mode says what else to do with it: `:raise`, the default; `:skip`; a mode to fall back to, `:mixed` or `:none`, which cannot fail; or a block. Mistakes in the options themselves stay `ArgumentError`.
 
 ### A drop-in for stdlib CSV
 

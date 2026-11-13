@@ -145,37 +145,8 @@ class DSV
 
   attr_accessor :header_row, :mode, :quote, :row_separator, :selected_columns, :as_array, :rows
 
-  def initialize(source, *args)
-    @source = (
-      if source.is_a?(::String)
-        DSV.source_type(source).new(source, *args).source
-      else
-        source
-      end
-    )
-    options = DSV.extract_options(args)
-    @header_row = options[:header_row] || options[:headers] || options[:header] || false
-    @mode = DSV.normalised_mode(options[:mode])
-    @quote = options[:quote] || nil
-    @row_separator = options[:row_separator] || options[:row_sep] || "\n"
-    @column_separator = options[:column_separator] || options[:col_sep] || ','
-    @selected_columns = options[:selected_columns]
-    @as_array = options[:as_array] || false
-    if options[:columns]
-      self.columns = options[:columns]
-    else
-      self.columns
-    end
-    @rows = []
-  end
-
   def close
     @source.close
-  end
-
-  # A call's own selection, or the instance's selected_columns: where the call gives none.
-  def selection(selected_columns)
-    selected_columns.empty? ? Array(@selected_columns) : selected_columns
   end
 
   def read(*selected_columns, &block)
@@ -243,6 +214,143 @@ class DSV
     @repeated_names ||= (columns || {}).select{|name, position| position.is_a?(::Array)}.keys
   end
 
+  def parse_row(raw_row, *selected_columns)
+    parse_fields(split_row(raw_row) || raise(UnterminatedQuote.new(1)), *selected_columns)
+  end
+
+  # With no columns defined, rows keyed by name supply them, and the header, from the first row's keys; rows keyed by position write positionally and have no header to write.
+  def write(*selected_columns)
+    prepare_to_rewrite if @mode == 'r+'
+    self.columns = @rows[0].keys if blank?(columns) && @rows[0].is_a?(::Hash) && @rows[0].keys[0].is_a?(::String)
+    write_header(*selected_columns) if header_row? && attributes
+    each{|row| write_row(row, *selected_columns)}
+  end
+  alias_method :write_csv, :write
+
+  def write_header(*selected_columns)
+    selected_columns.flatten!
+    names = selected_columns.empty? ? attributes : selected_columns
+    write_values(names)
+  end
+  alias_method :write_csv_header, :write_header
+
+  # A nil value is an empty field, so the columns after it keep their places; with no columns defined a row's values are written in the row's own order.
+  def write_row(row, *selected_columns)
+    selected_columns.flatten!
+    values = if !selected_columns.empty?
+               selected_columns.collect{|column| row[column]}
+             elsif attributes
+               values_in_order(row)
+             else
+               row.values
+             end
+    write_values(values)
+  end
+  alias_method :write_csv_row, :write_row
+
+  def each(*selected_columns)
+    return to_enum(:each, *selected_columns) unless block_given?
+    selected_columns = selection(selected_columns)
+    selected_columns.flatten!
+    if @rows[0]
+      if selected_columns.empty?
+        @rows.each{|row| yield row}
+      elsif @as_array
+        @rows.each{|row| yield row.values_at(*positions(selected_columns))}
+      else
+        @rows.each do |row|
+          yield selected_columns.inject({}){|hash, column_name| hash[column_name] = row[column_name]; hash}
+        end
+      end
+    else
+      if selected_columns.empty? || @as_array
+        read_csv(selected_columns).each{|row| yield row}
+      else
+        read_csv(selected_columns).each do |row|
+          yield selected_columns.inject({}){|hash, column_name| hash[column_name] = row[column_name]; hash}
+        end
+      end
+    end
+  end
+  alias_method :each_row, :each
+
+  def attributes
+    @attributes ||= (
+      if blank?(columns)
+        nil
+      else
+        a = []
+        columns.each do |k,v|
+          case v
+          when Array
+            v.each{|e| a << [k, e]}
+          else
+            a << [k, v]
+          end
+        end
+        a.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
+      end
+    )
+  end
+
+  def attributes=(attributes)
+    @attributes = attributes
+  end
+
+  def header_row?
+    @header_row
+  end
+
+  def first_row
+    @source.rewind
+    return_value = @source.gets(@row_separator)
+    @source.rewind
+    return_value
+  end
+  alias_method :first_row?, :first_row
+
+  def to_a
+    read_csv unless @rows[0]
+    if @as_array
+      @rows
+    elsif blank?(@columns)
+      @rows.collect(&:values)
+    else
+      @rows.collect{|row| values_in_order(row)}
+    end
+  end
+
+  private
+
+  def initialize(source, *args)
+    @source = (
+      if source.is_a?(::String)
+        DSV.source_type(source).new(source, *args).source
+      else
+        source
+      end
+    )
+    options = DSV.extract_options(args)
+    @header_row = options[:header_row] || options[:headers] || options[:header] || false
+    @mode = DSV.normalised_mode(options[:mode])
+    @quote = options[:quote] || nil
+    @row_separator = options[:row_separator] || options[:row_sep] || "\n"
+    @column_separator = options[:column_separator] || options[:col_sep] || ','
+    @selected_columns = options[:selected_columns]
+    @as_array = options[:as_array] || false
+    if options[:columns]
+      self.columns = options[:columns]
+    else
+      self.columns
+    end
+    @rows = []
+  end
+
+  # A call's own selection, or the instance's selected_columns: where the call gives none.
+  def selection(selected_columns)
+    selected_columns.empty? ? Array(@selected_columns) : selected_columns
+  end
+
   # A row's value for a name, keyed for the row: assigned where the name occurs once, gathered where it repeats.
   def store_field(parsed_row, name, value)
     if repeated_names.include?(name)
@@ -275,13 +383,13 @@ class DSV
     when :none, :unquoted
       split_on(row, @column_separator)
     when :double, :double_quoted, :double_quotes
-      split_double_quoted(row) || split_quoted(row)
+      double_quoted_fields(row) || quoted_fields(row)
     else
-      split_quoted(row)
+      quoted_fields(row)
     end
   end
 
-  # A row split on a separator, String or Regexp; a Regexp's matches divide it, since String#split would also return any groups it captures. A single space is split on as / /, since String#split takes ' ' to mean runs of whitespace, any leading run dropped.
+  # A row cut at its separators, the one place that knows a separator may be a String, a single space or a Regexp. A Regexp's matches divide it, since String#split would also return any groups it captures. A single space is split on as / /, since String#split takes ' ' to mean runs of whitespace, any leading run dropped.
   def split_on(row, separator)
     case separator
     when ::Regexp; pieces_and_separators(row, separator).first
@@ -302,8 +410,8 @@ class DSV
     [pieces << row[position..], separators]
   end
 
-  # Unspecified quoting: the row split on the separator, a quoted field that held it joined back with the separator's own text.
-  def split_quoted(row)
+  # The fields of a row read with no quote mode named: the row cut at its separators, and a quoted field that held one joined back with the separator's own text.
+  def quoted_fields(row)
     if @column_separator.is_a?(::Regexp)
       reassemble_quoted_fields(*pieces_and_separators(row, @column_separator))
     else
@@ -311,8 +419,8 @@ class DSV
     end
   end
 
-  # The :double contract: a wholly quoted row split on quote-separator-quote, a wholly unquoted one plainly; nil for a row that is neither, or whose last field does not close.
-  def split_double_quoted(row)
+  # The fields of a row read under :double's contract: a wholly quoted row cut at quote-separator-quote, a wholly unquoted one at its separators; nil for a row that is neither, or whose last field does not close.
+  def double_quoted_fields(row)
     if row.start_with?('"')
       unescaped_fields(split_on(row.delete_prefix('"').delete_suffix('"'), quoted_separator)) if trailing_quotes(row, 0).odd?
     else
@@ -387,10 +495,6 @@ class DSV
     @source.read(start).to_s.scan(@row_separator).length + 1
   end
 
-  def parse_row(raw_row, *selected_columns)
-    parse_fields(split_row(raw_row) || raise(UnterminatedQuote.new(1)), *selected_columns)
-  end
-
   def parse_fields(fields, *selected_columns)
     selected_columns.flatten!
     return fields.values_at(*positions(selected_columns)) if @as_array && !selected_columns.empty?
@@ -423,19 +527,10 @@ class DSV
     end
   end
 
-# The positions of the columns selected, in column order, a repeated name giving each of its own.
-def positions(selected_columns)
+  # The positions of the columns selected, in column order, a repeated name giving each of its own.
+  def positions(selected_columns)
   selected_columns.flat_map{|column| column.is_a?(::Integer) ? column : Array((columns || {})[column])}.sort
-end
-
-  # With no columns defined, rows keyed by name supply them, and the header, from the first row's keys; rows keyed by position write positionally and have no header to write.
-  def write(*selected_columns)
-    prepare_to_rewrite if @mode == 'r+'
-    self.columns = @rows[0].keys if blank?(columns) && @rows[0].is_a?(::Hash) && @rows[0].keys[0].is_a?(::String)
-    write_header(*selected_columns) if header_row? && attributes
-    each{|row| write_row(row, *selected_columns)}
   end
-  alias_method :write_csv, :write
 
   # Under r+ a write replaces the file: the rows are read first if they have not been, then the file is emptied, once, here, rather than at the end of every read.
   def prepare_to_rewrite
@@ -443,27 +538,6 @@ end
     @source.rewind
     @source.truncate(0)
   end
-
-  def write_header(*selected_columns)
-    selected_columns.flatten!
-    names = selected_columns.empty? ? attributes : selected_columns
-    write_values(names)
-  end
-  alias_method :write_csv_header, :write_header
-
-  # A nil value is an empty field, so the columns after it keep their places; with no columns defined a row's values are written in the row's own order.
-  def write_row(row, *selected_columns)
-    selected_columns.flatten!
-    values = if !selected_columns.empty?
-               selected_columns.collect{|column| row[column]}
-             elsif attributes
-               values_in_order(row)
-             else
-               row.values
-             end
-    write_values(values)
-  end
-  alias_method :write_csv_row, :write_row
 
   def write_values(values)
     @render_row ||= row_renderer
@@ -492,78 +566,6 @@ end
       ->(values){values.collect{|value| quote + value.to_s.gsub(quote, doubled) + quote}.join(joiner) + @row_separator}
     else
       ->(values){values.join(joiner) + @row_separator}
-    end
-  end
-
-  def each(*selected_columns)
-    return to_enum(:each, *selected_columns) unless block_given?
-    selected_columns = selection(selected_columns)
-    selected_columns.flatten!
-    if @rows[0]
-      if selected_columns.empty?
-        @rows.each{|row| yield row}
-      elsif @as_array
-        @rows.each{|row| yield row.values_at(*positions(selected_columns))}
-      else
-        @rows.each do |row|
-          yield selected_columns.inject({}){|hash, column_name| hash[column_name] = row[column_name]; hash}
-        end
-      end
-    else
-      if selected_columns.empty? || @as_array
-        read_csv(selected_columns).each{|row| yield row}
-      else
-        read_csv(selected_columns).each do |row|
-          yield selected_columns.inject({}){|hash, column_name| hash[column_name] = row[column_name]; hash}
-        end
-      end
-    end
-  end
-  alias_method :each_row, :each
-
-  def attributes
-    @attributes ||= (
-      if blank?(columns)
-        nil
-      else
-        a = []
-        columns.each do |k,v|
-          case v
-          when Array
-            v.each{|e| a << [k, e]}
-          else
-            a << [k, v]
-          end
-        end
-        a.sort{|a,b| a[1] <=> b[1]}.collect{|a| a[0]}
-      end
-    )
-  end
-
-  def attributes=(attributes)
-    @attributes = attributes
-  end
-
-  def header_row?
-    @header_row
-  end
-
-  def first_row
-    @source.rewind
-    return_value = @source.gets(@row_separator)
-    @source.rewind
-    return_value
-  end
-  alias_method :first_row?, :first_row
-
-  def to_a
-    read_csv unless @rows[0]
-    if @as_array
-      @rows
-    elsif blank?(@columns)
-      @rows.collect(&:values)
-    else
-      @rows.collect{|row| values_in_order(row)}
     end
   end
 
