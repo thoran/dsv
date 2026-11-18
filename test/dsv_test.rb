@@ -385,6 +385,12 @@ describe DSV do
       _(DSV.new(DATA).quote).must_be_nil
     end
 
+    it "keeps the internals private, SimpleCSV's own interface public" do
+      csv = DSV.new(DATA, headers: true)
+      [:close, :read, :read_header, :parse, :columns, :columns=, :repeated_names, :parse_row, :write, :write_header, :write_row, :each, :attributes, :attributes=, :header_row?, :first_row, :to_a].each{|name| _(csv.public_methods).must_include name}
+      [:selection, :split_row, :split_on, :quoted_fields, :double_quoted_fields, :parse_fields, :row_renderer].each{|name| _(csv.private_methods).must_include name}
+    end
+
     it "reads the header row under mode: given as a symbol or a long name" do
       _(DSV.new(DATA, headers: true, mode: :r).read).must_equal KEYED
       with_file{|path| _(DSV.new(path, headers: true, mode: :read_only).read).must_equal KEYED}
