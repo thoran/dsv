@@ -141,9 +141,16 @@ class DSV
 
   end # class << self
 
+  QUOTE_MODES = {
+    none: [:none, :unquoted],
+    double: [:double, :double_quoted, :double_quotes],
+    single: [:single, :single_quoted, :single_quotes]
+  }
+
   include Enumerable
 
-  attr_accessor :header_row, :mode, :quote, :row_separator, :selected_columns, :as_array, :rows
+  attr_accessor :header_row, :mode, :row_separator, :selected_columns, :as_array, :rows
+  attr_reader :quote
 
   def initialize(source, *args)
     @source = (
@@ -156,7 +163,7 @@ class DSV
     options = DSV.extract_options(args)
     @header_row = options[:header_row] || options[:headers] || options[:header] || false
     @mode = DSV.normalised_mode(options[:mode])
-    @quote = options[:quote] || nil
+    self.quote = options[:quote]
     @row_separator = options[:row_separator] || options[:row_sep] || "\n"
     @column_separator = options[:column_separator] || options[:col_sep] || ','
     @selected_columns = options[:selected_columns]
@@ -167,6 +174,22 @@ class DSV
       self.columns
     end
     @rows = []
+  end
+
+  # The quote mode, each spelling of it read as the mode it spells, and with it the character its fields are quoted with: a single quote under :single, a double quote otherwise.
+  def quote=(quote)
+    @quote = quote
+    @quote_mode = QUOTE_MODES.find{|_mode, spellings| spellings.include?(quote&.to_sym)}&.first
+    @quote_character = (
+      case @quote_mode
+      when :single; "'"
+      when :double; '"'
+      else '"'
+      end
+    )
+    @doubled_quote = @quote_character * 2
+    @quote_byte = @quote_character.ord
+    @quoted_separator = nil
   end
 
   def close
@@ -268,13 +291,13 @@ class DSV
     value.nil? || value.empty?
   end
 
-  # One row into its fields, by the quote mode: :none splits; :double splits a row as it promises, wholly quoted or wholly unquoted, and one that is neither as unspecified would; unspecified splits and reassembles a quoted field that held the separator, a doubled quote inside it reading as one. nil where a quoted field in the row is still open at its end. Direct string operations throughout; the scanner-based parser is on the branch scanner-parser.
+  # One row into its fields, by the quote mode: :none splits; :double splits a row as it promises, wholly quoted or wholly unquoted, and one that is neither as unspecified would; unspecified splits and reassembles a quoted field that held the separator, a doubled quote inside it reading as one. :single reads as :double does, with a single quote. nil where a quoted field in the row is still open at its end. Direct string operations throughout; the scanner-based parser is on the branch scanner-parser.
   def split_row(raw_row)
     row = raw_row.chomp(@row_separator)
-    case @quote&.to_sym
-    when :none, :unquoted
+    case @quote_mode
+    when :none
       split_on(row, @column_separator)
-    when :double, :double_quoted, :double_quotes
+    when :double, :single
       split_double_quoted(row) || split_quoted(row)
     else
       split_quoted(row)
@@ -311,21 +334,21 @@ class DSV
     end
   end
 
-  # The :double contract: a wholly quoted row split on quote-separator-quote, a wholly unquoted one plainly; nil for a row that is neither, or whose last field does not close.
+  # The :double and :single contract: a wholly quoted row split on quote-separator-quote, a wholly unquoted one plainly; nil for a row that is neither, or whose last field does not close.
   def split_double_quoted(row)
-    if row.start_with?('"')
-      unescaped_fields(split_on(row.delete_prefix('"').delete_suffix('"'), quoted_separator)) if trailing_quotes(row, 0).odd?
+    if row.start_with?(@quote_character)
+      unescaped_fields(split_on(row.delete_prefix(@quote_character).delete_suffix(@quote_character), quoted_separator)) if trailing_quotes(row, 0).odd?
     else
-      split_on(row, @column_separator) unless row.include?('"')
+      split_on(row, @column_separator) unless row.include?(@quote_character)
     end
   end
 
   # The fields of a row split as wholly quoted, a doubled quote read as one; nil where a field holds a lone quote, the mark of a row that was not. A field has twice the quotes it has unescaped exactly when every quote in it is one of a doubled pair.
   def unescaped_fields(fields)
     fields.collect do |field|
-      next field unless field.include?('"')
-      unescaped = field.gsub('""', '"')
-      return nil unless field.count('"') == 2 * unescaped.count('"')
+      next field unless field.include?(@quote_character)
+      unescaped = field.gsub(@doubled_quote, @quote_character)
+      return nil unless field.count(@quote_character) == 2 * unescaped.count(@quote_character)
       unescaped
     end
   end
@@ -334,9 +357,9 @@ class DSV
   def quoted_separator
     @quoted_separator ||= (
       if @column_separator.is_a?(::Regexp)
-        ::Regexp.new('"(?:' + @column_separator.source + ')"', @column_separator.options)
+        ::Regexp.new(@quote_character + '(?:' + @column_separator.source + ')' + @quote_character, @column_separator.options)
       else
-        '"' + @column_separator + '"'
+        @quote_character + @column_separator + @quote_character
       end
     )
   end
@@ -349,12 +372,12 @@ class DSV
       if buffer && trailing_quotes(piece, -1).even?
         buffer << separator_before(i, separators) << piece
       elsif buffer
-        fields << (buffer << separator_before(i, separators) << piece.delete_suffix('"')).gsub('""', '"')
+        fields << (buffer << separator_before(i, separators) << piece.delete_suffix(@quote_character)).gsub(@doubled_quote, @quote_character)
         buffer = nil
-      elsif piece.start_with?('"') && trailing_quotes(piece, 0).even?
-        buffer = +piece.delete_prefix('"')
-      elsif piece.start_with?('"')
-        fields << piece.delete_prefix('"').delete_suffix('"').gsub('""', '"')
+      elsif piece.start_with?(@quote_character) && trailing_quotes(piece, 0).even?
+        buffer = piece.delete_prefix(@quote_character)
+      elsif piece.start_with?(@quote_character)
+        fields << piece.delete_prefix(@quote_character).delete_suffix(@quote_character).gsub(@doubled_quote, @quote_character)
       else
         fields << piece
       end
@@ -362,10 +385,10 @@ class DSV
     fields unless buffer
   end
 
-  # How many quotes a piece ends with, counting back to but not including the byte given, so that a field's opening quote is not taken for part of its closing. Read by byte, a quote being 34 in any ASCII-compatible encoding, so that nothing is allocated per character.
+  # How many quotes a piece ends with, counting back to but not including the byte given, so that a field's opening quote is not taken for part of its closing. Read by byte, a quote being one byte in any ASCII-compatible encoding, so that nothing is allocated per character.
   def trailing_quotes(piece, floor)
     i = piece.bytesize - 1
-    i -= 1 while i > floor && piece.getbyte(i) == 34
+    i -= 1 while i > floor && piece.getbyte(i) == @quote_byte
     piece.bytesize - 1 - i
   end
 

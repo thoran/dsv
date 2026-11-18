@@ -36,7 +36,6 @@ What SimpleCSV meant, without its bugs.
 
 - The code laid out as SimpleCSV 0.9.9 is: a `when` and its result on one line, joined by `;`, or, where any `when` in the `case` is long, each result on the next line; an assignment from a conditional wrapped in parentheses; `row_renderer` one branch per quote mode.
 - `:double` back to 0.12.4's reading: a row not starting with a quote split plainly, one starting with a quote split on quote-separator-quote, and one which leaves a lone quote in a field read in full as wholly quoted.
-- `:single`, read as `:double` is.
 - `filter`, beside `select`.
 - A String under a write mode taken as a path, so that a file not yet there can be written by name.
 - The internals private, and the two levels of row splitting named apart: `split_on()` cuts a row at its separators, and each quote mode reads a row into its `*_fields()`.

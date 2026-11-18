@@ -1,5 +1,19 @@
 # dsv/CHANGELOG
 
+## 20261118
+
+0.12.15: Fix :single reads, where it was read as unspecified.
+
+1. ~ split_row(): :single, :single_quoted and :single_quotes are read as :double is. They had been read as unspecified, so DSV could not read back what it wrote under :single.
+2. + QUOTE_MODES, + quote=(): Setting the quote mode reads it as the mode it spells, and sets the quote character, a single quote under :single and a double quote otherwise.
+3. ~ split_quoted(), split_double_quoted(), unescaped_fields(), quoted_separator, reassemble_quoted_fields(), trailing_quotes(): The quote is the mode's quote character rather than a double quote.
+4. ~ reassemble_quoted_fields(): A quoted field's buffer is begun without a unary +, since delete_prefix() never returns a frozen String.
+5. ~ test/dsv_test.rb: Reading under :single is tested, a mode set after construction and reading back what :single writes included.
+6. ~ README.md: Reading under :single is described.
+7. ~ TODO: - 3.
+8. ~ ROADMAP.md: :single is no longer listed under 0.12.x.
+9. ~ lib/DSV/VERSION.rb: /0.12.14/0.12.15/.
+
 ## 20261108
 
 0.12.14: A space as the column separator splits on each space.

@@ -94,9 +94,10 @@ Unspecified, quoting follows RFC 4180: a quoted field may hold the separator or 
 ```ruby
 DSV.read('plain.csv', headers: true, quote: :none)    # no field is quoted; quotes are data
 DSV.read('quoted.csv', headers: true, quote: :double)  # every field is quoted, as DSV writes them
+DSV.read('single.csv', headers: true, quote: :single)  # as :double, with single quotes
 ```
 
-Under `:double` a row that is wholly unquoted, as a header row often is, is split plainly, and a row that is neither wholly quoted nor wholly unquoted is read as it would be with no mode named, so naming the mode never costs a correct read.
+Under `:double` a row that is wholly unquoted, as a header row often is, is split plainly, and a row that is neither wholly quoted nor wholly unquoted is read as it would be with no mode named, so naming the mode never costs a correct read. `:single` reads as `:double` does, with a single quote where `:double` has a double one, and a double quote is then data.
 
 Input which isn't RFC 4180 is read to one rule. A quote opens a field only at the start of one, so a quote anywhere else, as in `12" pizza`, is data. A quoted field closes only at a quote followed by the separator or the end of the row, so one which doesn't close by the end of the source, as `"abc` or `"ab"c` doesn't, raises `DSV::UnterminatedQuote`, whose `line` is the line its row began on.
 
