@@ -1,5 +1,18 @@
 # dsv/CHANGELOG
 
+## 20261120
+
+0.12.15: normalised_mode, row_renderer and write_row are laid out as SimpleCSV 0.11.5 has them.
+
+1. ~ normalised_mode(): Each when and its result are joined by ;, not then.
+2. ~ write_row(): The values are assigned from an if wrapped in parentheses, rather than one hanging from the assignment.
+3. ~ row_renderer(): Each quote mode has a branch of its own, giving its renderer.
+4. + quoted_row_renderer(), + unquoted_row_renderer(): The renderers, private. Each lambda holds its quote and separator, since literals inside it would be allocated for every field.
+5. ~ TODO: - 1, 2. The fallback under :double is undone by 0.13.0's declarations, not by a patch back to 0.12.4, whose reading misread rows silently. :unspecified, not :mixed, names the default. Jobs are added: :unquoted as the name of the mode reading no quotes; the reader chosen once, brought forward from 1.x; and .read and .parse taking a path and text apart, into which the String under a write mode taken as a path is folded. :single moves to 0.13.0, once :double raises, since no release has read it.
+6. ~ ROADMAP.md: The design philosophy opens with fail fast, otherwise go fast, and the default is the one reading which interprets. The layout is done, :double back to 0.12.4's reading is no longer listed under 0.12.x, and :single moves to 0.13.0. :unspecified names the default. 0.13.0 lists :unquoted, the reader chosen once and the source given as a path or text, and 2.0 is gone.
+7. ~ PROPOSED.md: The version rule is no longer asked of :single, an addition. :unspecified replaces :mixed in the examples. Path or text asks only how DSV.new is told which a String is.
+8. ~ lib/DSV/VERSION.rb: /0.12.14/0.12.15/.
+
 ## 20261108
 
 0.12.14: A space as the column separator splits on each space.

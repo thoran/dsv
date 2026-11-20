@@ -1,18 +1,18 @@
 # dsv/PROPOSED.md
 
-Date: 20261110
+Date: 20261120
 
 What is undecided, under a heading for each theme or change, a theme's heading matching ROADMAP.md's. What each release does is in ROADMAP.md; the jobs are in TODO. Not listed in the gemspec, so it does not ship with the gem.
 
 ## Rows which contradict their declaration
 
-- The option's name. `on_error:` was the first proposal. `unexpected:` fits the language of declarations, and covers a field count as well as quoting: `quote: :double, unexpected: :mixed`.
-- A chain, such as `[:mixed, :skip]`, each step broader than the one before.
+- The option's name. `on_error:` was the first proposal. `unexpected:` fits the language of declarations, and covers a field count as well as quoting: `quote: :double, unexpected: :unspecified`.
+- A chain, such as `[:unspecified, :skip]`, each step broader than the one before.
 - The exception raised. One proposal: `DSV::Error` as a base, `DSV::UnexpectedRow` beneath it with the line and the mode in force, and `UnterminatedQuote` moved beneath that, keeping its name so that existing rescues still work.
 
 ## 0.12.x and the version rule
 
-`:single` and `filter` add vocabulary, and making the internals private turns calls that run today into `NoMethodError`, so the version rule makes each at least a minor. Whether they stay in 0.12.x, as what SimpleCSV meant, or move to 0.13.0.
+`filter` adds vocabulary, and making the internals private turns calls that run today into `NoMethodError`, so the version rule makes each at least a minor. Whether they stay in 0.12.x, as what SimpleCSV meant, or move to 0.13.0.
 
 ## The scanner-based parser
 
@@ -55,4 +55,4 @@ Whether either is default behaviour or an option.
 
 ## Path or text
 
-From 2.0: `.read` taking paths only and `.parse` text only, and a missing path raising.
+How `DSV.new` is told whether a String is a path or text, now that neither is inferred.

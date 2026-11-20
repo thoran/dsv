@@ -22,11 +22,11 @@ class DSV
     # A mode as Ruby's File spells it, from any of the spellings the library accepts, a Symbol included; unspecified is r.
     def normalised_mode(mode)
       case mode.to_s
-      when 'r', 'r+', 'w', 'w+', 'a', 'a+' then mode.to_s
-      when 'read_only', 'read-only', 'readonly' then 'r'
-      when 'rw', 'read_write', 'read-write', 'readwrite' then 'r+'
-      when 'write_only', 'write-only', 'writeonly' then 'w'
-      when 'append' then 'a'
+      when 'r', 'r+', 'w', 'w+', 'a', 'a+'; mode.to_s
+      when 'read_only', 'read-only', 'readonly'; 'r'
+      when 'rw', 'read_write', 'read-write', 'readwrite'; 'r+'
+      when 'write_only', 'write-only', 'writeonly'; 'w'
+      when 'append'; 'a'
       else 'r'
       end
     end
@@ -454,13 +454,15 @@ end
   # A nil value is an empty field, so the columns after it keep their places; with no columns defined a row's values are written in the row's own order.
   def write_row(row, *selected_columns)
     selected_columns.flatten!
-    values = if !selected_columns.empty?
-               selected_columns.collect{|column| row[column]}
-             elsif attributes
-               values_in_order(row)
-             else
-               row.values
-             end
+    values = (
+      if !selected_columns.empty?
+        selected_columns.collect{|column| row[column]}
+      elsif attributes
+        values_in_order(row)
+      else
+        row.values
+      end
+    )
     write_values(values)
   end
   alias_method :write_csv_row, :write_row
@@ -478,20 +480,14 @@ end
 
   # Chosen once, at the first write, from the quote mode: how a row of values is rendered, with the instance's separators, a quote inside a quoted value doubled as RFC 4180 has it. The spacey modes put a space after each separator, as Array#to_csv_row did.
   def row_renderer
-    quote, spacey = case @quote&.to_sym
-                    when :none, :unquoted then [nil, false]
-                    when :spacey_none, :spacey_unquoted then [nil, true]
-                    when :single then ["'", false]
-                    when :spacey_single then ["'", true]
-                    when :spacey_double then ['"', true]
-                    else ['"', false]
-                    end
-    joiner = spacey ? writable_column_separator + ' ' : writable_column_separator
-    if quote
-      doubled = quote * 2
-      ->(values){values.collect{|value| quote + value.to_s.gsub(quote, doubled) + quote}.join(joiner) + @row_separator}
-    else
-      ->(values){values.join(joiner) + @row_separator}
+    separator = writable_column_separator
+    case @quote&.to_sym
+    when :none, :unquoted; unquoted_row_renderer(separator)
+    when :spacey_none, :spacey_unquoted; unquoted_row_renderer(separator + ' ')
+    when :single; quoted_row_renderer("'", separator)
+    when :spacey_single; quoted_row_renderer("'", separator + ' ')
+    when :spacey_double; quoted_row_renderer('"', separator + ' ')
+    else quoted_row_renderer('"', separator)
     end
   end
 
@@ -565,6 +561,17 @@ end
     else
       @rows.collect{|row| values_in_order(row)}
     end
+  end
+
+  private
+
+  def quoted_row_renderer(quote, separator)
+    doubled_quote = quote * 2
+    ->(values){values.collect{|value| quote + value.to_s.gsub(quote, doubled_quote) + quote}.join(separator) + @row_separator}
+  end
+
+  def unquoted_row_renderer(separator)
+    ->(values){values.join(separator) + @row_separator}
   end
 
 end # class DSV

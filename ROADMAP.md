@@ -1,6 +1,6 @@
 # dsv/ROADMAP.md
 
-Date: 20261110
+Date: 20261120
 
 What each release does, and why, and the themes beyond them. The jobs, one to a line, are in TODO; what is undecided is in PROPOSED.md. Not listed in the gemspec, so it does not ship with the gem.
 
@@ -8,9 +8,11 @@ What each release does, and why, and the themes beyond them. The jobs, one to a 
 
 ### Modes are declarations
 
-A quote mode says what the file holds, and dsv reads it on that understanding, the speed of each mode coming from what it is allowed to assume. A named mode is gospel: dsv acts as though it were true, and a wrong declaration is the caller's to answer for. `:double` declares every field quoted, and `:none` that quotes are data; the two are treated alike, neither falling back to another reading where a row does not fit.
+Fail fast, otherwise go fast. A quote mode says what the file holds, and dsv reads it on that understanding, the speed of each mode coming from what it is allowed to assume. A named mode is one direct path, chosen once: no fallback, no interpretation, no guessing. A row which contradicts it raises, where the contradiction costs nothing to see, rather than being read some other way. `:double` declares every field quoted, and `:none` that quotes are data; the two are treated alike.
 
-The default, `:mixed` once it has the name, declares nothing: it reads bare and quoted fields together, as RFC 4180 does, and is not a fast path.
+The default, `:unspecified` once it has the name, declares nothing: it reads bare and quoted fields together, as RFC 4180 does, and is not a fast path. It is the one reading which interprets.
+
+Nothing else is guessed either: an unknown mode or option raises, and a source is given as a path or as text, never inferred from whether a file of that name exists.
 
 ### Faster, better and more compliant
 
@@ -34,11 +36,7 @@ A fix is a patch. Anything which is not a fix is at least a minor, as is a fix w
 
 What SimpleCSV meant, without its bugs.
 
-- The code laid out as SimpleCSV 0.9.9 is: a `when` and its result on one line, joined by `;`, or, where any `when` in the `case` is long, each result on the next line; an assignment from a conditional wrapped in parentheses; `row_renderer` one branch per quote mode.
-- `:double` back to 0.12.4's reading: a row not starting with a quote split plainly, one starting with a quote split on quote-separator-quote, and one which leaves a lone quote in a field read in full as wholly quoted.
-- `:single`, read as `:double` is.
 - `filter`, beside `select`.
-- A String under a write mode taken as a path, so that a file not yet there can be written by name.
 - The internals private, and the two levels of row splitting named apart: `split_on()` cuts a row at its separators, and each quote mode reads a row into its `*_fields()`.
 
 ### 0.13.0: modes as declarations
@@ -46,8 +44,12 @@ What SimpleCSV meant, without its bugs.
 A mode is held to what it declares, and so is everything else given to dsv.
 
 - An unknown quote mode, file mode or option raises `ArgumentError`, where each is ignored today.
-- `:mixed` names the default.
-- A mode raises on a contradiction which costs nothing to see, every row alike, the header included: under `:double`, a row not starting with a quote, and a bare field in a row read in full. Declaring `:mixed` reads such a row. What else may be done with it comes after 1.0, under Rows which contradict their declaration.
+- `:unspecified` names the default, which may also be stated.
+- The reader is chosen once, when the quote mode is set, as `row_renderer` is for writing, so that no row asks which mode is in force.
+- `.read` and `.open` take a path, and `.parse` takes text; a path which does not exist raises. A String is no longer taken as a path or as text by whether a file of that name exists, so a file not yet there can be written by name.
+- `:unquoted` names the mode reading no quotes, `:none` kept as an alias, since "none" may be read as no mode named.
+- A mode raises on a contradiction which costs nothing to see, every row alike, the header included: under `:double`, a row not starting with a quote, and a bare field in a row read in full. Declaring `:unspecified` reads such a row. What else may be done with it comes after 1.0, under Rows which contradict their declaration.
+- `:single`, read as `:double` is, with a single quote. No release has read it, so it is an addition, not a fix, and it comes once `:double` raises, so as to arrive with no fallback.
 
 ### 0.14.0: streaming
 
@@ -61,7 +63,7 @@ A corpus checked against stdlib CSV, and the README's speed sentence from a benc
 
 ### 1.x: speed, results unchanged
 
-Faster without a result changing: a fast path for the default, `as_array:` from the split fields, and the splitter chosen once at construction, as `row_renderer` is for writing.
+Faster without a result changing: a fast path for the default, `as_array:` from the split fields.
 
 ### 1.x: features
 
@@ -69,15 +71,11 @@ New options, each opt-in: `:rfc_4180`, `field_count:`, minimal quoting when writ
 
 A line number in a parse error is found only when the error is raised, as `UnterminatedQuote` finds its, where the source can seek. `line_numbers:` counts lines as it reads instead, for any source; the read loop is chosen once, at construction, so that without it no row pays for the count.
 
-### 2.0
-
-Path or text reconsidered, under Path or text in PROPOSED.md.
-
 ## Themes
 
 ### Rows which contradict their declaration
 
-From 0.13.0 such a row raises. After 1.0, an option orthogonal to the mode says what else to do with it: `:raise`, the default; `:skip`; a mode to fall back to, `:mixed` or `:none`, which cannot fail; or a block. Mistakes in the options themselves stay `ArgumentError`.
+From 0.13.0 such a row raises. After 1.0, an option orthogonal to the mode says what else to do with it: `:raise`, the default; `:skip`; a mode to fall back to, `:unspecified` or `:unquoted`, which cannot fail; or a block. Mistakes in the options themselves stay `ArgumentError`.
 
 ### A drop-in for stdlib CSV
 
