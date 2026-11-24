@@ -8,7 +8,10 @@ require 'stringio'
 require 'DSV/VERSION'
 require 'DSV/File'
 require 'DSV/String'
+require 'DSV/Error'
 require 'DSV/UnterminatedQuote'
+require 'DSV/UnexpectedRow'
+require 'DSV/UnquotedField'
 
 class DSV
 
@@ -224,6 +227,9 @@ class DSV
         nil
       end
     )
+  rescue UnexpectedRow => error
+    error.line = 1
+    raise
   end
 
   def columns=(*column_order)
@@ -268,14 +274,14 @@ class DSV
     value.nil? || value.empty?
   end
 
-  # One row into its fields, by the quote mode: :none splits; :double splits a row as it promises, wholly quoted or wholly unquoted, and one that is neither as unspecified would; unspecified splits and reassembles a quoted field that held the separator, a doubled quote inside it reading as one. nil where a quoted field in the row is still open at its end. Direct string operations throughout; the scanner-based parser is on the branch scanner-parser.
+  # One row into its fields, by the quote mode: :none splits; :double splits a row as it promises, every field quoted, and raises UnquotedField on one which is not; unspecified splits and reassembles a quoted field that held the separator, a doubled quote inside it reading as one. nil where a quoted field in the row is still open at its end. Direct string operations throughout; the scanner-based parser is on the branch scanner-parser.
   def split_row(raw_row)
     row = raw_row.chomp(@row_separator)
     case @quote&.to_sym
     when :none, :unquoted
       split_on(row, @column_separator)
     when :double, :double_quoted, :double_quotes
-      split_double_quoted(row) || split_quoted(row)
+      split_double_quoted(row)
     else
       split_quoted(row)
     end
@@ -311,16 +317,44 @@ class DSV
     end
   end
 
-  # The :double contract: a wholly quoted row split on quote-separator-quote, a wholly unquoted one plainly; nil for a row that is neither, or whose last field does not close.
+  # The :double contract, every field quoted: the row split on quote-separator-quote, a closed last field ending in an odd run of quotes, counted from the last piece, whose opening quote the split has already taken. Read in full only where the last field seems open, as it is where it goes on to the next line, or where the split leaves a lone quote in a field, as a field holding quote-separator-quote does. A row not starting with a quote raises UnquotedField, at the cost of one byte compared. nil where the last field does not close.
   def split_double_quoted(row)
-    if row.start_with?('"')
-      unescaped_fields(split_on(row.delete_prefix('"').delete_suffix('"'), quoted_separator)) if trailing_quotes(row, 0).odd?
-    else
-      split_on(row, @column_separator) unless row.include?('"')
-    end
+    raise UnquotedField.new(:double) unless row.start_with?('"')
+    fields = split_on(row.delete_prefix('"'), quoted_separator)
+    return reassemble_wholly_quoted_fields(row) unless fields.last && trailing_quotes(fields.last, -1).odd?
+    fields[-1] = fields.last.delete_suffix('"')
+    unescaped_fields(fields) || reassemble_wholly_quoted_fields(row)
   end
 
-  # The fields of a row split as wholly quoted, a doubled quote read as one; nil where a field holds a lone quote, the mark of a row that was not. A field has twice the quotes it has unescaped exactly when every quote in it is one of a doubled pair.
+  # A row under :double whose split left a lone quote in a field, read in full as unspecified reads one, except that a field which is not quoted raises UnquotedField. nil where a quoted field is still open after the last piece.
+  def reassemble_wholly_quoted_fields(row)
+    pieces, separators = (
+      if @column_separator.is_a?(::Regexp)
+        pieces_and_separators(row, @column_separator)
+      else
+        [split_on(row, @column_separator), nil]
+      end
+    )
+    fields = []
+    buffer = nil
+    pieces.each_with_index do |piece, i|
+      if buffer && trailing_quotes(piece, -1).even?
+        buffer << separator_before(i, separators) << piece
+      elsif buffer
+        fields << (buffer << separator_before(i, separators) << piece.delete_suffix('"')).gsub('""', '"')
+        buffer = nil
+      elsif !piece.start_with?('"')
+        raise UnquotedField.new(:double)
+      elsif trailing_quotes(piece, 0).even?
+        buffer = +piece.delete_prefix('"')
+      else
+        fields << piece.delete_prefix('"').delete_suffix('"').gsub('""', '"')
+      end
+    end
+    fields unless buffer
+  end
+
+  # The fields of a row split as wholly quoted, a doubled quote read as one; nil where a field holds a lone quote, which the split alone cannot place. A field has twice the quotes it has unescaped exactly when every quote in it is one of a doubled pair.
   def unescaped_fields(fields)
     fields.collect do |field|
       next field unless field.include?('"')
@@ -374,10 +408,13 @@ class DSV
     separators ? separators[i - 1] : @column_separator
   end
 
-  # A row's fields, the next line taken into the row while a quoted field in it is open, a quoted field being able to hold the row separator; a field still open at the end of the source raises UnterminatedQuote.
+  # A row's fields, the next line taken into the row while a quoted field in it is open, a quoted field being able to hold the row separator; a field still open at the end of the source raises UnterminatedQuote. A row which contradicts its mode is given its line here, where the line can be found, and only then.
   def row_fields(raw_row)
     raw_row << @source.gets(@row_separator) until (fields = split_row(raw_row)) || @source.eof?
     fields || raise(UnterminatedQuote.new(line_of(raw_row)))
+  rescue UnexpectedRow => error
+    error.line = line_of(raw_row)
+    raise
   end
 
   # The line on which a row read up to the source's position began, counted only when an error wants it, by reading the source again up to the row, so that no row which closes pays for it.
@@ -389,6 +426,9 @@ class DSV
 
   def parse_row(raw_row, *selected_columns)
     parse_fields(split_row(raw_row) || raise(UnterminatedQuote.new(1)), *selected_columns)
+  rescue UnexpectedRow => error
+    error.line = 1
+    raise
   end
 
   def parse_fields(fields, *selected_columns)

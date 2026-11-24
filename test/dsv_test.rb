@@ -522,7 +522,7 @@ describe DSV do
       _(DSV.read("a  b\n", column_separator: ' ')).must_equal [{0 => 'a', 1 => '', 2 => 'b'}]
       _(DSV.read("\"x y\"  2\n", column_separator: ' ')).must_equal [{0 => 'x y', 1 => '', 2 => '2'}]
       _(DSV.read("\"a\" \"\" \"b\"\n", quote: :double, column_separator: ' ')).must_equal [{0 => 'a', 1 => '', 2 => 'b'}]
-      _(DSV.read("a  b\n", quote: :double, column_separator: ' ')).must_equal [{0 => 'a', 1 => '', 2 => 'b'}]
+      _{DSV.read("a  b\n", quote: :double, column_separator: ' ')}.must_raise DSV::UnquotedField
     end
 
     it "does not split on a tab where the separator is a space" do
@@ -587,9 +587,10 @@ describe DSV do
       _(DSV.read("\"a\",\"b\"\n\"x\",\"2\"\n", headers: true, quote: 'double')).must_equal [{'a' => 'x', 'b' => '2'}]
     end
 
-    it "strips the quotes under quote: :double, a row being wholly quoted or, as a header row often is, wholly unquoted" do
-      _(DSV.read("a,b\n\"x\",\"2\"\n", headers: true, quote: :double)).must_equal [{'a' => 'x', 'b' => '2'}]
+    it "strips the quotes under quote: :double, every row wholly quoted, the header included" do
+      _(DSV.read("\"a\",\"b\"\n\"x\",\"2\"\n", headers: true, quote: :double)).must_equal [{'a' => 'x', 'b' => '2'}]
       _(DSV.read("\"a\",\"b\"\n\"say \"\"hi\"\"\",\"2\"\n", headers: true, quote: :double)).must_equal [{'a' => 'say "hi"', 'b' => '2'}]
+      _(DSV.read("\"a\",\"\"\n", quote: :double)).must_equal [{0 => 'a', 1 => ''}]
     end
 
     it "keeps every position of a repeated header name in columns, the name at each position in attributes" do
@@ -627,19 +628,41 @@ describe DSV do
     end
 
     it "keeps a separator inside a quoted field under quote: :double" do
-      _(DSV.read("a,b\n\"x, y\",\"2\"\n", headers: true, quote: :double)).must_equal [{'a' => 'x, y', 'b' => '2'}]
+      _(DSV.read("\"a\",\"b\"\n\"x, y\",\"2\"\n", headers: true, quote: :double)).must_equal [{'a' => 'x, y', 'b' => '2'}]
     end
 
-    it "reads a row that is neither wholly quoted nor wholly unquoted under quote: :double as it would unspecified" do
-      _(DSV.read("\"a\",b,\"c\"\n", quote: :double)).must_equal [{0 => 'a', 1 => 'b', 2 => 'c'}]
-      _(DSV.read("1,\"x\"\n", quote: :double)).must_equal [{0 => '1', 1 => 'x'}]
-      _(DSV.read("\"a\",\"b\",c\n", quote: :double)).must_equal [{0 => 'a', 1 => 'b', 2 => 'c'}]
-      _(DSV.read("a,b\n1,\"x, y\"\n", headers: true, quote: :double)).must_equal [{'a' => '1', 'b' => 'x, y'}]
+    it "reads a field holding quote-separator-quote under quote: :double, the row read in full" do
+      _(DSV.read("\"a\"\",\"\"b\",\"c\"\n", quote: :double)).must_equal [{0 => 'a","b', 1 => 'c'}]
+    end
+
+    it "raises UnquotedField on a row under quote: :double with a field not quoted, where 0.12.5 to 0.12.15 read it as unspecified" do
+      _{DSV.read("\"a\",b,\"c\"\n", quote: :double)}.must_raise DSV::UnquotedField
+      _{DSV.read("1,\"x\"\n", quote: :double)}.must_raise DSV::UnquotedField
+      _{DSV.read("\"a\",\"b\",c\n", quote: :double)}.must_raise DSV::UnquotedField
+      _{DSV.read("\"a\",,\"c\"\n", quote: :double)}.must_raise DSV::UnquotedField
+      _{DSV.read("a,b\n\"x\",\"2\"\n", headers: true, quote: :double)}.must_raise DSV::UnquotedField
+      _{DSV.parse_line('"a",b', quote: :double)}.must_raise DSV::UnquotedField
+    end
+
+    it "names the line and the mode of a row which breaks quote: :double" do
+      error = _{DSV.read("\"a\",\"b\"\n\"x\",\"2\"\n\"y\",3\n", quote: :double)}.must_raise DSV::UnquotedField
+      _(error.line).must_equal 3
+      _(error.mode).must_equal :double
+      _(error.message).must_include 'line 3'
+      error = _{DSV.read("a,b\n\"x\",\"2\"\n", headers: true, quote: :double)}.must_raise DSV::UnquotedField
+      _(error.line).must_equal 1
+    end
+
+    it "raises errors about the data under DSV::Error, UnquotedField under UnexpectedRow" do
+      _(DSV::UnquotedField.ancestors).must_include DSV::UnexpectedRow
+      _(DSV::UnexpectedRow.ancestors).must_include DSV::Error
+      _(DSV::UnterminatedQuote.ancestors).must_include DSV::Error
+      _{DSV.read("\"a\",b\n", quote: :double)}.must_raise DSV::Error
     end
 
     it "reads a quoted field holding the row separator as one field across lines under quote: :double, as DSV writes it" do
       _(DSV.read("\"x\ny\",\"2\"\n\"z\",\"3\"\n", quote: :double)).must_equal [{0 => "x\ny", 1 => '2'}, {0 => 'z', 1 => '3'}]
-      _(DSV.read("1,\"x\ny\"\n", quote: :double)).must_equal [{0 => '1', 1 => "x\ny"}]
+      _(DSV.read("\"a\",\"x\n,y\",\"z\"\n", quote: :double)).must_equal [{0 => 'a', 1 => "x\n,y", 2 => 'z'}]
       output = written(headers: true, columns: ['a', 'b']){|csv| csv.rows = [{'a' => "x\ny", 'b' => '2'}]; csv.write}
       _(DSV.read(output, headers: true, quote: :double)).must_equal [{'a' => "x\ny", 'b' => '2'}]
     end
@@ -654,18 +677,19 @@ describe DSV do
 
     it "reads a stray quote in an unquoted field as data, without taking in the next line" do
       _(DSV.read("12\" pizza,9.99\nnext,row\n", as_array: true)).must_equal [['12" pizza', '9.99'], ['next', 'row']]
-      _(DSV.read("12\" pizza,9.99\nnext,row\n", as_array: true, quote: :double)).must_equal [['12" pizza', '9.99'], ['next', 'row']]
+      _{DSV.read("12\" pizza,9.99\nnext,row\n", as_array: true, quote: :double)}.must_raise DSV::UnquotedField
     end
 
     it "reads a quoted field across lines after a stray quote in the same row" do
       _(DSV.read("a\"b,\"c\nd\"\n", as_array: true)).must_equal [['a"b', "c\nd"]]
-      _(DSV.read("a\"b,\"c\nd\"\n", as_array: true, quote: :double)).must_equal [['a"b', "c\nd"]]
+      _{DSV.read("a\"b,\"c\nd\"\n", as_array: true, quote: :double)}.must_raise DSV::UnquotedField
     end
 
     it "raises UnterminatedQuote on a quoted field which does not close" do
       _{DSV.read("\"abc,d\n")}.must_raise DSV::UnterminatedQuote
       _{DSV.read("\"ab\"c,d\n")}.must_raise DSV::UnterminatedQuote
-      _{DSV.read("x,\"abc\n", quote: :double)}.must_raise DSV::UnterminatedQuote
+      _{DSV.read("\"x\",\"abc\n", quote: :double)}.must_raise DSV::UnterminatedQuote
+      _{DSV.read("\"x\",\"y\"\",\"\"\n", quote: :double)}.must_raise DSV::UnterminatedQuote
       _{DSV.parse_line('x,"abc')}.must_raise DSV::UnterminatedQuote
     end
 

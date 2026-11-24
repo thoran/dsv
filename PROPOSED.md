@@ -1,6 +1,6 @@
 # dsv/PROPOSED.md
 
-Date: 20261120
+Date: 20261124
 
 What is undecided, under a heading for each theme or change, a theme's heading matching ROADMAP.md's. What each release does is in ROADMAP.md; the jobs are in TODO. Not listed in the gemspec, so it does not ship with the gem.
 
@@ -8,11 +8,11 @@ What is undecided, under a heading for each theme or change, a theme's heading m
 
 - The option's name. `on_error:` was the first proposal. `unexpected:` fits the language of declarations, and covers a field count as well as quoting: `quote: :double, unexpected: :unspecified`.
 - A chain, such as `[:unspecified, :skip]`, each step broader than the one before.
-- The exception raised. One proposal: `DSV::Error` as a base, `DSV::UnexpectedRow` beneath it with the line and the mode in force, and `UnterminatedQuote` moved beneath that, keeping its name so that existing rescues still work.
+- `:collect`, a choice for the option: each row which contradicts its mode is kept with its line, reading goes on to the end, and there one error is raised holding them all, so that a file can be checked whole in one pass. Nothing is kept or checked on a row which keeps its mode. Whether the rows read are returned beside the error, and its name, such as `DSV::UnexpectedRows`.
 
-## 0.12.x and the version rule
+## 0.13.x and the version rule
 
-`filter` adds vocabulary, and making the internals private turns calls that run today into `NoMethodError`, so the version rule makes each at least a minor. Whether they stay in 0.12.x, as what SimpleCSV meant, or move to 0.13.0.
+`filter` adds vocabulary, so the version rule makes it at least a minor. Whether it comes as a fix in 0.13.x, as what SimpleCSV meant, or in a minor.
 
 ## The scanner-based parser
 
@@ -29,7 +29,7 @@ The option's name.
 
 ## The quote character apart from the mode
 
-`quote_char:`, so that a mode declares how fields are quoted and the character is said separately. Whether it comes, and how it sits beside `:single`.
+`quote_char:`, so that a mode declares how fields are quoted and the character is said separately. Whether it comes, and how it sits beside `:single`. Quotes are counted a byte at a time, which is cheapest, so any character of one byte in an ASCII-compatible encoding can be one; a character of more than one byte would want counting by character, which is slower, or to be refused.
 
 ## Unquoted empty fields
 
@@ -44,6 +44,12 @@ A dialect option, such as `dialect: :ruby_csv`, bundling stdlib CSV's choices, i
 - Its name, `only:` or `select:`, `columns:` being taken.
 - Whether the positional form is kept or retired.
 - `selected_columns:` renamed to match.
+
+## Guessing
+
+- `:infer`: the quote mode read off the first row, taken as an exemplar where the caller directs it, and then held to as a named mode is, so that the rest of the file reads fast: a later row which contradicts it raises, as it would had that mode been named. It would be the only mode besides those named and `:unspecified`.
+- A fallback for `:infer` only where asked, as for any mode, by the option under Rows which contradict their declaration: `quote: :infer, unexpected: :unspecified` reads a row which contradicts the inferred mode as unspecified.
+- Which row is the exemplar under `headers: true`: the header, or the first row beneath it, a header often being unquoted where the rows beneath are quoted.
 
 ## Byte-order marks and lone CRs
 

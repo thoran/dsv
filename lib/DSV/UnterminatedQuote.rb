@@ -3,7 +3,7 @@
 
 class DSV
   # A quoted field which does not close by the end of the source; line is the one on which its row began.
-  class UnterminatedQuote < ::StandardError
+  class UnterminatedQuote < Error
     attr_reader :line
 
     def initialize(line)

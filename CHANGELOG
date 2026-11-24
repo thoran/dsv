@@ -1,5 +1,22 @@
 # dsv/CHANGELOG
 
+## 20261124
+
+0.13.0: Under :double, a row which breaks it raises, where from 0.12.5 to 0.12.15 it was read as unspecified.
+
+1. ~ split_row(): Under :double, a row with a field which is not quoted raises DSV::UnquotedField. 0.12.5 item 2 read such a row as unspecified: a change of design, which cost :double a scan of each unquoted row and a count of each field holding a quote so as to know when to fall back, and so a minor, released as a patch beside a fix.
+2. ~ split_double_quoted(): A row not starting with a quote raises UnquotedField, an unquoted header included, which every release before split plainly. The row is read in full only where its last field seems open or the split leaves a lone quote in a field.
+3. + reassemble_wholly_quoted_fields(): A row under :double read in full, a field which is not quoted raising UnquotedField.
+4. + lib/DSV/Error.rb, + lib/DSV/UnexpectedRow.rb, + lib/DSV/UnquotedField.rb: DSV::Error is the base of what dsv raises about the data; UnexpectedRow, beneath it, a row which contradicts its mode, with its line and mode; UnquotedField, beneath that, a field with no quotes under a wholly quoted mode.
+5. ~ lib/DSV/UnterminatedQuote.rb: UnterminatedQuote is a DSV::Error.
+6. ~ row_fields(), parse_row(), columns: An UnexpectedRow is given the line its row began on.
+7. ~ test/dsv_test.rb: Rows which break :double raise, with their line and mode, an unquoted header included; a field holding quote-separator-quote and an empty last field are read under :double; the errors' classes are tested.
+8. ~ README.md: A row which breaks :double raises UnquotedField, where it was read as with no mode named. The errors are listed.
+9. ~ TODO: Only the jobs in hand are kept, in order and without their releases; the rest are in ROADMAP.md. The readers are no longer renamed as nouns, split_double_quoted() alone becoming split_wholly_quoted(). Jobs are added for write keeping a repeated name, and for attributes= setting columns.
+10. ~ ROADMAP.md: Speed is given as the reason for the modes and for no fallback. 0.13.0 undoes the fallback, naming 0.12.5's errors; 0.14.0 makes the internals private; the declarations are 0.15.0 and streaming 0.16.0. Path or text is no longer a theme, and speed against other languages is one.
+11. ~ PROPOSED.md: The exception raised is settled. :collect and :infer are asked after, and the version rule of filter alone. The quote character notes what a quote longer than a byte would cost.
+12. ~ lib/DSV/VERSION.rb: /0.12.15/0.13.0/.
+
 ## 20261120
 
 0.12.15: normalised_mode, row_renderer and write_row are laid out as SimpleCSV 0.11.5 has them.
