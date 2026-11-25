@@ -258,8 +258,9 @@ class DSV
     end
   end
 
-  # A row's values in position order: an Array under a repeated name is spread back over its positions, and a single value under one is written at each.
+  # A row's values in position order: an Array under a repeated name is spread back over its positions, and a single value under one is written at each. Where no name repeats, nothing is spread, and no field is looked at.
   def values_in_order(row)
+    return row.values_at(*attributes) if repeated_names.empty?
     occurrence = ::Hash.new(0)
     attributes.collect do |name|
       value = row[name]
@@ -449,7 +450,11 @@ class DSV
       when Integer
         fields.each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
       else
-        fields.each{|column_value| store_field(parsed_row, attributes[i], column_value) unless !selected_columns.include?(attributes[i += 1])}
+        if repeated_names.empty?
+          fields.each{|column_value| parsed_row[attributes[i]] = column_value unless !selected_columns.include?(attributes[i += 1])}
+        else
+          fields.each{|column_value| store_field(parsed_row, attributes[i], column_value) unless !selected_columns.include?(attributes[i += 1])}
+        end
       end
     end
     if @as_array

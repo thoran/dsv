@@ -2,6 +2,12 @@
 
 ## 20261125
 
+0.13.2: Where no column name repeats, writing, to_a, and reading as_array: or by name no longer check each field for one, so a write takes a third less time.
+
+1. ~ values_in_order(): Where no name repeats, the row's values are taken with values_at, no field being looked at. From 0.11.5 every field of every row was checked for an Array, which took about 40% of a write.
+2. ~ parse_fields(): Under a selection by name, where no name repeats, each field is assigned rather than passed to store_field().
+3. ~ DSV::VERSION: /0.13.1/0.13.2/
+
 0.13.1: ~ DSV#write: Ensure that rows with header a,a,b don't lose the duplicate column name and are written back as a,a,b.
 
 1. ~ write(): The columns taken from the first row's keys give a name whose value is an Array once for each of its values, as 0.11.5 meant a repeated column to round-trip.
