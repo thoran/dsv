@@ -1,19 +1,18 @@
 # TODO
 
-1. write with no columns defined keeping a repeated name, each of its values in a field of its own, where the Array is written whole into one field.
-2. filter, a class-level alias of select.
-3. The internals private, and split_double_quoted() renamed split_wholly_quoted().
-4. An unknown quote mode, file mode or option raises ArgumentError.
-5. :unspecified, the name of the default.
-6. :unquoted, the name of the mode reading no quotes, :none kept as an alias.
-7. The reader chosen once, when the quote mode is set, as row_renderer is for writing.
-8. .read and .open taking a path, and .parse text; a path which does not exist raising, and nothing inferred from whether a file exists.
-9. :single read as :double is, with a single quote.
-10. attributes= setting columns, attributes always worked out from columns; rows read afterwards keyed by those names.
-11. each yields each row as it is read.
-12. each returns its receiver.
-13. rows no longer filled by each.
-14. Chunks from each_slice.
-15. The source read once, start to end, with no rewind; the header from the first row read.
-16. The line of an error found by seeking only where the source can.
-17. A rewind left to r+ rewriting and to first_row called alone.
+1. filter, a class-level alias of select.
+2. The internals private, and split_double_quoted() renamed split_wholly_quoted().
+3. An unknown quote mode, file mode or option raises ArgumentError.
+4. :unspecified, the name of the default.
+5. :unquoted, the name of the mode reading no quotes, :none kept as an alias.
+6. The reader chosen once, when the quote mode is set, as row_renderer is for writing.
+7. .read and .open taking a path, and .parse text; a path which does not exist raising, and nothing inferred from whether a file exists.
+8. :single read as :double is, with a single quote.
+9. attributes= setting columns, attributes always worked out from columns; rows read afterwards keyed by those names.
+10. each yields each row as it is read.
+11. each returns its receiver.
+12. rows no longer filled by each.
+13. Chunks from each_slice.
+14. The source read once, start to end, with no rewind; the header from the first row read.
+15. The line of an error found by seeking only where the source can.
+16. A rewind left to r+ rewriting and to first_row called alone.

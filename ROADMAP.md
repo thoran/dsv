@@ -1,6 +1,6 @@
 # dsv/ROADMAP.md
 
-Date: 20261124
+Date: 20261125
 
 What each release does, and why, and the themes beyond them. The jobs for the releases in hand, one to a line in the order they are to be done, are in TODO; what is undecided is in PROPOSED.md. Not listed in the gemspec, so it does not ship with the gem.
 
@@ -46,7 +46,6 @@ Going back to 0.12.4's reading instead would misread rows which keep the contrac
 What SimpleCSV meant, without its bugs.
 
 - `filter`, beside `select`.
-- `write` with no columns defined keeping a repeated name, each of its values in a field of its own, so that rows read with a repeated header write back as they were read.
 
 ### 0.14.0: the internals private
 

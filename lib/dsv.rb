@@ -468,10 +468,10 @@ def positions(selected_columns)
   selected_columns.flat_map{|column| column.is_a?(::Integer) ? column : Array((columns || {})[column])}.sort
 end
 
-  # With no columns defined, rows keyed by name supply them, and the header, from the first row's keys; rows keyed by position write positionally and have no header to write.
+  # With no columns defined, rows keyed by name supply them, and the header, from the first row's keys, a name whose value is an Array once for each of its values; rows keyed by position write positionally and have no header to write.
   def write(*selected_columns)
     prepare_to_rewrite if @mode == 'r+'
-    self.columns = @rows[0].keys if blank?(columns) && @rows[0].is_a?(::Hash) && @rows[0].keys[0].is_a?(::String)
+    self.columns = @rows[0].flat_map{|name, value| value.is_a?(::Array) ? ::Array.new(value.size, name) : name} if blank?(columns) && @rows[0].is_a?(::Hash) && @rows[0].keys[0].is_a?(::String)
     write_header(*selected_columns) if header_row? && attributes
     each{|row| write_row(row, *selected_columns)}
   end

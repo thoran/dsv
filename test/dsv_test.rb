@@ -614,6 +614,11 @@ describe DSV do
       _(written(columns: ['a', 'a', 'b'], quote: :none){|csv| csv.write_row('a' => 'x', 'b' => '3')}).must_equal "x,x,3\n"
     end
 
+    it "writes a repeated name from the rows' keys where no columns are defined, each of its values in a field of its own" do
+      _(written(headers: true, quote: :none){|csv| csv.rows = [{'a' => ['1', '2'], 'b' => '3'}]; csv.write}).must_equal "a,a,b\n1,2,3\n"
+      _(written(headers: true){|csv| csv.rows = DSV.read("a,a,b\n1,2,3\n", headers: true); csv.write}).must_equal "\"a\",\"a\",\"b\"\n\"1\",\"2\",\"3\"\n"
+    end
+
     it "reads a doubled quote as one quote in a row" do
       _(DSV.read("a,b\n\"say \"\"hi\"\"\",2\n", headers: true)).must_equal [{'a' => 'say "hi"', 'b' => '2'}]
     end

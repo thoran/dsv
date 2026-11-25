@@ -1,5 +1,15 @@
 # dsv/CHANGELOG
 
+## 20261125
+
+0.13.1: ~ DSV#write: Ensure that rows with header a,a,b don't lose the duplicate column name and are written back as a,a,b.
+
+1. ~ write(): The columns taken from the first row's keys give a name whose value is an Array once for each of its values, as 0.11.5 meant a repeated column to round-trip.
+2. ~ test/dsv_test.rb: A repeated name is written from the rows' keys, from rows given and from rows read.
+3. ~ TODO: The job for write is gone.
+4. ~ ROADMAP.md: 0.13.x no longer lists it.
+5. ~ DSV::VERSION: /0.13.0/0.13.1/
+
 ## 20261124
 
 0.13.0: Under :double, a row which breaks it raises, where from 0.12.5 to 0.12.15 it was read as unspecified.
