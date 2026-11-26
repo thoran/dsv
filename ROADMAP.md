@@ -32,15 +32,15 @@ A fix is a patch. Anything which is not a fix is at least a minor, as is a fix w
 
 ## Releases
 
-### 0.15.0: `filter`
+### 0.16.0: `filter`
 
 No release has had `filter`, and none said it would, so adding it is not a fix but a minor of its own.
 
-### 0.16.0: modes as declarations
+### 0.17.0: modes as declarations
 
-A mode is held to what it declares, and so is everything else given to dsv: what is ignored or inferred today raises, which makes this a minor. A mode's name says what it declares, and "none" may be read as no mode named. `:single` comes once `:double` raises, so as to arrive with no fallback; no release has read it, so it is an addition, not a fix. Column names are held in one place, so that what is written differs from what was read only through the selection given to `write`.
+A mode is held to what it declares, and so is everything else given to dsv: what is ignored or inferred today raises, which makes this a minor. A mode's name says what it declares, and "none" may be read as no mode named. Column names are held in one place, so that what is written differs from what was read only through the selection given to `write`.
 
-### 0.17.0: streaming
+### 0.18.0: streaming
 
 Rows are read as they are wanted, so that `detect` and `break` stop reading and memory does not grow with the file; and the source is read once, start to end, so that a pipe or `$stdin` can be read.
 

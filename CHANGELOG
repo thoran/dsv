@@ -2,6 +2,16 @@
 
 ## 20261126
 
+0.15.0: ~ DSV#read: Under :single, every field is read as single-quoted.
+
+1. ~ split_row(): Under :single, :single_quoted and :single_quotes, every field is read as single-quoted, and a row with a field which isn't raises UnquotedField. They had been read as unspecified.
+2. ~ split_wholly_quoted(), reassemble_wholly_quoted_fields(), unescaped_fields(), quoted_separator(), trailing_quotes(): Each takes the quote, of which quoted_separator() makes a separator once for each. A :double read of quoted fields takes about a sixth less time, the quote no longer being made from a literal for each field.
+3. ~ test/dsv_test.rb: Reading under :single is tested, reading back what it writes and a mode set after construction included.
+4. ~ README.md: Reading under :single is described.
+5. ~ TODO: The job for :single is gone.
+6. ~ ROADMAP.md: filter is 0.16.0, the declarations 0.17.0, without :single, and streaming 0.18.0.
+7. ~ DSV::VERSION: /0.14.2/0.15.0/
+
 0.14.2: ~ DSV.new: A path or text no longer has its header read twice.
 
 1. ~ initialize(): A String source is opened by DSV::File.source or DSV::String.source, rather than taken from a DSV::File or DSV::String built and thrown away, whose own initialize had already read the header.

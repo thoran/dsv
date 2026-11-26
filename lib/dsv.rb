@@ -392,7 +392,9 @@ class DSV
     when :none, :unquoted
       split_on(row, @column_separator)
     when :double, :double_quoted, :double_quotes
-      split_wholly_quoted(row)
+      split_wholly_quoted(row, '"')
+    when :single, :single_quoted, :single_quotes
+      split_wholly_quoted(row, "'")
     else
       split_quoted(row)
     end
@@ -428,17 +430,17 @@ class DSV
     end
   end
 
-  # The :double contract, every field quoted: the row split on quote-separator-quote, a closed last field ending in an odd run of quotes, counted from the last piece, whose opening quote the split has already taken. Read in full only where the last field seems open, as it is where it goes on to the next line, or where the split leaves a lone quote in a field, as a field holding quote-separator-quote does. A row not starting with a quote raises UnquotedField, at the cost of one byte compared. nil where the last field does not close.
-  def split_wholly_quoted(row)
-    raise UnquotedField.new(:double) unless row.start_with?('"')
-    fields = split_on(row.delete_prefix('"'), quoted_separator)
-    return reassemble_wholly_quoted_fields(row) unless fields.last && trailing_quotes(fields.last, -1).odd?
-    fields[-1] = fields.last.delete_suffix('"')
-    unescaped_fields(fields) || reassemble_wholly_quoted_fields(row)
+  # The contract of :double and :single, every field quoted with the quote given: the row split on quote-separator-quote, a closed last field ending in an odd run of quotes, counted from the last piece, whose opening quote the split has already taken. Read in full only where the last field seems open, as it is where it goes on to the next line, or where the split leaves a lone quote in a field, as a field holding quote-separator-quote does. A row not starting with the quote raises UnquotedField, at the cost of one byte compared. nil where the last field does not close.
+  def split_wholly_quoted(row, quote)
+    raise UnquotedField.new(quote == "'" ? :single : :double) unless row.start_with?(quote)
+    fields = split_on(row.delete_prefix(quote), quoted_separator(quote))
+    return reassemble_wholly_quoted_fields(row, quote) unless fields.last && trailing_quotes(fields.last, -1, quote.getbyte(0)).odd?
+    fields[-1] = fields.last.delete_suffix(quote)
+    unescaped_fields(fields, quote) || reassemble_wholly_quoted_fields(row, quote)
   end
 
-  # A row under :double whose split left a lone quote in a field, read in full as unspecified reads one, except that a field which is not quoted raises UnquotedField. nil where a quoted field is still open after the last piece.
-  def reassemble_wholly_quoted_fields(row)
+  # A wholly quoted row whose split left a lone quote in a field, read in full as unspecified reads one, except that a field which is not quoted raises UnquotedField. nil where a quoted field is still open after the last piece.
+  def reassemble_wholly_quoted_fields(row, quote)
     pieces, separators = (
       if @column_separator.is_a?(::Regexp)
         pieces_and_separators(row, @column_separator)
@@ -448,40 +450,42 @@ class DSV
     )
     fields = []
     buffer = nil
+    quote_byte, escaped = quote.getbyte(0), quote * 2
     pieces.each_with_index do |piece, i|
-      if buffer && trailing_quotes(piece, -1).even?
+      if buffer && trailing_quotes(piece, -1, quote_byte).even?
         buffer << separator_before(i, separators) << piece
       elsif buffer
-        fields << (buffer << separator_before(i, separators) << piece.delete_suffix('"')).gsub('""', '"')
+        fields << (buffer << separator_before(i, separators) << piece.delete_suffix(quote)).gsub(escaped, quote)
         buffer = nil
-      elsif !piece.start_with?('"')
-        raise UnquotedField.new(:double)
-      elsif trailing_quotes(piece, 0).even?
-        buffer = +piece.delete_prefix('"')
+      elsif !piece.start_with?(quote)
+        raise UnquotedField.new(quote == "'" ? :single : :double)
+      elsif trailing_quotes(piece, 0, quote_byte).even?
+        buffer = +piece.delete_prefix(quote)
       else
-        fields << piece.delete_prefix('"').delete_suffix('"').gsub('""', '"')
+        fields << piece.delete_prefix(quote).delete_suffix(quote).gsub(escaped, quote)
       end
     end
     fields unless buffer
   end
 
   # The fields of a row split as wholly quoted, a doubled quote read as one; nil where a field holds a lone quote, which the split alone cannot place. A field has twice the quotes it has unescaped exactly when every quote in it is one of a doubled pair.
-  def unescaped_fields(fields)
+  def unescaped_fields(fields, quote)
+    escaped = quote * 2
     fields.collect do |field|
-      next field unless field.include?('"')
-      unescaped = field.gsub('""', '"')
-      return nil unless field.count('"') == 2 * unescaped.count('"')
+      next field unless field.include?(quote)
+      unescaped = field.gsub(escaped, quote)
+      return nil unless field.count(quote) == 2 * unescaped.count(quote)
       unescaped
     end
   end
 
-  # Quote, separator, quote: what divides the fields of a wholly quoted row.
-  def quoted_separator
-    @quoted_separator ||= (
+  # Quote, separator, quote: what divides the fields of a wholly quoted row, made once for each quote.
+  def quoted_separator(quote)
+    (@quoted_separators ||= {})[quote] ||= (
       if @column_separator.is_a?(::Regexp)
-        ::Regexp.new('"(?:' + @column_separator.source + ')"', @column_separator.options)
+        ::Regexp.new(quote + '(?:' + @column_separator.source + ')' + quote, @column_separator.options)
       else
-        '"' + @column_separator + '"'
+        quote + @column_separator + quote
       end
     )
   end
@@ -507,10 +511,10 @@ class DSV
     fields unless buffer
   end
 
-  # How many quotes a piece ends with, counting back to but not including the byte given, so that a field's opening quote is not taken for part of its closing. Read by byte, a quote being 34 in any ASCII-compatible encoding, so that nothing is allocated per character.
-  def trailing_quotes(piece, floor)
+  # How many quotes a piece ends with, counting back to but not including the byte given, so that a field's opening quote is not taken for part of its closing. Read by byte, a double quote being 34 and a single quote 39 in any ASCII-compatible encoding, so that nothing is allocated per character.
+  def trailing_quotes(piece, floor, quote_byte = 34)
     i = piece.bytesize - 1
-    i -= 1 while i > floor && piece.getbyte(i) == 34
+    i -= 1 while i > floor && piece.getbyte(i) == quote_byte
     piece.bytesize - 1 - i
   end
 

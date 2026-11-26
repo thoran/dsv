@@ -682,6 +682,40 @@ describe DSV do
       output = written(headers: true, columns: ['a', 'b']){|csv| csv.rows = [{'a' => "x\ny", 'b' => '2'}]; csv.write}
       _(DSV.read(output, headers: true, quote: :double)).must_equal [{'a' => "x\ny", 'b' => '2'}]
     end
+
+    it "reads under quote: :single as under :double, with a single quote" do
+      _(DSV.parse_line("'a,b','c'", quote: :single)).must_equal ['a,b', 'c']
+      _(DSV.read("'a','b'\n'it''s','2'\n", headers: true, quote: :single)).must_equal [{'a' => "it's", 'b' => '2'}]
+      _(DSV.read("'a'',''b','c'\n", quote: :single_quoted)).must_equal [{0 => "a','b", 1 => 'c'}]
+      _(DSV.read("'x\ny','2'\n", quote: 'single')).must_equal [{0 => "x\ny", 1 => '2'}]
+      _(DSV.read("'a'; 'b'\n'x; y';'2'\n", headers: true, quote: :single_quotes, column_separator: /;\s*/)).must_equal [{'a' => 'x; y', 'b' => '2'}]
+    end
+
+    it "reads a double quote as data under quote: :single, and a single quote as data with no mode named" do
+      _(DSV.parse_line("'\"a\"','b'", quote: :single)).must_equal ['"a"', 'b']
+      _(DSV.parse_line("'a','b'")).must_equal ["'a'", "'b'"]
+    end
+
+    it "raises UnquotedField on a row under quote: :single with a field not quoted, naming its line and the mode" do
+      _{DSV.parse_line("O'Brien,'x'", quote: :single)}.must_raise DSV::UnquotedField
+      _{DSV.read("'a',b,'c'\n", quote: :single)}.must_raise DSV::UnquotedField
+      _{DSV.read("\"a\",\"b\"\n", quote: :single)}.must_raise DSV::UnquotedField
+      error = _{DSV.read("'a','b'\n'y',3\n", quote: :single)}.must_raise DSV::UnquotedField
+      _(error.line).must_equal 2
+      _(error.mode).must_equal :single
+      _{DSV.read("'x','abc\n", quote: :single)}.must_raise DSV::UnterminatedQuote
+    end
+
+    it "reads back what it writes under quote: :single" do
+      output = written(headers: true, columns: ['a', 'b'], quote: :single){|csv| csv.rows = [{'a' => "it's, here", 'b' => "x\ny"}]; csv.write}
+      _(DSV.read(output, headers: true, quote: :single)).must_equal [{'a' => "it's, here", 'b' => "x\ny"}]
+    end
+
+    it "reads with the quote of a mode set after construction" do
+      csv = DSV.new("'a','b'\n")
+      csv.quote = :single
+      _(csv.read).must_equal [{0 => 'a', 1 => 'b'}]
+    end
   end
 
   # Input which is not RFC 4180, read to the default rule: a quote is structure only where it opens a field, and a field it opens which does not close raises UnterminatedQuote.
