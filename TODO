@@ -1,48 +1,44 @@
 # TODO
 
-## `filter`
-
-1. filter, a class-level alias of select.
-
 ## Modes as declarations
 
-2. An unknown quote mode, file mode or option raises ArgumentError.
-3. :unspecified, the name of the default.
-4. :unquoted, the name of the mode reading no quotes, :none kept as an alias.
-5. The reader chosen once, when the quote mode is set, as row_renderer is for writing.
-6. .read and .open taking a path, and .parse text; a path which does not exist raising, and nothing inferred from whether a file exists.
-7. attributes= setting columns, attributes always worked out from columns; rows read afterwards keyed by those names.
+1. An unknown quote mode, file mode or option raises ArgumentError.
+2. :unspecified, the name of the default.
+3. :unquoted, the name of the mode reading no quotes, :none kept as an alias.
+4. The reader chosen once, when the quote mode is set, as row_renderer is for writing.
+5. .read and .open taking a path, and .parse text; a path which does not exist raising, and nothing inferred from whether a file exists.
+6. attributes= setting columns, attributes always worked out from columns; rows read afterwards keyed by those names.
 
 ## Streaming
 
-8. each yields each row as it is read.
-9. each returns its receiver.
-10. rows no longer filled by each.
-11. Chunks from each_slice.
-12. The source read once, start to end, with no rewind; the header from the first row read.
-13. The line of an error found by seeking only where the source can.
-14. A rewind left to r+ rewriting and to first_row called alone.
+7. each yields each row as it is read.
+8. each returns its receiver.
+9. rows no longer filled by each.
+10. Chunks from each_slice.
+11. The source read once, start to end, with no rewind; the header from the first row read.
+12. The line of an error found by seeking only where the source can.
+13. A rewind left to r+ rewriting and to first_row called alone.
 
 ## Checked and measured
 
-15. A corpus in the tests, a day of NEMWEB's dispatch files, trimmed, and the RFC 4180 cases, each checked against stdlib CSV's rows.
-16. A benchmark script against stdlib CSV, and the README's speed sentence written from its output.
-17. The README showing every mode by example, and a table matching each to stdlib CSV's and Python's settings.
+14. A corpus in the tests, a day of NEMWEB's dispatch files, trimmed, and the RFC 4180 cases, each checked against stdlib CSV's rows.
+15. A benchmark script against stdlib CSV, and the README's speed sentence written from its output.
+16. The README showing every mode by example, and a table matching each to stdlib CSV's and Python's settings.
 
 ## Speed, results unchanged
 
-18. A per-row fast path for the default: split, the fields bare or wrapped in two quotes unwrapped, any other row read in full.
-19. as_array: returning the split fields, rather than building a Hash and then an Array from it.
-20. Rows built by zip.to_h.
-21. The scanner-based parser, at the tag scanner-parser-20261006, judged against the string operations used now.
+17. A per-row fast path for the default: split, the fields bare or wrapped in two quotes unwrapped, any other row read in full.
+18. as_array: returning the split fields, rather than building a Hash and then an Array from it.
+19. Rows built by zip.to_h.
+20. The scanner-based parser, at the tag scanner-parser-20261006, judged against the string operations used now.
 
 ## Features
 
-22. :rfc_4180, a quote mode reading what RFC 4180 allows as :unspecified does and raising on what it forbids.
-23. field_count:, :header or an Integer, off by default; a row of another width raising.
-24. Writing with minimal quoting: a field quoted only where it holds a separator, a quote or a row terminator.
-25. A line number in each parse error, and line_numbers:.
-26. headers?, the instance-level header_row renamed, header_row kept as an alias.
-27. <<, to append a row, and generate, to build a string.
-28. Symbols and Strings interchangeable for column names, in a selection, a columns: list and a row's keys.
-29. Duplicate headers by option: all kept as an Array, the default; indexed, a, a.1; first; last; error.
+21. :rfc_4180, a quote mode reading what RFC 4180 allows as :unspecified does and raising on what it forbids.
+22. field_count:, :header or an Integer, off by default; a row of another width raising.
+23. Writing with minimal quoting: a field quoted only where it holds a separator, a quote or a row terminator.
+24. A line number in each parse error, and line_numbers:.
+25. headers?, the instance-level header_row renamed, header_row kept as an alias.
+26. <<, to append a row, and generate, to build a string.
+27. Symbols and Strings interchangeable for column names, in a selection, a columns: list and a row's keys.
+28. Duplicate headers by option: all kept as an Array, the default; indexed, a, a.1; first; last; error.

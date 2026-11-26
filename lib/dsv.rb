@@ -71,6 +71,7 @@ class DSV
       each(source, *args).select(&block)
     end
     alias_method :find_all, :select
+    alias_method :filter, :select
 
     def reject(source, *args, &block)
       each(source, *args).reject(&block)

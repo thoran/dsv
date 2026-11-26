@@ -2,6 +2,15 @@
 
 ## 20261126
 
+0.16.0: + DSV.filter: An alias of DSV.select.
+
+1. + DSV.filter: An alias of select, as find_all is.
+2. ~ test/dsv_test.rb: Selecting by filter is tested, beside select and find_all.
+3. ~ README.md: The class-level aliases include filter.
+4. ~ TODO: The job for filter is gone, and the rest are numbered from 1.
+5. ~ ROADMAP.md: 0.16.0 is gone.
+6. ~ DSV::VERSION: /0.15.0/0.16.0/
+
 0.15.0: ~ DSV#read: Under :single, every field is read as single-quoted.
 
 1. ~ split_row(): Under :single, :single_quoted and :single_quotes, every field is read as single-quoted, and a row with a field which isn't raises UnquotedField. They had been read as unspecified.

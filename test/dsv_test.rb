@@ -163,9 +163,10 @@ describe DSV do
       _(DSV.map(DATA, headers: true){|row| row['a'].to_i}).must_equal [1, 4]
     end
 
-    it "selects the rows for which the block is true, also as find_all" do
+    it "selects the rows for which the block is true, also as find_all and filter" do
       _(DSV.select(DATA, headers: true){|row| row['a'] == '4'}).must_equal [KEYED.last]
       _(DSV.find_all(DATA, headers: true){|row| row['a'] == '4'}).must_equal [KEYED.last]
+      _(DSV.filter(DATA, headers: true){|row| row['a'] == '4'}).must_equal [KEYED.last]
     end
 
     it "rejects the rows for which the block is true" do
