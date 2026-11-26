@@ -1,18 +1,12 @@
 # dsv/PROPOSED.md
 
-Date: 20261124
-
-What is undecided, under a heading for each theme or change, a theme's heading matching ROADMAP.md's. What each release does is in ROADMAP.md; the jobs are in TODO. Not listed in the gemspec, so it does not ship with the gem.
+What is undecided, under a heading for each theme or change, a theme's heading matching ROADMAP.md's. Why each release is made is in ROADMAP.md; the jobs are in TODO. Not listed in the gemspec, so it does not ship with the gem.
 
 ## Rows which contradict their declaration
 
 - The option's name. `on_error:` was the first proposal. `unexpected:` fits the language of declarations, and covers a field count as well as quoting: `quote: :double, unexpected: :unspecified`.
 - A chain, such as `[:unspecified, :skip]`, each step broader than the one before.
 - `:collect`, a choice for the option: each row which contradicts its mode is kept with its line, reading goes on to the end, and there one error is raised holding them all, so that a file can be checked whole in one pass. Nothing is kept or checked on a row which keeps its mode. Whether the rows read are returned beside the error, and its name, such as `DSV::UnexpectedRows`.
-
-## 0.13.x and the version rule
-
-`filter` adds vocabulary, so the version rule makes it at least a minor. Whether it comes as a fix in 0.13.x, as what SimpleCSV meant, or in a minor.
 
 ## The scanner-based parser
 

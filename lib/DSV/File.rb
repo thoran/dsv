@@ -5,13 +5,6 @@ require_relative '../dsv'
 
 class DSV
   class File < DSV
-
-    def initialize(filename, *args)
-      @filename = ::File.expand_path(filename)
-      @args = args
-      super(source, *args)
-    end
-
     def source
       @source ||= ::File.new(filename, mode, permissions)
     end
@@ -31,5 +24,12 @@ class DSV
 
     attr_reader :filename
 
+    private
+
+    def initialize(filename, *args)
+      @filename = ::File.expand_path(filename)
+      @args = args
+      super(source, *args)
+    end
   end
 end

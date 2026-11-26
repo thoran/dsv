@@ -2,6 +2,19 @@
 
 ## 20261126
 
+0.14.0: The internals are private, and split_double_quoted() is renamed split_wholly_quoted().
+
+1. ~ DSV: The instance methods it had as SimpleCSV are public, as is repeated_names, which the README documents; the rest are private, below initialize.
+2. ~ DSV, DSV::File, DSV::String: No blank line opens or closes a class body, and in DSV::File and DSV::String initialize is at the head of a private section at the foot of the class.
+3. /split_double_quoted()/split_wholly_quoted()/: Its contract is every field quoted, whatever the quote character.
+4. ~ split_on(), split_quoted(), split_wholly_quoted(): Each comment says what its level of row splitting does.
+5. ~ test/dsv_test.rb: Which instance methods are public and which private is tested.
+6. ~ TODO: Each decided job is listed here alone, those for 1.0 and 1.x included, under a heading naming its release as ROADMAP.md does, without its version. The job for the internals is gone.
+7. ~ ROADMAP.md: Each release says only why it is made, its jobs being in TODO. 0.13.0, 0.13.x and 0.14.0 are gone. 0.15.0 adds filter, 0.16.0 the declarations, and 0.17.0 streaming.
+8. ~ PROPOSED.md: The version of filter is settled: no release has had it, so it is a minor. The Date line is gone.
+9. ~ CHANGELOG: Each version line from 0.12.2 names DSV::VERSION, and no line of glyphs ends in a full stop.
+10. ~ DSV::VERSION: /0.13.2/0.14.0/
+
 0.13.2: Create a fast path, where no column name repeats, for writing, to_a, and reading as_array or by name, so that a write takes a third less time.
 
 1. ~ values_in_order(): Where no name repeats, the row's values are taken with values_at, no field being looked at. From 0.11.5 every field of every row was checked for an Array, which took about 40% of a write.
@@ -33,7 +46,7 @@
 9. ~ TODO: Only the jobs in hand are kept, in order and without their releases; the rest are in ROADMAP.md. The readers are no longer renamed as nouns, split_double_quoted() alone becoming split_wholly_quoted(). Jobs are added for write keeping a repeated name, and for attributes= setting columns.
 10. ~ ROADMAP.md: Speed is given as the reason for the modes and for no fallback. 0.13.0 undoes the fallback, naming 0.12.5's errors; 0.14.0 makes the internals private; the declarations are 0.15.0 and streaming 0.16.0. Path or text is no longer a theme, and speed against other languages is one.
 11. ~ PROPOSED.md: The exception raised is settled. :collect and :infer are asked after, and the version rule of filter alone. The quote character notes what a quote longer than a byte would cost.
-12. ~ lib/DSV/VERSION.rb: /0.12.15/0.13.0/.
+12. ~ DSV::VERSION: /0.12.15/0.13.0/
 
 ## 20261120
 
@@ -46,7 +59,7 @@
 5. ~ TODO: - 1, 2. The fallback under :double is undone by 0.13.0's declarations, not by a patch back to 0.12.4, whose reading misread rows silently. :unspecified, not :mixed, names the default. Jobs are added: :unquoted as the name of the mode reading no quotes; the reader chosen once, brought forward from 1.x; and .read and .parse taking a path and text apart, into which the String under a write mode taken as a path is folded. :single moves to 0.13.0, once :double raises, since no release has read it.
 6. ~ ROADMAP.md: The design philosophy opens with fail fast, otherwise go fast, and the default is the one reading which interprets. The layout is done, :double back to 0.12.4's reading is no longer listed under 0.12.x, and :single moves to 0.13.0. :unspecified names the default. 0.13.0 lists :unquoted, the reader chosen once and the source given as a path or text, and 2.0 is gone.
 7. ~ PROPOSED.md: The version rule is no longer asked of :single, an addition. :unspecified replaces :mixed in the examples. Path or text asks only how DSV.new is told which a String is.
-8. ~ lib/DSV/VERSION.rb: /0.12.14/0.12.15/.
+8. ~ DSV::VERSION: /0.12.14/0.12.15/
 
 ## 20261108
 
@@ -59,7 +72,7 @@
 5. ~ TODO: One job to a line, each marked with its release, the reasons moved to ROADMAP.md and what is undecided to PROPOSED.md. The space separator is done, and the string predicates were done in 0.12.0. The layout of normalised_mode, row_renderer and write_row, and the renaming of split_quoted() and split_double_quoted(), are added.
 6. ~ ROADMAP.md: Each release is stated as what it does and why; what is undecided is moved to PROPOSED.md.
 7. + PROPOSED.md: What is undecided, under a heading for each theme or change.
-8. ~ lib/DSV/VERSION.rb: /0.12.13/0.12.14/.
+8. ~ DSV::VERSION: /0.12.13/0.12.14/
 
 ## 20261103
 
@@ -69,7 +82,7 @@
 2. ~ DSV.parse_line: passes quote: on, rather than always reading as unspecified; its options to DSV.new written key: value, not with hashrockets.
 3. ~ test/dsv_test.rb: + quote: given as a String on read; + parse_line with quote:.
 4. ~ TODO: - 1.
-5. ~ lib/DSV/VERSION.rb: /0.12.12/0.12.13/.
+5. ~ DSV::VERSION: /0.12.12/0.12.13/
 
 0.12.12: as_array: with a column selection gives the columns selected.
 
@@ -78,7 +91,7 @@
 3. ~ test/dsv_test.rb: + selections under as_array:, by name, by position, by a repeated name, and from rows already read.
 4. ~ README.md: + as_array:, and a selection under it.
 5. ~ TODO: - 1.
-6. ~ lib/DSV/VERSION.rb: /0.12.11/0.12.12/.
+6. ~ DSV::VERSION: /0.12.11/0.12.12/
 
 0.12.11: the class methods close the files they open, and return an Enumerator without a block.
 
@@ -88,14 +101,14 @@
 4. ~ test/dsv_test.rb: + files_opened(); + the class methods closing what they open, on an early exit too, and leaving an IO open; + the Enumerators.
 5. ~ README.md: Enumerating from the class, closing and the Enumerator.
 6. ~ TODO: - 1.
-7. ~ lib/DSV/VERSION.rb: /0.12.10/0.12.11/.
+7. ~ DSV::VERSION: /0.12.10/0.12.11/
 
 0.12.10: ~ TODO, now grouped by release; + ROADMAP.md.
 
 1. ~ TODO: the jobs decided, by release: the fixes left for 0.12.x; modes as declarations in 0.13.0; streaming in 0.14.0; what 1.0 needs; speed and new options in 1.x.
 2. ~ TODO: 11, strict:, and 15, the malformed-quoting option, superseded by field_count: and :rfc_4180; 13, chunks, by a streaming each; 1, 6, 7 and the undecided parts of 2, to ROADMAP.md.
 3. + ROADMAP.md: the design, the boundary for 1.0, the version rule, the release sequence, and the themes after 1.0 with what is undecided in each.
-4. ~ lib/DSV/VERSION.rb: /0.12.9/0.12.10/.
+4. ~ DSV::VERSION: /0.12.9/0.12.10/
 
 
 ## 20261028
@@ -108,7 +121,7 @@
 4. ~ test/dsv_test.rb: - the skip on a quoted field which does not close; + the line it names; the malformed examples now state the default rule.
 5. ~ README.md: Quoting, the rule for input which isn't RFC 4180.
 6. ~ TODO: 12, as UnterminatedQuote finds its line; + 15, the rule as an option.
-7. ~ lib/DSV/VERSION.rb: /0.12.8/0.12.9/.
+7. ~ DSV::VERSION: /0.12.8/0.12.9/
 
 0.12.8: a stray quote no longer takes in the next line.
 
@@ -117,7 +130,7 @@
 3. ~ split_double_quoted(): takes a row as wholly quoted only where it ends in a closing quote.
 4. + parse_fields(), from parse_row(), so that the read loop splits each row once.
 5. ~ test/dsv_test.rb: - the skip on a stray quote; + a quoted field across lines after a stray quote.
-6. ~ lib/DSV/VERSION.rb: /0.12.7/0.12.8/.
+6. ~ DSV::VERSION: /0.12.7/0.12.8/
 
 
 ## 20261027
@@ -126,12 +139,12 @@
 
 1. ~ reassemble_quoted_fields(): a piece closes a field where it ends in an odd run of quotes; + trailing_quotes().
 2. ~ test/dsv_test.rb: - the skip on a doubled quote before a separator.
-3. ~ lib/DSV/VERSION.rb: /0.12.6/0.12.7/.
+3. ~ DSV::VERSION: /0.12.6/0.12.7/
 
 0.12.6: + quoting examples.
 
 1. ~ test/dsv_test.rb: + a doubled quote before a separator, skipped; + a quote not opening a field read as data; + a stray quote not taking in the next line, skipped; + an unclosed quoted field raising UnterminatedQuote, skipped.
-2. ~ lib/DSV/VERSION.rb: /0.12.5/0.12.6/.
+2. ~ DSV::VERSION: /0.12.5/0.12.6/
 
 
 ## 20261016
@@ -145,7 +158,7 @@
 5. ~ test/dsv_test.rb: - the skip on a Regexp separator with a quoted field; + examples of the above.
 6. ~ README.md: writing with a Regexp raises; how :double reads a row it does not promise.
 7. ~ TODO: 5, - the Regexp separator as a reason for the scanner parser.
-8. ~ lib/DSV/VERSION.rb: /0.12.4/0.12.5/.
+8. ~ DSV::VERSION: /0.12.4/0.12.5/
 
 
 ## 20260913, 1005
@@ -156,7 +169,7 @@
 2. + test/helper.rb, which test/dsv_test.rb now requires in place of its own preamble; + test/VERSION_test.rb and test/gemspec_test.rb, upon bitget.rb's pattern. Run as `rake test`, or a file at a time as before.
 3. test/gemspec_test.rb checks both gemspecs, each against its own file: that each is valid, pins no date, takes its version from DSV::VERSION, names the gem after its own file, ships its own gemspec and not the other, declares no runtime dependency, and declares minitest-mock. Run to 125.
 4. ~ this CHANGELOG: /# CHANGELOG/# dsv\/CHANGELOG/, the name a file states being the file it is rather than the kind of file it is, and - the paragraph upon how the history is kept.
-5. ~ lib/DSV/VERSION.rb: /0.12.3/0.12.4/.
+5. ~ DSV::VERSION: /0.12.3/0.12.4/
 6. Of the work the heading states, the gemspec, the packaging and the three test files fell upon the 13th; the second registration, minitest-mock, both gemspecs under test and this file's reformatting upon the 5th. The commit carries the 13th, where the greater part of it was done.
 
 
@@ -166,7 +179,7 @@
 
 1. + README.md, written once under the DSV name: what it is, reading, selecting columns, enumerating from the class, any delimiter, quoting, writing, r+, repeated header names, parse_line, and what it is not. It claims small, keyed access and any delimiter; speed is measured in 0.13.0 and reported there.
 2. ~ TODO: the rename and the README done.
-3. ~ lib/DSV/VERSION.rb: /0.12.2/0.12.3/.
+3. ~ DSV::VERSION: /0.12.2/0.12.3/
 
 0.12.2: + DSV::VERSION.
 
@@ -179,13 +192,13 @@
 
 1. - the twenty-seven supporting files (_meta, Array, Hash, Object, OpenStruct, Struct, Thoran, and the blank? family), and their requires. Of them the library used four things: Array#extract_options!, now DSV.extract_options, the same line as a class method; Array#peek_options, now DSV::File#options; Object#blank?, asked of a Hash of columns, an Array of names and a selection, now the private blank?(value), nil? || empty?; and String#split_csv, the parser, now the private split_row taking the quote mode and separators from the instance, its reassembly loop as reassemble_quoted_fields, the same string operations, start_with? and end_with? in place of the four regex matches per piece. Array#to_csv and Hash#to_csv had not been called since 0.11.6 and 0.11.2; the other seventeen were reached only through Array#to_csv's object path, which the library never used. Nothing goes under Thoran::; there is nothing left to namespace. The originals stay in ~/lib/ruby for the live SimpleCSV and its other users.
 2. ~ test/dsv_test.rb: - the examples of Array#to_csv and Hash#to_csv, which tested the removed files, and with them the skip on Finding 20, closed by the deletion. Run to 108, 2 skipped.
-3. ~ lib/dsv.rb: /0.12.0/0.12.1/.
+3. ~ lib/dsv.rb: /0.12.0/0.12.1/
 
 
 0.12.0: /SimpleCSV/DSV/
 
 1. /SimpleCSV/DSV/, /SimpleCSV::File/DSV::File/, /SimpleCSV::String/DSV::String/; lib/SimpleCSV.rb --> lib/dsv.rb, lib/SimpleCSV/ --> lib/DSV/, test/SimpleCSV_test.rb --> test/dsv_test.rb; the requires to match. The supporting files are still required under their old paths, and 0.11.18 being the last SimpleCSV that worked in full, this is that library under its new name: the suite passes as before with only the names changed. Run to 111, 3 skipped.
-2. ~ lib/dsv.rb: /0.11.18/0.12.0/.
+2. ~ lib/dsv.rb: /0.11.18/0.12.0/
 
 0.11.18: + TODO, and the header's Todo, Ideas and Bugs sections retired into it.
 
@@ -196,62 +209,62 @@
 
 1. ~ SimpleCSV.header_row: returns the header row parsed into its names, as .attributes does, or nil where there is no header row; it had returned the instance's header_row accessor, true or false, the only thing the name could mean at the class level being the row (Finding 9). .first_row remains the raw first line. The instance-level accessor of the same name, the headers: option's value, is unchanged and is a 0.12.0 naming question.
 2. ~ test/SimpleCSV_test.rb: + the class-level header_row with and without a header. Run to 111, 3 skipped.
-3. ~ lib/SimpleCSV.rb: /0.11.16/0.11.17/.
+3. ~ lib/SimpleCSV.rb: /0.11.16/0.11.17/
 
 0.11.16: ~ SimpleCSV#read and #each, selected_columns: given at construction is the selection when a call gives none.
 
 1. + selection(): a call's own selection, or the instance's selected_columns: where the call gives none; #read and #each take theirs through it, and #parse, #to_a and the class methods follow. selected_columns: had been stored by #initialize and read by nothing (Finding 12). A single name or position is accepted as well as a list, and a call's own selection wins. Whether the selection becomes a keyword on the calls themselves is a 0.12.0 question; for now the option works under its name.
 2. ~ test/SimpleCSV_test.rb: + the option at construction, a call overriding it, an Enumerator under it, and positions through the class-level read. Run to 110, 3 skipped.
-3. ~ lib/SimpleCSV.rb: /0.11.15/0.11.16/.
+3. ~ lib/SimpleCSV.rb: /0.11.15/0.11.16/
 
 0.11.15: ~ SimpleCSV#read, a second read gives the rows once.
 
 1. ~ read(): the rows are those of this read, the source being rewound and read again; a second read had appended them to the first's, doubling them.
 2. ~ test/SimpleCSV_test.rb: - the skip on the read-twice example. Run to 109, 3 skipped.
-3. ~ lib/SimpleCSV.rb: /0.11.14/0.11.15/.
+3. ~ lib/SimpleCSV.rb: /0.11.14/0.11.15/
 
 0.11.14: ~ SimpleCSV.open, the instance is a local, not a class-level variable.
 
 1. ~ SimpleCSV.open: the instance it makes is held in a local for the block's duration and returned; it had been kept in the class's own @csv_file, shared across every call and every thread (Finding 22).
 2. ~ test/SimpleCSV_test.rb: - the skip on the open example. Run to 109, 4 skipped.
-3. ~ lib/SimpleCSV.rb: /0.11.13/0.11.14/.
+3. ~ lib/SimpleCSV.rb: /0.11.13/0.11.14/
 
 0.11.13: ~ SimpleCSV::File#initialize, the path is expanded on construction.
 
 1. ~ SimpleCSV::File#initialize: the filename is ::File.expand_path of what was given, so #filename is absolute and the file is opened by it (Finding 21). #filename had been @filename ||= File.expand_path(@filename), which never ran, @filename being set already, and which would have called SimpleCSV::File.expand_path had it run, File resolving inside the class to the class itself. - #filename, + attr_reader :filename.
 2. ~ test/SimpleCSV_test.rb: - the skip on the expansion example. Run to 109, 5 skipped.
-3. ~ lib/SimpleCSV.rb: /0.11.12/0.11.13/.
+3. ~ lib/SimpleCSV.rb: /0.11.12/0.11.13/
 
 0.11.12: ~ SimpleCSV#each, an Enumerator without a block.
 
 1. ~ each(): returns an Enumerator over the rows, the selection included, when no block is given (Finding 11); it had yielded regardless and raised LocalJumpError, so Enumerable's methods that call each without a block, and each('a').to_a, failed. include Enumerable is honest now.
 2. ~ test/SimpleCSV_test.rb: - the skip on the enumerator example. Run to 109, 6 skipped.
-3. ~ lib/SimpleCSV.rb: /0.11.11/0.11.12/.
+3. ~ lib/SimpleCSV.rb: /0.11.11/0.11.12/
 
 0.11.11: ~ SimpleCSV#to_a, rows keyed by position come back as arrays in position order.
 
 1. ~ to_a(): with no columns each row's values in their order, a position-keyed row holding them in position order (Finding 10); the branch had built an array in an inject and thrown it away, giving an empty array per row.
 2. ~ test/SimpleCSV_test.rb: - the skip on the to_a example. Run to 109, 7 skipped.
-3. ~ lib/SimpleCSV.rb: /0.11.10/0.11.11/.
+3. ~ lib/SimpleCSV.rb: /0.11.10/0.11.11/
 
 0.11.10: ~ SimpleCSV.detect, nil when no row matches.
 
 1. ~ SimpleCSV.detect: returns nil when the block is true for no row (Finding 8); the fall-through had been .each's return value, every row.
 2. ~ test/SimpleCSV_test.rb: - the skip on the detect example. Run to 109, 8 skipped.
-3. ~ lib/SimpleCSV.rb: /0.11.9/0.11.10/.
+3. ~ lib/SimpleCSV.rb: /0.11.9/0.11.10/
 
 0.11.9: ~ SimpleCSV.read, .parse and .each, a column selection given before the options is honoured.
 
 1. ~ SimpleCSV.read, ~ .each: the arguments before the options are the selection and go to the instance's #read or #each, as the two comments of 20240826 asked: SimpleCSV.read(source, 'a', headers: true) reads the a column alone (Finding 7). The names had been passed into new, which discarded them. .parse, .collect, .select, .reject and .detect go through .each and gain it likewise; the two comments go.
 2. ~ test/SimpleCSV_test.rb: - the skip on the selection example, + the selection through .each and .parse. Run to 109, 9 skipped.
-3. ~ lib/SimpleCSV.rb: /0.11.8/0.11.9/.
+3. ~ lib/SimpleCSV.rb: /0.11.8/0.11.9/
 
 0.11.8: ~ SimpleCSV#initialize, the mode is normalised to Ruby's spelling whatever spelling it was given.
 
 1. + SimpleCSV.normalised_mode(): the table that SimpleCSV::File#mode held, r, r+, w, w+, a and a+ as themselves and the long names read_only, rw, read_write, write_only and append to them, a Symbol as its String, unspecified as r. #initialize keeps @mode as that, so #columns's test of the mode against 'r', 'r+' and 'a+' holds for every spelling: mode: :r, :read_only and 'rw' read the header row (Finding 6). The parent had kept the option as given and SimpleCSV::File had normalised only its own copy, which the parent's #initialize then overwrote.
 2. ~ SimpleCSV::File#mode: the same table by the same method; #mode reports Ruby's spelling.
 3. ~ test/SimpleCSV_test.rb: - the skip on the mode example, + the reported mode for three spellings. Run to 109, 10 skipped.
-4. ~ lib/SimpleCSV.rb: /0.11.7/0.11.8/.
+4. ~ lib/SimpleCSV.rb: /0.11.7/0.11.8/
 
 0.11.7: ~ SimpleCSV#write_row, a nil value is an empty field, and a row with no columns defined is written from its own keys.
 
@@ -259,7 +272,7 @@
 2. ~ write(): with no columns defined and rows keyed by name, the columns, and the header when headers: is on, are taken from the first row's keys; rows keyed by position write positionally and have no header to write.
 3. ~ columns(): memoised upon whether the header has been looked for rather than upon what it gave, a source with no header row yielding nil legitimately; ||= had looked again on every call, reading and rewinding the source, which when the source is the file being written read the rows just written back as a header. ~ columns=(): clears attributes and repeated_names, which are derived from it.
 4. ~ test/SimpleCSV_test.rb: - the skip on the nil example, + nil under :none, + position-keyed and name-keyed rows written with no columns defined. Run to 109, 11 skipped.
-5. ~ lib/SimpleCSV.rb: /0.11.6/0.11.7/.
+5. ~ lib/SimpleCSV.rb: /0.11.6/0.11.7/
 
 0.11.6: ~ SimpleCSV#write_values, a row is rendered inside the class with the instance's separators, a quote inside a value doubled.
 
@@ -268,7 +281,7 @@
 3. The spacey modes, :spacey_double, :spacey_single, :spacey_none and :spacey_unquoted, put a space after each separator as Array#to_csv_row did; all seven spellings are kept.
 4. The library no longer calls Array#to_csv; the require stays until Phase 4's scoping, with Hash#to_csv's.
 5. ~ test/SimpleCSV_test.rb: - two skips (Finding 23 and the doubled quote), + a round trip through a pipe and CRLF, + the spacey modes. Run to 107, 12 skipped.
-6. ~ lib/SimpleCSV.rb: /0.11.5/0.11.6/.
+6. ~ lib/SimpleCSV.rb: /0.11.5/0.11.6/
 
 0.11.5: ~ SimpleCSV#columns, a repeated header name keeps every position, and a row holds its values as an Array.
 
@@ -278,7 +291,7 @@
 4. + values_in_order(): a row's values in position order, an Array under a repeated name spread back over its positions and a single value under one written at each; to_a, as_array and write_row all use it, so a repeated column round-trips.
 5. The rule, for the README: a value is a String, or an Array where the header repeats the name; columns says which. Keying the repeats as distinct suffixed names (a, a.1), and keeping only the first or the last or refusing, are derivations of the same columns map and arrive later as options.
 6. ~ test/SimpleCSV_test.rb: the empty-name example generalised to any repeated name, + reading, selecting, to_a, as_array and writing under one. Run to 106, 14 skipped.
-7. ~ lib/SimpleCSV.rb: /0.11.4/0.11.5/.
+7. ~ lib/SimpleCSV.rb: /0.11.4/0.11.5/
 
 0.11.4: ~ String#split_csv, the smallest changes that make it read RFC 4180 quoting correctly.
 
@@ -295,7 +308,7 @@
 
 1. - SimpleCSV::File.open, - SimpleCSV::String.open: each built an instance, kept it in @csv_file, and called super, which built a second one and used that; the first was never closed, so a file was opened twice (Finding 19). SimpleCSV.open already constructs through new on whichever class it is called on, so the overrides added nothing but the leak.
 2. ~ test/SimpleCSV_test.rb: - the two skips, one per class; each example now counts one construction. Run to 103, 22 skipped.
-3. ~ lib/SimpleCSV.rb: /0.11.2/0.11.3/.
+3. ~ lib/SimpleCSV.rb: /0.11.2/0.11.3/
 
 0.11.2: ~ SimpleCSV#write_header, the header row is the column names, selected or all, written as a row.
 
@@ -303,14 +316,14 @@
 2. + write_values(): writes one row of values, quoted as @quote says; write_row() and write_header() both end here, so that the write path has one place to take the separators from when it does (Finding 23).
 3. The library no longer calls Hash#to_csv anywhere; the require stays until Phase 4's scoping.
 4. ~ test/SimpleCSV_test.rb: - the skip on the selected header example, and + the same under quote: :none. Run to 103, 24 skipped.
-5. ~ lib/SimpleCSV.rb: /0.11.1/0.11.2/.
+5. ~ lib/SimpleCSV.rb: /0.11.1/0.11.2/
 
 0.11.1: ~ SimpleCSV#write, the file is emptied at the first write under r+, not at the end of every read.
 
 1. + prepare_to_rewrite(): under r+ reads the rows if they have not been read, then rewinds and truncates the file, once, before the header and rows are written. This is what the 2006 rewind and truncate at the end of #read were for, a read-then-rewrite of one file, moved to the write that the read was preparing for.
 2. ~ SimpleCSV#read: - the rewind and truncate under r+. Reading no longer alters the file on disk, whether by #read, #each, #to_a, #count or any other Enumerable method, nor does a second #read find an empty file (Finding 15). A #write with the rows not yet read no longer loses its header to a truncate that followed it.
 3. ~ test/SimpleCSV_test.rb: - the skip on the r+ example, and + two examples: reading under r+ by #read and by #count leaves the file as it was; #write under r+ with the rows unread rewrites the file with its header, and with rows set replaces it. Run to 103, 25 skipped.
-4. ~ lib/SimpleCSV.rb: /0.11.0/0.11.1/.
+4. ~ lib/SimpleCSV.rb: /0.11.0/0.11.1/
 
 0.11.0: + test/SimpleCSV_test.rb, and the header's Changes section retired to CHANGELOG.
 
@@ -446,7 +459,7 @@
 1. ~ SimpleCSV#initialize, so as the default quoting is :none, not :double.
 2. + SimpleCSV#read_header, which I'd mistakenly taken out in the recent cull... for use with SimpleCSV#read.
 3. ~ SimpleCSV#read, calls read_header, so the first line isn't pulled in as data.
-4. ~ SimpleCSV#initialize, /use_array/as_array/.
+4. ~ SimpleCSV#initialize, /use_array/as_array/
 5. ~ SimpleCSV#initialize, compressed a couple of the if statements, since they weren't complicated enough to be over 7 lines each.
 6. ~ SimpleCSV#parse_row, logic was inverted for when @columns.blank? after a change in the logic for at 0.9.0!
 7. ~ SimpleCSV#attributes, /columns/@columns.blank?/, and switched the logic order(!), since this is a little more robust and probably slightly faster too.
@@ -514,7 +527,7 @@
 
 0.9.0
 
-1. /CSVFile/SimpleCSV/.
+1. /CSVFile/SimpleCSV/
 2. Reset the Todo list and rolled in the Goals to that.
 3. Moved the loader stuff (Array, Hash, String) in here.
 4. More changes to interfaces to reflect the change in 0.8.0 to interface arguments.
@@ -551,7 +564,7 @@
 2. ~ #read...
 3. + #set_columns.
 4. + #readrow.
-5. /write_csv/write/.
+5. /write_csv/write/
 6. alias_method :write_csv, :write
 7. + #each_csv.
 8. + #csv_each.
@@ -568,7 +581,7 @@
 4. + .first_row
 5. + .attributes
 6. + .columns
-7. /#read_csv/#read/.
+7. /#read_csv/#read/
 8. ~ #do_read to use parse_row instead of parse_line.
 9. + alias_method :parse_row, :read_row
 10. ~ #columns=, fixed when taking a hash.
@@ -579,8 +592,8 @@
 1. Removed all the debug stuff.
 2. require'ing of String placed in Array.rb.
 3. include Enumerable.
-4. /line/row/.
-5. /separator/row_separator/.
+4. /line/row/
+5. /separator/row_separator/
 6. ~ #read_csv.
 7. + #do_read.
 8. + #read_header.
@@ -634,7 +647,7 @@
 
 0.5.10
 
-1. /read/read_csv/.
+1. /read/read_csv/
 2. Dropped in some class methods which are File/IO interface similarity/compatibility stuff (open, readlines, read, write, writelines) written between 0.6.4 and 0.6.5 as per notes2.txt.
 3. Added some aliases for read and write: read_csv and write_csv.
 4. Removed self.class from expand_path in self.open.
@@ -971,10 +984,10 @@
 
 0.2.0
 
-1. /from_csv/parse/.
+1. /from_csv/parse/
 2. /lines/rows/ only because I'm using the term columns and it seems to fit in with that better---although columns are the column names, not the column values.  I'm not committed to it and may change this back.
 3. Added < File to the CSVFile class definition.
-4. /@file_handle/self/.
+4. /@file_handle/self/
 5. I decided to only use the term rows to designate parsed data and so is essentially restricted to @rows and related.
 6. /lines/rows/.  I changed it back again, because lines seems more natural.  Still not sure about this, but so as to accommodat rows, I'm providing a rows method which returns @lines.
 

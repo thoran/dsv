@@ -1,18 +1,49 @@
 # TODO
 
+## `filter`
+
 1. filter, a class-level alias of select.
-2. The internals private, and split_double_quoted() renamed split_wholly_quoted().
-3. An unknown quote mode, file mode or option raises ArgumentError.
-4. :unspecified, the name of the default.
-5. :unquoted, the name of the mode reading no quotes, :none kept as an alias.
-6. The reader chosen once, when the quote mode is set, as row_renderer is for writing.
-7. .read and .open taking a path, and .parse text; a path which does not exist raising, and nothing inferred from whether a file exists.
-8. :single read as :double is, with a single quote.
-9. attributes= setting columns, attributes always worked out from columns; rows read afterwards keyed by those names.
-10. each yields each row as it is read.
-11. each returns its receiver.
-12. rows no longer filled by each.
-13. Chunks from each_slice.
-14. The source read once, start to end, with no rewind; the header from the first row read.
-15. The line of an error found by seeking only where the source can.
-16. A rewind left to r+ rewriting and to first_row called alone.
+
+## Modes as declarations
+
+2. An unknown quote mode, file mode or option raises ArgumentError.
+3. :unspecified, the name of the default.
+4. :unquoted, the name of the mode reading no quotes, :none kept as an alias.
+5. The reader chosen once, when the quote mode is set, as row_renderer is for writing.
+6. .read and .open taking a path, and .parse text; a path which does not exist raising, and nothing inferred from whether a file exists.
+7. :single read as :double is, with a single quote.
+8. attributes= setting columns, attributes always worked out from columns; rows read afterwards keyed by those names.
+
+## Streaming
+
+9. each yields each row as it is read.
+10. each returns its receiver.
+11. rows no longer filled by each.
+12. Chunks from each_slice.
+13. The source read once, start to end, with no rewind; the header from the first row read.
+14. The line of an error found by seeking only where the source can.
+15. A rewind left to r+ rewriting and to first_row called alone.
+
+## Checked and measured
+
+16. A corpus in the tests, a day of NEMWEB's dispatch files, trimmed, and the RFC 4180 cases, each checked against stdlib CSV's rows.
+17. A benchmark script against stdlib CSV, and the README's speed sentence written from its output.
+18. The README showing every mode by example, and a table matching each to stdlib CSV's and Python's settings.
+
+## Speed, results unchanged
+
+19. A per-row fast path for the default: split, the fields bare or wrapped in two quotes unwrapped, any other row read in full.
+20. as_array: returning the split fields, rather than building a Hash and then an Array from it.
+21. Rows built by zip.to_h.
+22. The scanner-based parser, at the tag scanner-parser-20261006, judged against the string operations used now.
+
+## Features
+
+23. :rfc_4180, a quote mode reading what RFC 4180 allows as :unspecified does and raising on what it forbids.
+24. field_count:, :header or an Integer, off by default; a row of another width raising.
+25. Writing with minimal quoting: a field quoted only where it holds a separator, a quote or a row terminator.
+26. A line number in each parse error, and line_numbers:.
+27. headers?, the instance-level header_row renamed, header_row kept as an alias.
+28. <<, to append a row, and generate, to build a string.
+29. Symbols and Strings interchangeable for column names, in a selection, a columns: list and a row's keys.
+30. Duplicate headers by option: all kept as an Array, the default; indexed, a, a.1; first; last; error.
