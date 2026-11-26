@@ -365,6 +365,11 @@ describe DSV do
       _(DSV.new(StringIO.new(DATA), headers: true).read).must_equal KEYED
     end
 
+    it "opens a path or text itself, constructing no DSV::File or DSV::String" do
+      with_file{|path| _(constructions(DSV::File){DSV.new(path, headers: true).close}).must_equal 0}
+      _(constructions(DSV::String){DSV.new(DATA, headers: true)}).must_equal 0
+    end
+
     it "reads only the selected_columns: given at construction when a call selects none, a call's own selection winning" do
       csv = DSV.new(DATA, headers: true, selected_columns: ['a'])
       _(csv.read).must_equal [{'a' => '1'}, {'a' => '4'}]

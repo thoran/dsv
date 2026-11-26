@@ -5,8 +5,14 @@ require_relative '../dsv'
 
 class DSV
   class File < DSV
+    class << self
+      def source(filename, options = {})
+        ::File.new(::File.expand_path(filename), DSV.normalised_mode(options[:mode]), options[:permissions])
+      end
+    end # class << self
+
     def source
-      @source ||= ::File.new(filename, mode, permissions)
+      @source ||= DSV::File.source(filename, options)
     end
 
     def mode

@@ -331,14 +331,14 @@ class DSV
   private
 
   def initialize(source, *args)
+    options = DSV.extract_options(args)
     @source = (
       if source.is_a?(::String)
-        DSV.source_type(source).new(source, *args).source
+        DSV.source_type(source).source(source, options)
       else
         source
       end
     )
-    options = DSV.extract_options(args)
     @header_row = options[:header_row] || options[:headers] || options[:header] || false
     @mode = DSV.normalised_mode(options[:mode])
     @quote = options[:quote] || nil

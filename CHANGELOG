@@ -2,6 +2,13 @@
 
 ## 20261126
 
+0.14.2: ~ DSV.new: A path or text no longer has its header read twice.
+
+1. ~ initialize(): A String source is opened by DSV::File.source or DSV::String.source, rather than taken from a DSV::File or DSV::String built and thrown away, whose own initialize had already read the header.
+2. + DSV::File.source, + DSV::String.source: Each opens its argument as an IO, and DSV::File#source and DSV::String#source call them.
+3. ~ test/dsv_test.rb: DSV.new on a path or on text is tested to construct no DSV::File or DSV::String.
+4. ~ DSV::VERSION: /0.14.1/0.14.2/
+
 0.14.1: ~ DSV#write: Appending (a, a+) no longer repeats the header.
 
 1. ~ write(), + writes_header?(): Under a or a+, the header is written only to an empty file. Every append had written it again, partway down a file which already had one.
