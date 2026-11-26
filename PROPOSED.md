@@ -16,6 +16,8 @@ Whether it replaces the string operations used now, once judged against them.
 
 - A row terminator inside a field: kept, quoted, or folded to a space.
 - The encoding declared, and a transcode offered with any loss marked.
+- Under `a`, which can't read the file, whether its header is read separately, so that rows given in another column order raise rather than land under the wrong names.
+- Under `a` and `a+`, whether a row separator is written first where the file doesn't end in one, so that the first appended row doesn't join the last line.
 
 ## Duplicate headers
 

@@ -840,6 +840,25 @@ describe DSV do
       end
     end
 
+    it "appends under a or a+ to a file with a header without writing it again, and writes it to an empty file" do
+      with_file do |path|
+        DSV.open(path, mode: 'a+', headers: true, quote: :none){|csv| csv.rows = [{'a' => '7', 'b' => '8', 'c' => '9'}]; csv.write}
+        _(File.read(path)).must_equal "a,b,c\n1,2,3\n4,5,6\n7,8,9\n"
+      end
+      with_file do |path|
+        DSV.open(path, mode: 'a', headers: true, columns: [:a, :b, :c], quote: :none){|csv| csv.rows = [{'a' => 7, 'b' => 8, 'c' => 9}]; csv.write}
+        _(File.read(path)).must_equal "a,b,c\n1,2,3\n4,5,6\n7,8,9\n"
+      end
+      with_file('') do |path|
+        DSV.open(path, mode: 'a', headers: true, columns: [:a, :b], quote: :none){|csv| csv.rows = [{'a' => 1, 'b' => 2}]; csv.write}
+        _(File.read(path)).must_equal "a,b\n1,2\n"
+      end
+      with_file('') do |path|
+        DSV.open(path, mode: 'a+', headers: true, quote: :none){|csv| csv.rows = [{'a' => 1, 'b' => 2}]; csv.write}
+        _(File.read(path)).must_equal "a,b\n1,2\n"
+      end
+    end
+
     it "rewrites a file in place under r+ when the rows are read, changed and written" do
       with_file do |path|
         DSV.open(path, mode: 'r+', headers: true, quote: :none){|csv| csv.rows = csv.read.map{|row| row.merge('a' => 'X')}; csv.write}

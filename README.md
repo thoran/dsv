@@ -127,6 +127,15 @@ DSV.open('people.csv', mode: 'r+', headers: true) do |dsv|
 end
 ```
 
+Under `a` or `a+`, rows are added at the end, and a header is written only to an empty file. `a+` reads the header, so rows keyed by name go in the file's column order; `a` can't read it, so they go in the order `columns:` gives:
+
+```ruby
+DSV.open('people.csv', mode: 'a+', headers: true) do |dsv|
+  dsv.rows = [{'name' => 'Grace', 'born' => '1906'}]
+  dsv.write
+end
+```
+
 ### Repeated header names
 
 Where the header repeats a name, `columns` maps the name to every position and the row holds the values under that name as an Array, in position order:

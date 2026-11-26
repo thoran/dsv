@@ -228,7 +228,7 @@ class DSV
   def write(*selected_columns)
     prepare_to_rewrite if @mode == 'r+'
     self.columns = @rows[0].flat_map{|name, value| value.is_a?(::Array) ? ::Array.new(value.size, name) : name} if blank?(columns) && @rows[0].is_a?(::Hash) && @rows[0].keys[0].is_a?(::String)
-    write_header(*selected_columns) if header_row? && attributes
+    write_header(*selected_columns) if header_row? && attributes && writes_header?
     each{|row| write_row(row, *selected_columns)}
   end
   alias_method :write_csv, :write
@@ -581,6 +581,12 @@ class DSV
     read_csv unless @rows[0]
     @source.rewind
     @source.truncate(0)
+  end
+
+  # Under a or a+, a header is written only to an empty file, since a file with anything in it already has one. A source with no size, such as a pipe, always gets one.
+  def writes_header?
+    return true unless ['a', 'a+'].include?(@mode) && @source.respond_to?(:size)
+    @source.size.zero?
   end
 
   def write_values(values)
