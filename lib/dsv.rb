@@ -258,8 +258,9 @@ class DSV
     end
   end
 
-  # A row's values in position order: an Array under a repeated name is spread back over its positions, and a single value under one is written at each.
+  # A row's values in position order. Under a name at several positions the row holds an Array, whose values go back to those positions in turn; a single value under such a name goes at each. Where no name repeats, the values are taken as they are, sparing a check of every field.
   def values_in_order(row)
+    return row.values_at(*attributes) if repeated_names.empty?
     occurrence = ::Hash.new(0)
     attributes.collect do |name|
       value = row[name]
@@ -449,7 +450,11 @@ class DSV
       when Integer
         fields.each{|column_value| parsed_row[i] = column_value unless !selected_columns.include?(i += 1)}
       else
-        fields.each{|column_value| store_field(parsed_row, attributes[i], column_value) unless !selected_columns.include?(attributes[i += 1])}
+        if repeated_names.empty?
+          fields.each{|column_value| parsed_row[attributes[i]] = column_value unless !selected_columns.include?(attributes[i += 1])}
+        else
+          fields.each{|column_value| store_field(parsed_row, attributes[i], column_value) unless !selected_columns.include?(attributes[i += 1])}
+        end
       end
     end
     if @as_array
@@ -463,10 +468,10 @@ class DSV
     end
   end
 
-# The positions of the columns selected, in column order, a repeated name giving each of its own.
-def positions(selected_columns)
-  selected_columns.flat_map{|column| column.is_a?(::Integer) ? column : Array((columns || {})[column])}.sort
-end
+  # The positions of the columns selected, in column order, a repeated name giving each of its own.
+  def positions(selected_columns)
+    selected_columns.flat_map{|column| column.is_a?(::Integer) ? column : Array((columns || {})[column])}.sort
+  end
 
   # With no columns defined, rows keyed by name supply them, and the header, from the first row's keys, a name whose value is an Array once for each of its values; rows keyed by position write positionally and have no header to write.
   def write(*selected_columns)
