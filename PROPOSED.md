@@ -57,4 +57,5 @@ Whether either is default behaviour or an option.
 
 ## Path or text
 
-How `DSV.new` is told whether a String is a path or text, now that neither is inferred.
+- How `DSV.new` is told whether a String is a path or text, now that neither is inferred.
+- Whether a String can be text under a mode which writes, so that rows can be appended to text held in memory. From 0.16.1 a String is a path under `w`, `w+`, `a` and `a+`, and text is appended to through a StringIO opened for appending.

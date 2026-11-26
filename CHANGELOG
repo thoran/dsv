@@ -2,6 +2,17 @@
 
 ## 20261126
 
+0.16.1: ~ DSV.open: A file not yet there is written by name under w, w+, a and a+.
+
+1. ~ DSV.source_type: Under w, w+, a and a+, a String is a path. A file not yet there had been taken as text, and the rows written to it lost in a StringIO.
+2. ~ initialize(): The mode is given to source_type.
+3. ~ test/dsv_test.rb: Writing a new file by name under w, w+, a and a+ is tested, where it was skipped, and so is source_type under each mode.
+4. ~ README.md: Under w, w+, a or a+, a String is a path.
+5. ~ TODO: Modes as declarations is split into Modes by name, Nothing ignored, Column names in one place, and Path or text. The spacey modes reading what they write is a job, and the jobs are renumbered.
+6. ~ ROADMAP.md: 0.17.0 is modes by name, 0.18.0 nothing ignored, 0.19.0 column names in one place, 0.20.0 path or text, and streaming 0.21.0.
+7. ~ PROPOSED.md: Path or text asks whether a String can be text under a mode which writes.
+8. ~ DSV::VERSION: /0.16.0/0.16.1/
+
 0.16.0: + DSV.filter: An alias of DSV.select.
 
 1. + DSV.filter: An alias of select, as find_all is.

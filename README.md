@@ -47,7 +47,7 @@ DSV.read("1,2,3\n4,5,6\n", as_array: true)
 # => [["1", "2", "3"], ["4", "5", "6"]]
 ```
 
-A String that names an existing file is read as a file; any other String is read as text.
+A String that names an existing file is read as a file; any other String is read as text. Under `w`, `w+`, `a` or `a+` a String is always a path, so that a file not yet there can be written by name.
 
 ### Selecting columns
 

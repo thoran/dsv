@@ -359,6 +359,11 @@ describe DSV do
       with_file{|path| _(DSV.source_type(path)).must_equal DSV::File}
       _(DSV.source_type(DATA)).must_equal DSV::String
     end
+
+    it "is DSV::File for any String under a mode which writes" do
+      ['w', 'w+', 'a', 'a+', :append, 'write_only'].each{|mode| _(DSV.source_type('new.csv', mode)).must_equal DSV::File}
+      ['r', 'r+', nil].each{|mode| _(DSV.source_type('new.csv', mode)).must_equal DSV::String}
+    end
   end
 
   describe ".new" do
@@ -914,12 +919,13 @@ describe DSV do
       end
     end
 
-    it "writes a new file by name under a write mode" do
-      skip "Decision point 4: Finding 14, a path that does not exist yet is taken as text; the note leans to a write mode making it a path"
-      with_file do |path, directory|
-        new_path = File.join(directory, 'new.csv')
-        DSV.open(new_path, mode: 'w', headers: true, columns: [:a, :b], quote: :none){|csv| csv.rows = [{'a' => 1, 'b' => 2}]; csv.write}
-        _(File.read(new_path)).must_equal "a,b\n1,2\n"
+    it "writes a new file by name under w, w+, a and a+" do
+      ['w', 'w+', 'a', 'a+'].each do |mode|
+        with_file do |path, directory|
+          new_path = File.join(directory, 'new.csv')
+          DSV.open(new_path, mode: mode, headers: true, columns: [:a, :b], quote: :none){|csv| csv.rows = [{'a' => 1, 'b' => 2}]; csv.write}
+          _(File.read(new_path)).must_equal "a,b\n1,2\n"
+        end
       end
     end
 

@@ -32,11 +32,23 @@ A fix is a patch. Anything which is not a fix is at least a minor, as is a fix w
 
 ## Releases
 
-### 0.17.0: modes as declarations
+### 0.17.0: modes by name
 
-A mode is held to what it declares, and so is everything else given to dsv: what is ignored or inferred today raises, which makes this a minor. A mode's name says what it declares, and "none" may be read as no mode named. Column names are held in one place, so that what is written differs from what was read only through the selection given to `write`.
+A mode's name says what it declares: the default is `:unspecified` and the mode reading no quotes `:unquoted`, since "none" may be read as no mode named, and `quote` returns the name. The reader is chosen once, when the mode is set, as the writer is, so that a named mode is one direct path; and a spacey mode reads what it writes. A minor, since `quote` returns `:unspecified` where it returned `nil`, and a spacey mode is no longer read as unspecified.
 
-### 0.18.0: streaming
+### 0.18.0: nothing ignored
+
+Everything given to dsv is held to what it says: an unknown quote mode, file mode or option raises, where it is read as unspecified, as `r`, or not at all, and so does an argument which `new` does not take. A minor, since calls which run today raise.
+
+### 0.19.0: column names in one place
+
+Column names are held in one place, so that what is written differs from what was read only through the selection given to `write`. A minor, since rows read after `attributes=` are keyed by the names given.
+
+### 0.20.0: path or text
+
+A source is a path or text by the call it is given to, never by whether a file of that name exists. A minor, since a String naming no file raises where a path is wanted. It waits on Path or text in PROPOSED.md.
+
+### 0.21.0: streaming
 
 Rows are read as they are wanted, so that `detect` and `break` stop reading and memory does not grow with the file; and the source is read once, start to end, so that a pipe or `$stdin` can be read.
 

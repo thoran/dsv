@@ -32,8 +32,9 @@ class DSV
       end
     end
 
-    def source_type(source)
-      if ::File.exist?(source)
+    # A String is a path under a mode which writes, so that a file not yet there can be written by name, and otherwise where it names a file; any other String is text.
+    def source_type(source, mode = nil)
+      if ['w', 'w+', 'a', 'a+'].include?(normalised_mode(mode)) || ::File.exist?(source)
         DSV::File
       else
         DSV::String
@@ -335,7 +336,7 @@ class DSV
     options = DSV.extract_options(args)
     @source = (
       if source.is_a?(::String)
-        DSV.source_type(source).source(source, options)
+        DSV.source_type(source, options[:mode]).source(source, options)
       else
         source
       end
