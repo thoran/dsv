@@ -152,7 +152,7 @@ class DSV
   end
 
   def read(*selected_columns, &block)
-    selected_columns = selection(selected_columns)
+    selected_columns = selection(selected_columns).flatten
     if block
       parse(*selected_columns, &block)
     else
@@ -220,7 +220,7 @@ class DSV
   end
 
   def parse_row(raw_row, *selected_columns)
-    parse_fields(split_row(raw_row) || raise(UnterminatedQuote.new(1)), *selected_columns)
+    parse_fields(split_row(raw_row) || raise(UnterminatedQuote.new(1)), *selected_columns.flatten)
   rescue UnexpectedRow => error
     error.line = 1
     raise
@@ -228,6 +228,7 @@ class DSV
 
   # With no columns defined, rows keyed by name supply them, and the header, from the first row's keys, a name whose value is an Array once for each of its values; rows keyed by position write positionally and have no header to write.
   def write(*selected_columns)
+    selected_columns.flatten!
     prepare_to_rewrite if @mode == 'r+'
     self.columns = @rows[0].flat_map{|name, value| value.is_a?(::Array) ? ::Array.new(value.size, name) : name} if blank?(columns) && @rows[0].is_a?(::Hash) && @rows[0].keys[0].is_a?(::String)
     write_header(*selected_columns) if header_row? && attributes && writes_header?
@@ -274,9 +275,9 @@ class DSV
       end
     else
       if selected_columns.empty? || @as_array
-        read_csv(selected_columns).each{|row| yield row}
+        read_csv(*selected_columns).each{|row| yield row}
       else
-        read_csv(selected_columns).each do |row|
+        read_csv(*selected_columns).each do |row|
           yield selected_columns.inject({}){|hash, column_name| hash[column_name] = row[column_name]; hash}
         end
       end
@@ -542,7 +543,6 @@ class DSV
   end
 
   def parse_fields(fields, *selected_columns)
-    selected_columns.flatten!
     return fields.values_at(*positions(selected_columns)) if @as_array && !selected_columns.empty?
     parsed_row = {}
     i = -1

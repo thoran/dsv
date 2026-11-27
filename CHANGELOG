@@ -1,5 +1,18 @@
 # dsv/CHANGELOG
 
+## 20261127
+
+0.16.2: ~ DSV#read, ~ DSV#write: The columns selected are flattened once, not for every row.
+
+1. ~ parse_fields(): The columns selected are no longer flattened. Since 0.12.12 they had been, for every row read, at three objects a row where they came as an Array or from each.
+2. ~ read(), parse_row(): The columns selected are flattened once.
+3. ~ write(): The columns selected are flattened once, so as write_row is given them flat.
+4. ~ each(): read_csv is given *selected_columns, so as nothing is passed where nothing is selected.
+5. ~ test/dsv_test.rb: read and write are tested to give each row the columns selected flat, however they were given, and each to pass read_csv the columns selected.
+6. ~ TODO: The columns selected in the order selected is a job, under Column names in one place, and the jobs after it are renumbered.
+7. ~ ROADMAP.md: 0.19.0 gives the columns selected in the order selected.
+8. ~ DSV::VERSION: /0.16.1/0.16.2/
+
 ## 20261126
 
 0.16.1: ~ DSV.open: A file not yet there is written by name under w, w+, a and a+.

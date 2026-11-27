@@ -14,41 +14,42 @@
 ## Column names in one place
 
 6. attributes= setting columns, attributes always worked out from columns; rows read afterwards keyed by those names.
+7. The columns selected in the order selected, in Hash rows and under as_array:, from read and each alike; positions no longer sorted.
 
 ## Path or text
 
-7. .read and .open taking a path, and .parse text; a path which does not exist raising, and nothing inferred from whether a file exists.
+8. .read and .open taking a path, and .parse text; a path which does not exist raising, and nothing inferred from whether a file exists.
 
 ## Streaming
 
-8. each yields each row as it is read.
-9. each returns its receiver.
-10. rows no longer filled by each.
-11. Chunks from each_slice.
-12. The source read once, start to end, with no rewind; the header from the first row read.
-13. The line of an error found by seeking only where the source can.
-14. A rewind left to r+ rewriting and to first_row called alone.
+9. each yields each row as it is read.
+10. each returns its receiver.
+11. rows no longer filled by each.
+12. Chunks from each_slice.
+13. The source read once, start to end, with no rewind; the header from the first row read.
+14. The line of an error found by seeking only where the source can.
+15. A rewind left to r+ rewriting and to first_row called alone.
 
 ## Checked and measured
 
-15. A corpus in the tests, a day of NEMWEB's dispatch files, trimmed, and the RFC 4180 cases, each checked against stdlib CSV's rows.
-16. A benchmark script against stdlib CSV, and the README's speed sentence written from its output.
-17. The README showing every mode by example, and a table matching each to stdlib CSV's and Python's settings.
+16. A corpus in the tests, a day of NEMWEB's dispatch files, trimmed, and the RFC 4180 cases, each checked against stdlib CSV's rows.
+17. A benchmark script against stdlib CSV, and the README's speed sentence written from its output.
+18. The README showing every mode by example, and a table matching each to stdlib CSV's and Python's settings.
 
 ## Speed, results unchanged
 
-18. A per-row fast path for the default: split, the fields bare or wrapped in two quotes unwrapped, any other row read in full.
-19. as_array: returning the split fields, rather than building a Hash and then an Array from it.
-20. Rows built by zip.to_h.
-21. The scanner-based parser, at the tag scanner-parser-20261006, judged against the string operations used now.
+19. A per-row fast path for the default: split, the fields bare or wrapped in two quotes unwrapped, any other row read in full.
+20. as_array: returning the split fields, rather than building a Hash and then an Array from it.
+21. Rows built by zip.to_h.
+22. The scanner-based parser, at the tag scanner-parser-20261006, judged against the string operations used now.
 
 ## Features
 
-22. :rfc_4180, a quote mode reading what RFC 4180 allows as :unspecified does and raising on what it forbids.
-23. field_count:, :header or an Integer, off by default; a row of another width raising.
-24. Writing with minimal quoting: a field quoted only where it holds a separator, a quote or a row terminator.
-25. A line number in each parse error, and line_numbers:.
-26. headers?, the instance-level header_row renamed, header_row kept as an alias.
-27. <<, to append a row, and generate, to build a string.
-28. Symbols and Strings interchangeable for column names, in a selection, a columns: list and a row's keys.
-29. Duplicate headers by option: all kept as an Array, the default; indexed, a, a.1; first; last; error.
+23. :rfc_4180, a quote mode reading what RFC 4180 allows as :unspecified does and raising on what it forbids.
+24. field_count:, :header or an Integer, off by default; a row of another width raising.
+25. Writing with minimal quoting: a field quoted only where it holds a separator, a quote or a row terminator.
+26. A line number in each parse error, and line_numbers:.
+27. headers?, the instance-level header_row renamed, header_row kept as an alias.
+28. <<, to append a row, and generate, to build a string.
+29. Symbols and Strings interchangeable for column names, in a selection, a columns: list and a row's keys.
+30. Duplicate headers by option: all kept as an Array, the default; indexed, a, a.1; first; last; error.

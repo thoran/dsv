@@ -423,6 +423,16 @@ describe DSV do
       _(DSV.new(DATA, headers: true).read(['a', 'c'])).must_equal [{'a' => '1', 'c' => '3'}, {'a' => '4', 'c' => '6'}]
     end
 
+    it "gives each row the columns selected as one list, however they were given" do
+      [['a', 'c'], [['a', 'c']]].each do |selection|
+        csv = DSV.new(DATA, headers: true)
+        original = csv.method(:parse_fields)
+        received = []
+        csv.stub(:parse_fields, ->(fields, *columns){received << columns; original.call(fields, *columns)}){csv.read(*selection)}
+        _(received).must_equal [['a', 'c'], ['a', 'c']]
+      end
+    end
+
     it "selects columns by position, keyed by position even under a header row" do
       _(DSV.new("1,2,3\n4,5,6\n").read(0, 2)).must_equal [{0 => '1', 2 => '3'}, {0 => '4', 2 => '6'}]
       _(DSV.new(DATA, headers: true).read(0, 2)).must_equal [{0 => '1', 2 => '3'}, {0 => '4', 2 => '6'}]
@@ -481,6 +491,18 @@ describe DSV do
       _(DSV.new(DATA, headers: true).each).must_be_kind_of Enumerator
       _(DSV.new(DATA, headers: true).each.to_a).must_equal KEYED
       _(DSV.new(DATA, headers: true).each('a').to_a).must_equal [{'a' => '1'}, {'a' => '4'}]
+    end
+
+    it "reads the source with the columns selected, not an Array of them" do
+      [true, false].each do |as_array|
+        [[], ['a'], ['a', 'c']].each do |selection|
+          csv = DSV.new(DATA, headers: true, as_array: as_array)
+          original = csv.method(:read_csv)
+          received = nil
+          csv.stub(:read_csv, ->(*arguments){received = arguments; original.call(*arguments)}){csv.each(*selection){}}
+          _(received).must_equal selection
+        end
+      end
     end
   end
 
@@ -779,6 +801,18 @@ describe DSV do
     it "writes only the selected columns" do
       output = written(columns: [:a, :b, :c]){|csv| csv.rows = [{'a' => 1, 'b' => 2, 'c' => 3}]; csv.write('a', 'c')}
       _(output).must_equal "\"1\",\"3\"\n"
+    end
+
+    it "gives each row the columns selected as one list, however they were given" do
+      [['a', 'c'], [['a', 'c']]].each do |selection|
+        received = []
+        written(columns: [:a, :b, :c]) do |csv|
+          csv.rows = [{'a' => 1, 'b' => 2, 'c' => 3}, {'a' => 4, 'b' => 5, 'c' => 6}]
+          original = csv.method(:write_row)
+          csv.stub(:write_row, ->(row, *columns){received << columns; original.call(row, *columns)}){csv.write(*selection)}
+        end
+        _(received).must_equal [['a', 'c'], ['a', 'c']]
+      end
     end
 
     it "writes what it read back, so a source round-trips" do

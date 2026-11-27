@@ -42,7 +42,7 @@ Everything given to dsv is held to what it says: an unknown quote mode, file mod
 
 ### 0.19.0: column names in one place
 
-Column names are held in one place, so that what is written differs from what was read only through the selection given to `write`. A minor, since rows read after `attributes=` are keyed by the names given.
+Column names are held in one place, so that what is written differs from what was read only through the selection given to `write`; and the columns selected come in the order selected, from `read` and `each` alike and under `as_array:`, as `write` writes them. A minor, since rows read after `attributes=` are keyed by the names given, and a selection's columns come in its order rather than the file's.
 
 ### 0.20.0: path or text
 
