@@ -2,6 +2,23 @@
 
 ## 20261128
 
+0.17.0: ~ DSV#quote: Each mode has one name, and its reader is chosen when it is set.
+
+1. + DSV::QUOTE_MODES: Each quote mode's name and its aliases, mapped to its name. :unspecified names the default, and :unquoted the mode reading no quotes, :none being an alias.
+2. ~ quote, quote=: The mode is set by its name or an alias, and quote returns the name, :unspecified where none is given. The reader is chosen then, and the writer at the next write, so a mode set between writes takes effect.
+3. + row_reader(), + spacey?(), + spaced(): The reader is chosen from the mode once, as row_renderer() chooses the writer.
+4. ~ split_row(): Each row is read by the reader chosen, rather than the mode being looked up for it.
+5. ~ split_quoted(), split_wholly_quoted(), reassemble_wholly_quoted_fields(), quoted_separator(), separator_before(): Each reads with the separator of the mode, which under a spacey mode has a space after it. The spacey modes had been read as unspecified, so what they wrote did not read back.
+6. ~ split_wholly_quoted(), reassemble_wholly_quoted_fields(): UnquotedField is given the mode in force.
+7. ~ row_renderer(): :single_quoted and :single_quotes write single quotes. They had written double quotes.
+8. ~ DSV, DSV::File, DSV::String, DSV::Error, DSV::UnexpectedRow, DSV::UnquotedField, DSV::UnterminatedQuote: No class, method or constant has a comment.
+9. ~ test/dsv_test.rb: The mode's name, the spacey modes read and written, :single_quoted and :single_quotes written, and a mode set between writes are tested.
+10. ~ README.md: The modes are named, :none is given as another name for :unquoted, and the spacey modes are described.
+11. ~ TODO: Modes by name is gone; Path or text, The columns in the order selected and Streaming come last, Streaming as two jobs; Speed, results unchanged gains four jobs making fewer objects a row; the line number job leaves out line_numbers:; and the jobs are numbered from 1.
+12. ~ ROADMAP.md: 0.17.0 is gone. Path or text moves from 0.20.0, the columns in the order selected from 0.19.0, and streaming from 0.21.0, each to 2.0, since SimpleCSV guessed a source, gave the file's order and never streamed. DSV::CSV comes after streaming, in 1.x or 2.0, and whether line_numbers: comes is left to PROPOSED.md. The philosophy names :unspecified and :unquoted.
+13. ~ PROPOSED.md: Work done on every row asks whether to add anything done on every row read or written; Streaming asks whether it comes in 1.x beside each, and how an error's line is found. Path or text asks how DSV.new is told once neither is inferred.
+14. ~ DSV::VERSION: /0.16.3/0.17.0/
+
 0.16.3: ~ DSV: Its String literals are frozen, so as reading makes half as many objects.
 
 1. ~ DSV, DSV::File, DSV::String, DSV::Error, DSV::UnexpectedRow, DSV::UnquotedField, DSV::UnterminatedQuote, DSV::VERSION: Each file declares frozen_string_literal: true. A literal had been a new String each time it was reached, which in reading was several times for every quoted field.

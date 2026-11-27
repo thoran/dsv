@@ -21,7 +21,6 @@ class DSV
       @mode ||= DSV.normalised_mode(options[:mode])
     end
 
-    # The trailing Hash of the arguments, left in place for the parent to take.
     def options
       @args.last.is_a?(::Hash) ? @args.last : {}
     end

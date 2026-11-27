@@ -2,6 +2,10 @@
 
 What is undecided, under a heading for each theme or change, a theme's heading matching ROADMAP.md's. Why each release is made is in ROADMAP.md; the jobs are in TODO. Not listed in the gemspec, so it does not ship with the gem.
 
+## Work done on every row
+
+Whether to add anything which is done on every row read or written, such as counting lines as they are read. With one read loop, checking whether the option is on costs every row something, even when it is off. With a loop of its own for the option, chosen when the DSV is created, as ROADMAP has `line_numbers:`, a row pays nothing when the option is off, but there is another loop to keep in step with the rest. Either way it makes DSV more complex, and is worth adding only where what it gives outweighs that.
+
 ## Rows which contradict their declaration
 
 - The option's name. `on_error:` was the first proposal. `unexpected:` fits the language of declarations, and covers a field count as well as quoting: `quote: :double, unexpected: :unspecified`.
@@ -57,5 +61,11 @@ Whether either is default behaviour or an option.
 
 ## Path or text
 
-- How `DSV.new` is told whether a String is a path or text, now that neither is inferred.
+- How `DSV.new` is told whether a String is a path or text, once neither is inferred.
 - Whether a String can be text under a mode which writes, so that rows can be appended to text held in memory. From 0.16.1 a String is a path under `w`, `w+`, `a` and `a+`, and text is appended to through a StringIO opened for appending.
+
+## Streaming
+
+Whether it comes sooner, in 1.x, as a call or an option of its own, `each` left as it is, so that no major is wanted for it.
+
+How an error's line is found once the source is read only once. Rewinding the source and counting the lines up to the bad row is what `line_of()` does now, and could go on doing for a source which can be rewound. It costs nothing on a row which reads cleanly, but gives no line from a pipe or `$stdin`. Counting each line as it is read, as stdlib CSV's `lineno`, Python's `line_num`, Go's `FieldPos` and Rust's `Position` do, costs one increment per line read, a row continuing onto the next line counting each, and gives the line from any source. Whether to count at all is under Work done on every row.

@@ -16,13 +16,21 @@ require 'DSV/UnexpectedRow'
 require 'DSV/UnquotedField'
 
 class DSV
+  QUOTE_MODES = {
+    unspecified: :unspecified,
+    unquoted: :unquoted, none: :unquoted,
+    double: :double, double_quoted: :double, double_quotes: :double,
+    single: :single, single_quoted: :single, single_quotes: :single,
+    spacey_unquoted: :spacey_unquoted, spacey_none: :spacey_unquoted,
+    spacey_double: :spacey_double,
+    spacey_single: :spacey_single
+  }
+
   class << self
-    # The trailing Hash of an argument list, removed from it; or none.
     def extract_options(args)
       args.last.is_a?(::Hash) ? args.pop : {}
     end
 
-    # A mode as Ruby's File spells it, from any of the spellings the library accepts, a Symbol included; unspecified is r.
     def normalised_mode(mode)
       case mode.to_s
       when 'r', 'r+', 'w', 'w+', 'a', 'a+'; mode.to_s
@@ -34,7 +42,6 @@ class DSV
       end
     end
 
-    # A String is a path under a mode which writes, so that a file not yet there can be written by name, and otherwise where it names a file; any other String is text.
     def source_type(source, mode = nil)
       if ['w', 'w+', 'a', 'a+'].include?(normalised_mode(mode)) || ::File.exist?(source)
         DSV::File
@@ -57,7 +64,6 @@ class DSV
       end
     end
 
-    # The class-level read, parse and each take a column selection before the options, as the instance-level ones take it as arguments. Each closes what it opens; without a block, each returns an Enumerator which opens the source afresh on each pass.
     def each(source, *args, &block)
       return to_enum(:each, source, *args) unless block
       options = DSV.extract_options(args)
@@ -109,7 +115,6 @@ class DSV
     end
     alias_method :write_csv, :write
 
-    # The header row as names, or nil where there is none; first_row is the raw line.
     def header_row(source, *args)
       opened(source, *args, &:attributes)
     end
@@ -126,7 +131,7 @@ class DSV
       opened(source, *args, &:columns)
     end
 
-    def parse_line(raw_row, *args) # For FasterCSV compatibility.
+    def parse_line(raw_row, *args)
       options = DSV.extract_options(args)
       row_separator = options[:row_separator] || options[:row_sep] || "\n"
       column_separator = options[:column_separator] || options[:col_sep] || ','
@@ -136,7 +141,6 @@ class DSV
 
     private
 
-    # A DSV on the source, given to the block and closed after it, an early exit included, where the source is a path or text and so was opened here; an IO given is the caller's to close.
     def opened(source, *args)
       dsv = new(source, *args)
       yield dsv
@@ -147,7 +151,16 @@ class DSV
 
   include Enumerable
 
-  attr_accessor :header_row, :mode, :quote, :row_separator, :selected_columns, :as_array, :rows
+  attr_accessor :header_row, :mode, :row_separator, :selected_columns, :as_array, :rows
+  attr_reader :quote
+
+  def quote=(quote)
+    @quote = QUOTE_MODES[quote&.to_sym] || :unspecified
+    @read_separator = spacey? ? spaced(@column_separator) : @column_separator
+    @quoted_separators = nil
+    @read_row = row_reader
+    @render_row = nil
+  end
 
   def close
     @source.close
@@ -185,7 +198,6 @@ class DSV
   end
   alias_method :parse_csv, :parse
 
-  # Memoised upon whether the header has been looked for rather than upon what it gave, since a source with no header row yields nil legitimately and ||= would look again, reading and rewinding the source, on every call.
   def columns
     return @columns if defined?(@columns)
     @columns = (
@@ -216,7 +228,6 @@ class DSV
     end
   end
 
-  # The names that occur at more than one position; under such a name a row holds an Array of values, one per position, in order.
   def repeated_names
     @repeated_names ||= (columns || {}).select{|name, position| position.is_a?(::Array)}.keys
   end
@@ -228,7 +239,6 @@ class DSV
     raise
   end
 
-  # With no columns defined, rows keyed by name supply them, and the header, from the first row's keys, a name whose value is an Array once for each of its values; rows keyed by position write positionally and have no header to write.
   def write(*selected_columns)
     selected_columns.flatten!
     prepare_to_rewrite if @mode == 'r+'
@@ -245,7 +255,6 @@ class DSV
   end
   alias_method :write_csv_header, :write_header
 
-  # A nil value is an empty field, so the columns after it keep their places; with no columns defined a row's values are written in the row's own order.
   def write_row(row, *selected_columns)
     selected_columns.flatten!
     values = (
@@ -346,9 +355,9 @@ class DSV
     )
     @header_row = options[:header_row] || options[:headers] || options[:header] || false
     @mode = DSV.normalised_mode(options[:mode])
-    @quote = options[:quote] || nil
     @row_separator = options[:row_separator] || options[:row_sep] || "\n"
     @column_separator = options[:column_separator] || options[:col_sep] || ','
+    self.quote = options[:quote]
     @selected_columns = options[:selected_columns]
     @as_array = options[:as_array] || false
     if options[:columns]
@@ -359,12 +368,10 @@ class DSV
     @rows = []
   end
 
-  # A call's own selection, or the instance's selected_columns: where the call gives none.
   def selection(selected_columns)
     selected_columns.empty? ? Array(@selected_columns) : selected_columns
   end
 
-  # A row's value for a name, keyed for the row: assigned where the name occurs once, gathered where it repeats.
   def store_field(parsed_row, name, value)
     if repeated_names.include?(name)
       (parsed_row[name] ||= []) << value
@@ -373,7 +380,6 @@ class DSV
     end
   end
 
-  # A row's values in position order. Under a name at several positions the row holds an Array, whose values go back to those positions in turn; a single value under such a name goes at each. Where no name repeats, the values are taken as they are, sparing a check of every field.
   def values_in_order(row)
     return row.values_at(*attributes) if repeated_names.empty?
     occurrence = ::Hash.new(0)
@@ -385,27 +391,35 @@ class DSV
     end
   end
 
-  # nil or empty, which a Hash of columns, an Array of names and an unset selection all may be.
   def blank?(value)
     value.nil? || value.empty?
   end
 
-  # One row into its fields, by the quote mode: :none splits; :double splits a row as it promises, every field quoted, and raises UnquotedField on one which is not; unspecified splits and reassembles a quoted field that held the separator, a doubled quote inside it reading as one. nil where a quoted field in the row is still open at its end. Direct string operations throughout; the scanner-based parser is on the branch scanner-parser.
   def split_row(raw_row)
-    row = raw_row.chomp(@row_separator)
-    case @quote&.to_sym
-    when :none, :unquoted
-      split_on(row, @column_separator)
-    when :double, :double_quoted, :double_quotes
-      split_wholly_quoted(row, '"')
-    when :single, :single_quoted, :single_quotes
-      split_wholly_quoted(row, "'")
-    else
-      split_quoted(row)
+    @read_row.call(raw_row.chomp(@row_separator))
+  end
+
+  def row_reader
+    case @quote
+    when :unquoted, :spacey_unquoted; ->(row){split_on(row, @read_separator)}
+    when :double, :spacey_double; ->(row){split_wholly_quoted(row, '"')}
+    when :single, :spacey_single; ->(row){split_wholly_quoted(row, "'")}
+    else ->(row){split_quoted(row)}
     end
   end
 
-  # A row cut at its separators, the one place that knows a separator may be a String, a single space or a Regexp. A Regexp's matches divide it, since String#split would also return any groups it captures. A single space is split on as / /, since String#split takes ' ' to mean runs of whitespace, any leading run dropped.
+  def spacey?
+    @quote.start_with?('spacey_')
+  end
+
+  def spaced(separator)
+    if separator.is_a?(::Regexp)
+      ::Regexp.new('(?:' + separator.source + ') ', separator.options)
+    else
+      separator + ' '
+    end
+  end
+
   def split_on(row, separator)
     case separator
     when ::Regexp; pieces_and_separators(row, separator).first
@@ -414,7 +428,6 @@ class DSV
     end
   end
 
-  # A row's pieces between a Regexp's matches, with the text of each match, so that a quoted field may be joined back with the separator it held.
   def pieces_and_separators(row, separator)
     pieces, separators, position = [], [], 0
     row.scan(separator) do
@@ -426,31 +439,28 @@ class DSV
     [pieces << row[position..], separators]
   end
 
-  # The fields of a row read with no quote mode named: the row cut at its separators, and a quoted field that held one joined back with the separator's own text.
   def split_quoted(row)
-    if @column_separator.is_a?(::Regexp)
-      reassemble_quoted_fields(*pieces_and_separators(row, @column_separator))
+    if @read_separator.is_a?(::Regexp)
+      reassemble_quoted_fields(*pieces_and_separators(row, @read_separator))
     else
-      reassemble_quoted_fields(split_on(row, @column_separator))
+      reassemble_quoted_fields(split_on(row, @read_separator))
     end
   end
 
-  # The contract of :double and :single, every field quoted with the quote given: the row split on quote-separator-quote, a closed last field ending in an odd run of quotes, counted from the last piece, whose opening quote the split has already taken. Read in full only where the last field seems open, as it is where it goes on to the next line, or where the split leaves a lone quote in a field, as a field holding quote-separator-quote does. A row not starting with the quote raises UnquotedField, at the cost of one byte compared. nil where the last field does not close.
   def split_wholly_quoted(row, quote)
-    raise UnquotedField.new(quote == "'" ? :single : :double) unless row.start_with?(quote)
+    raise UnquotedField.new(@quote) unless row.start_with?(quote)
     fields = split_on(row.delete_prefix(quote), quoted_separator(quote))
     return reassemble_wholly_quoted_fields(row, quote) unless fields.last && trailing_quotes(fields.last, -1, quote.getbyte(0)).odd?
     fields[-1] = fields.last.delete_suffix(quote)
     unescaped_fields(fields, quote) || reassemble_wholly_quoted_fields(row, quote)
   end
 
-  # A wholly quoted row whose split left a lone quote in a field, read in full as unspecified reads one, except that a field which is not quoted raises UnquotedField. nil where a quoted field is still open after the last piece.
   def reassemble_wholly_quoted_fields(row, quote)
     pieces, separators = (
-      if @column_separator.is_a?(::Regexp)
-        pieces_and_separators(row, @column_separator)
+      if @read_separator.is_a?(::Regexp)
+        pieces_and_separators(row, @read_separator)
       else
-        [split_on(row, @column_separator), nil]
+        [split_on(row, @read_separator), nil]
       end
     )
     fields = []
@@ -463,7 +473,7 @@ class DSV
         fields << (buffer << separator_before(i, separators) << piece.delete_suffix(quote)).gsub(escaped, quote)
         buffer = nil
       elsif !piece.start_with?(quote)
-        raise UnquotedField.new(quote == "'" ? :single : :double)
+        raise UnquotedField.new(@quote)
       elsif trailing_quotes(piece, 0, quote_byte).even?
         buffer = +piece.delete_prefix(quote)
       else
@@ -473,7 +483,6 @@ class DSV
     fields unless buffer
   end
 
-  # The fields of a row split as wholly quoted, a doubled quote read as one; nil where a field holds a lone quote, which the split alone cannot place. A field has twice the quotes it has unescaped exactly when every quote in it is one of a doubled pair.
   def unescaped_fields(fields, quote)
     escaped = quote * 2
     fields.collect do |field|
@@ -484,18 +493,16 @@ class DSV
     end
   end
 
-  # Quote, separator, quote: what divides the fields of a wholly quoted row, made once for each quote.
   def quoted_separator(quote)
     (@quoted_separators ||= {})[quote] ||= (
-      if @column_separator.is_a?(::Regexp)
-        ::Regexp.new(quote + '(?:' + @column_separator.source + ')' + quote, @column_separator.options)
+      if @read_separator.is_a?(::Regexp)
+        ::Regexp.new(quote + '(?:' + @read_separator.source + ')' + quote, @read_separator.options)
       else
-        quote + @column_separator + quote
+        quote + @read_separator + quote
       end
     )
   end
 
-  # Pieces of a row split on the separator, the pieces of a quoted field that held the separator joined back with it, or with the text it matched where the separator is a Regexp; a piece closes a field where it ends in an odd run of quotes, a doubled quote being escaped, and a piece that is a lone quote opens or closes one; nil where a field is still open after the last piece.
   def reassemble_quoted_fields(pieces, separators = nil)
     fields = []
     buffer = nil
@@ -516,19 +523,16 @@ class DSV
     fields unless buffer
   end
 
-  # How many quotes a piece ends with, counting back to but not including the byte given, so that a field's opening quote is not taken for part of its closing. Read by byte, a double quote being 34 and a single quote 39 in any ASCII-compatible encoding, so that nothing is allocated per character.
   def trailing_quotes(piece, floor, quote_byte = 34)
     i = piece.bytesize - 1
     i -= 1 while i > floor && piece.getbyte(i) == quote_byte
     piece.bytesize - 1 - i
   end
 
-  # What stood between a piece and the one before it: the separator, or the text a Regexp separator matched there.
   def separator_before(i, separators)
-    separators ? separators[i - 1] : @column_separator
+    separators ? separators[i - 1] : @read_separator
   end
 
-  # A row's fields, the next line taken into the row while a quoted field in it is open, a quoted field being able to hold the row separator; a field still open at the end of the source raises UnterminatedQuote. A row which contradicts its mode is given its line here, where the line can be found, and only then.
   def row_fields(raw_row)
     raw_row << @source.gets(@row_separator) until (fields = split_row(raw_row)) || @source.eof?
     fields || raise(UnterminatedQuote.new(line_of(raw_row)))
@@ -537,7 +541,6 @@ class DSV
     raise
   end
 
-  # The line on which a row read up to the source's position began, counted only when an error wants it, by reading the source again up to the row, so that no row which closes pays for it.
   def line_of(raw_row)
     start = @source.pos - raw_row.bytesize
     @source.rewind
@@ -579,19 +582,16 @@ class DSV
     end
   end
 
-  # The positions of the columns selected, in column order, a repeated name giving each of its own.
   def positions(selected_columns)
     selected_columns.flat_map{|column| column.is_a?(::Integer) ? column : Array((columns || {})[column])}.sort
   end
 
-  # Under r+ a write replaces the file: the rows are read first if they have not been, then the file is emptied, once, here, rather than at the end of every read.
   def prepare_to_rewrite
     read_csv unless @rows[0]
     @source.rewind
     @source.truncate(0)
   end
 
-  # Under a or a+, a header is written only to an empty file, since a file with anything in it already has one. A source with no size, such as a pipe, always gets one.
   def writes_header?
     return true unless ['a', 'a+'].include?(@mode) && @source.respond_to?(:size)
     @source.size.zero?
@@ -602,21 +602,16 @@ class DSV
     @source.write(@render_row.call(values))
   end
 
-  # The column separator a row is written with: a Regexp says what may be read as one, not what to write.
   def writable_column_separator
     raise ::ArgumentError, "a Regexp column separator can be read with, not written with; give a String to write" if @column_separator.is_a?(::Regexp)
     @column_separator
   end
 
-  # Chosen once, at the first write, from the quote mode: how a row of values is rendered, with the instance's separators, a quote inside a quoted value doubled as RFC 4180 has it. The spacey modes put a space after each separator, as Array#to_csv_row did.
   def row_renderer
-    separator = writable_column_separator
-    case @quote&.to_sym
-    when :none, :unquoted; unquoted_row_renderer(separator)
-    when :spacey_none, :spacey_unquoted; unquoted_row_renderer(separator + ' ')
-    when :single; quoted_row_renderer("'", separator)
-    when :spacey_single; quoted_row_renderer("'", separator + ' ')
-    when :spacey_double; quoted_row_renderer('"', separator + ' ')
+    separator = spacey? ? spaced(writable_column_separator) : writable_column_separator
+    case @quote
+    when :unquoted, :spacey_unquoted; unquoted_row_renderer(separator)
+    when :single, :spacey_single; quoted_row_renderer("'", separator)
     else quoted_row_renderer('"', separator)
     end
   end

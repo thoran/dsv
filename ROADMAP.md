@@ -1,6 +1,6 @@
 # dsv/ROADMAP.md
 
-Date: 20261126
+Date: 20261128
 
 Why each release is made, and the themes beyond them. The jobs, one to a line in the order they are to be done, are in TODO, under headings naming the releases here, without their versions; what is undecided is in PROPOSED.md. Not listed in the gemspec, so it does not ship with the gem.
 
@@ -8,11 +8,11 @@ Why each release is made, and the themes beyond them. The jobs, one to a line in
 
 ### Modes are declarations
 
-Fail fast, otherwise go fast. Speed is why the modes exist, and the main reason for everything in this section: the fewer checks made on each row and field, the faster dsv reads. A quote mode says what the file holds, and dsv reads it on that understanding, the speed of each mode coming from what it is allowed to assume. A named mode is one direct path, chosen once, checking nothing it may assume: no fallback, no interpretation, no guessing, each of which is a check made on every row or field. A row which contradicts it raises, where the contradiction costs nothing to see, rather than being read some other way. `:double` declares every field quoted, and `:none` that quotes are data; the two are treated alike.
+Fail fast, otherwise go fast. Speed is why the modes exist, and the main reason for everything in this section: the fewer checks made on each row and field, the faster dsv reads. A quote mode says what the file holds, and dsv reads it on that understanding, the speed of each mode coming from what it is allowed to assume. A named mode is one direct path, chosen once, checking nothing it may assume: no fallback, no interpretation, no guessing, each of which is a check made on every row or field. A row which contradicts it raises, where the contradiction costs nothing to see, rather than being read some other way. `:double` declares every field quoted, and `:unquoted` that quotes are data; the two are treated alike.
 
-The default, `:unspecified` once it has the name, declares nothing: it reads bare and quoted fields together, as RFC 4180 does, and is not a fast path. It is the one reading which interprets. Whoever wants a row read whichever way it comes wants `:unspecified`, the default: a mode which falls back reads as it does, with its checks added.
+The default, `:unspecified`, declares nothing: it reads bare and quoted fields together, as RFC 4180 does, and is not a fast path. It is the one reading which interprets. Whoever wants a row read whichever way it comes wants `:unspecified`, the default: a mode which falls back reads as it does, with its checks added.
 
-Nothing else is guessed either: an unknown mode or option raises, and a source is given as a path or as text, never inferred from whether a file of that name exists, so that a file not yet there can be written by name.
+Nothing else is guessed either: an unknown mode or option raises; and from 2.0, a source is given as a path or as text, never inferred from whether a file of that name exists.
 
 ### Faster, better, and more compliant
 
@@ -32,27 +32,13 @@ A fix is a patch. Anything which is not a fix is at least a minor, as is a fix w
 
 ## Releases
 
-### 0.17.0: modes by name
-
-A mode's name says what it declares: the default is `:unspecified` and the mode reading no quotes `:unquoted`, since "none" may be read as no mode named, and `quote` returns the name. The reader is chosen once, when the mode is set, as the writer is, so that a named mode is one direct path; and a spacey mode reads what it writes. A minor, since `quote` returns `:unspecified` where it returned `nil`, and a spacey mode is no longer read as unspecified.
-
 ### 0.18.0: nothing ignored
 
 Everything given to dsv is held to what it says: an unknown quote mode, file mode or option raises, where it is read as unspecified, as `r`, or not at all, and so does an argument which `new` does not take. A minor, since calls which run today raise.
 
 ### 0.19.0: column names in one place
 
-Column names are held in one place, so that what is written differs from what was read only through the selection given to `write`; and the columns selected come in the order selected, from `read` and `each` alike and under `as_array:`, as `write` writes them. A minor, since rows read after `attributes=` are keyed by the names given, and a selection's columns come in its order rather than the file's.
-
-### 0.20.0: path or text
-
-A source is a path or text by the call it is given to, never by whether a file of that name exists. A minor, since a String naming no file raises where a path is wanted. It waits on Path or text in PROPOSED.md.
-
-### 0.21.0: streaming
-
-Rows are read as they are wanted, so that `detect` and `break` stop reading and memory does not grow with the file; and the source is read once, start to end, so that a pipe or `$stdin` can be read.
-
-A minor rather than a fix, because `each` with a block no longer returns the rows; after 1.0 it would have to wait for 2.0.
+Column names are held in one place, so that what is written differs from what was read only through the selection given to `write`. A minor, since rows read after `attributes=` are keyed by the names given.
 
 ### 1.0: checked and measured
 
@@ -66,7 +52,19 @@ Faster without a result changing.
 
 New options, each opt-in, so that nothing read before reads differently.
 
-A line number in a parse error is found only when the error is raised, as `UnterminatedQuote` finds its, where the source can seek. `line_numbers:` counts lines as it reads instead, for any source, a pipe included; the read loop is chosen once, at construction, so that without it no row pays for the count.
+A line number in a parse error is found only when the error is raised, as `UnterminatedQuote` finds its, where the source can be rewound. `line_numbers:` would count lines as it reads instead, for any source, a pipe included; the read loop would be chosen once, at construction, so that without it no row pays for the count. Whether it comes is under Work done on every row in PROPOSED.md.
+
+### 2.0: path or text
+
+A source is a path or text by the call it is given to, never by whether a file of that name exists. SimpleCSV guessed, by whether one does, and 1.0 keeps the guess, a file not yet there being written by name under a mode which writes, as from 0.16.1. A major, since a String naming no file raises where a path is wanted. It waits on Path or text in PROPOSED.md.
+
+### 2.0: the columns in the order selected
+
+The columns selected come in the order selected, from `read` and `each` alike and under `as_array:`, as `write` writes them. SimpleCSV gave them in the file's order. A major, since a selection's columns come in its order rather than the file's.
+
+### 2.0: streaming
+
+Rows are read as they are wanted, so that `detect` and `break` stop reading and memory does not grow with the file; and the source is read once, start to end, so that a pipe or `$stdin` can be read. SimpleCSV never streamed, so 1.0 is complete without it. A major, because `each` with a block no longer returns the rows, nor fills `rows`.
 
 ## Themes
 
@@ -76,9 +74,9 @@ From 0.13.0 such a row raises. Reading it as 0.12.4 did, split plainly, is not g
 
 ### A drop-in for stdlib CSV
 
-`DSV::CSV`, late in 1.x: stdlib CSV's calls (`read`, `foreach`, `parse`, `parse_line`, `generate_line`, `open` with `<<`) and option names, and its defaults: Arrays without headers, Hashes with them, `:rfc_4180`, `nil` for unquoted empty fields, minimal quoting when writing. Switching would be a search-and-replace of `CSV.` with `DSV::CSV.`.
+`DSV::CSV`, after streaming, whether that comes in 1.x or 2.0: stdlib CSV's calls (`read`, `foreach`, `parse`, `parse_line`, `generate_line`, `open` with `<<`) and option names, and its defaults: Arrays without headers, Hashes with them, `:rfc_4180`, `nil` for unquoted empty fields, minimal quoting when writing. Switching would be a search-and-replace of `CSV.` with `DSV::CSV.`.
 
-It depends on `:rfc_4180`, the empty-field option, `quote_char:`, the option for contradicting rows, minimal quoting, a streaming `each`, and the speed work, since "faster" needs that first.
+It depends on `:rfc_4180`, the empty-field option, `quote_char:`, the option for contradicting rows, minimal quoting, streaming, and the speed work, since "faster" needs that first.
 
 ### Selection as a keyword
 

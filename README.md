@@ -89,15 +89,17 @@ A String is split on exactly as given: a space splits on each space, two in a ro
 
 ### Quoting
 
-Unspecified, quoting follows RFC 4180: a quoted field may hold the separator or the row separator, a doubled quote inside it reads as one quote, and a row's quotes are read only when the row holds one. Naming a mode is faster, since each is a direct string operation on the contract it names:
+With no mode named, the mode is `:unspecified`, and quoting follows RFC 4180: a quoted field may hold the separator or the row separator, a doubled quote inside it reads as one quote, and a row's quotes are read only when the row holds one. Naming a mode is faster, since each is a direct string operation on the contract it names, chosen once, when the mode is set:
 
 ```ruby
-DSV.read('plain.csv', headers: true, quote: :none)    # no field is quoted; quotes are data
-DSV.read('quoted.csv', headers: true, quote: :double)  # every field is quoted, as DSV writes them
-DSV.read('single.csv', headers: true, quote: :single)  # every field is quoted with a single quote
+DSV.read('plain.csv', headers: true, quote: :unquoted)  # no field is quoted; quotes are data
+DSV.read('quoted.csv', headers: true, quote: :double)   # every field is quoted, as DSV writes them
+DSV.read('single.csv', headers: true, quote: :single)   # every field is quoted with a single quote
 ```
 
-A named mode is held to: under `:double` every field of every row is quoted, the header's included. A row with a field which isn't raises `DSV::UnquotedField`, whose `line` is the line its row began on and `mode` the mode in force. To read a file whose quoting varies, name no mode. Under `:single` every field is single-quoted and held to as under `:double`, so a double quote is data; with no mode named, a single quote is data.
+A named mode is held to: under `:double` every field of every row is quoted, the header's included. A row with a field which isn't raises `DSV::UnquotedField`, whose `line` is the line its row began on and `mode` the mode in force. To read a file whose quoting varies, name no mode, or `:unspecified`. Under `:single` every field is single-quoted and held to as under `:double`, so a double quote is data; under `:unspecified`, a single quote is data.
+
+`:none` is another name for `:unquoted`, and `:double_quoted`, `:double_quotes`, `:single_quoted` and `:single_quotes` for `:double` and `:single`. `quote` gives the mode's name, whichever was given. The spacey modes, `:spacey_unquoted`, `:spacey_double` and `:spacey_single`, read as `:unquoted`, `:double` and `:single` do, with a space after each separator.
 
 Input which isn't RFC 4180 is read to one rule. A quote opens a field only at the start of one, so a quote anywhere else, as in `12" pizza`, is data. A quoted field closes only at a quote followed by the separator or the end of the row, so one which doesn't close by the end of the source, as `"abc` or `"ab"c` doesn't, raises `DSV::UnterminatedQuote`, whose `line` is the line its row began on.
 
@@ -117,7 +119,7 @@ end
 # "Ada","1815"
 ```
 
-Every field is quoted, which is the `:double` contract on the way back in, and a quote inside a value is doubled. `quote: :none` writes bare values, `:single` uses single quotes. A `nil` writes as an empty field. Rows without columns defined are written from their own keys, and if the keys are names they become the header.
+Every field is quoted, which is the `:double` contract on the way back in, and a quote inside a value is doubled. `quote: :unquoted` writes bare values, `:single` uses single quotes, and the spacey modes put a space after each separator. A `nil` writes as an empty field. Rows without columns defined are written from their own keys, and if the keys are names they become the header.
 
 Under `r+` a file is read, changed and written back in place; reading never alters the file, and the first write replaces it:
 
