@@ -1,6 +1,8 @@
 # DSV/String.rb
 # DSV::String
 
+# frozen_string_literal: true
+
 require_relative '../dsv'
 
 class DSV

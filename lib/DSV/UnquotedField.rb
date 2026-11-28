@@ -1,6 +1,8 @@
 # DSV/UnquotedField.rb
 # DSV::UnquotedField
 
+# frozen_string_literal: true
+
 class DSV
   # A field with no quotes, under a quote mode which declares every field quoted.
   class UnquotedField < UnexpectedRow

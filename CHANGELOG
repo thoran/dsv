@@ -1,5 +1,14 @@
 # dsv/CHANGELOG
 
+## 20261128
+
+0.16.3: ~ DSV: Its String literals are frozen, so as reading makes half as many objects.
+
+1. ~ DSV, DSV::File, DSV::String, DSV::Error, DSV::UnexpectedRow, DSV::UnquotedField, DSV::UnterminatedQuote, DSV::VERSION: Each file declares frozen_string_literal: true. A literal had been a new String each time it was reached, which in reading was several times for every quoted field.
+2. ~ test/dsv_test.rb: The default row separator and mode are tested to be frozen, and quoted fields to be read without a new copy of the quote character each time it is used.
+3. ~ test/helper.rb: + require 'objspace'
+4. ~ DSV::VERSION: /0.16.2/0.16.3/
+
 ## 20261127
 
 0.16.2: ~ DSV#read, ~ DSV#write: The columns selected are flattened once, not for every row.

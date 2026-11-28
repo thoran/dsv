@@ -1,6 +1,8 @@
 # dsv.rb
 # DSV
 
+# frozen_string_literal: true
+
 # Description: Delimiter-separated values: reading and writing CSV and its relatives, tabulated data to and from files and strings, with any delimiter on either side.
 
 require 'stringio'

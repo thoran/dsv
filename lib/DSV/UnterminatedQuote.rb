@@ -1,6 +1,8 @@
 # DSV/UnterminatedQuote.rb
 # DSV::UnterminatedQuote
 
+# frozen_string_literal: true
+
 class DSV
   # A quoted field which does not close by the end of the source; line is the one on which its row began.
   class UnterminatedQuote < Error

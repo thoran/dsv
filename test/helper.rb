@@ -2,6 +2,7 @@
 
 require 'minitest/autorun'
 require 'minitest/mock'
+require 'objspace'
 require 'stringio'
 require 'tmpdir'
 

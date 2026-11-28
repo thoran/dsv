@@ -396,6 +396,12 @@ describe DSV do
       _(DSV.new(DATA).quote).must_be_nil
     end
 
+    it "gives its own defaults frozen" do
+      csv = DSV.new("a,b\n")
+      _(csv.row_separator).must_be :frozen?
+      _(csv.mode).must_be :frozen?
+    end
+
     it "has its interface public and its internals private" do
       csv = DSV.new(DATA, headers: true)
       [:close, :read, :read_header, :parse, :columns, :columns=, :repeated_names, :parse_row, :write, :write_header, :write_row, :each, :attributes, :attributes=, :header_row?, :first_row, :to_a].each{|name| _(csv.public_methods).must_include name}
@@ -743,6 +749,21 @@ describe DSV do
       csv = DSV.new("'a','b'\n")
       csv.quote = :single
       _(csv.read).must_equal [{0 => 'a', 1 => 'b'}]
+    end
+
+    it "reads quoted fields without making a new copy of the quote character each time it is used" do
+      csv = DSV.new(%Q{"a","b"\n"c","d"\n})
+      quotes = []
+      GC.disable
+      begin
+        ObjectSpace.trace_object_allocations do
+          csv.read
+          ObjectSpace.each_object(::String){|s| quotes << s if ['"', '""'].include?(s) && ObjectSpace.allocation_sourcefile(s).to_s.end_with?('dsv.rb')}
+        end
+      ensure
+        GC.enable
+      end
+      _(quotes).must_be_empty
     end
   end
 
