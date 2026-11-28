@@ -384,16 +384,25 @@ describe DSV do
       _(DSV.read(DATA, headers: true, selected_columns: [0, 2])).must_equal [{0 => '1', 2 => '3'}, {0 => '4', 2 => '6'}]
     end
 
-    it "exposes the options as accessors, quote defaulting to nil" do
+    it "exposes the options as accessors, quote defaulting to :unspecified" do
       csv = DSV.new(DATA, headers: true, mode: 'r', quote: :none, row_separator: "\n", as_array: false)
       _(csv.header_row).must_equal true
       _(csv.header_row?).must_equal true
       _(csv.mode).must_equal 'r'
-      _(csv.quote).must_equal :none
+      _(csv.quote).must_equal :unquoted
       _(csv.row_separator).must_equal "\n"
       _(csv.as_array).must_equal false
       _(DSV.new(DATA).header_row?).must_equal false
-      _(DSV.new(DATA).quote).must_be_nil
+      _(DSV.new(DATA).quote).must_equal :unspecified
+    end
+
+    it "gives quote as the mode's name, whichever alias was given" do
+      {nil => :unspecified, :unspecified => :unspecified, :none => :unquoted, 'none' => :unquoted, :double_quotes => :double, 'single' => :single, :single_quoted => :single, :spacey_none => :spacey_unquoted, :spacey_double => :spacey_double}.each do |given, name|
+        _(DSV.new(DATA, quote: given).quote).must_equal name
+      end
+      csv = DSV.new(DATA)
+      csv.quote = :double_quoted
+      _(csv.quote).must_equal :double
     end
 
     it "gives its own defaults frozen" do
@@ -404,8 +413,8 @@ describe DSV do
 
     it "has its interface public and its internals private" do
       csv = DSV.new(DATA, headers: true)
-      [:close, :read, :read_header, :parse, :columns, :columns=, :repeated_names, :parse_row, :write, :write_header, :write_row, :each, :attributes, :attributes=, :header_row?, :first_row, :to_a].each{|name| _(csv.public_methods).must_include name}
-      [:selection, :split_row, :split_on, :split_quoted, :split_wholly_quoted, :reassemble_wholly_quoted_fields, :parse_fields, :row_renderer].each{|name| _(csv.private_methods).must_include name}
+      [:quote, :quote=, :close, :read, :read_header, :parse, :columns, :columns=, :repeated_names, :parse_row, :write, :write_header, :write_row, :each, :attributes, :attributes=, :header_row?, :first_row, :to_a].each{|name| _(csv.public_methods).must_include name}
+      [:selection, :split_row, :split_on, :split_quoted, :split_wholly_quoted, :reassemble_wholly_quoted_fields, :parse_fields, :row_reader, :row_renderer].each{|name| _(csv.private_methods).must_include name}
     end
 
     it "reads the header row under mode: given as a symbol or a long name" do
@@ -594,6 +603,7 @@ describe DSV do
 
     it "reads with a regular expression separator under the spacey quote modes" do
       _(DSV.read("1, 2\n", quote: :spacey_none, column_separator: /,\s*/)).must_equal [{0 => '1', 1 => '2'}]
+      _(DSV.read("'1';  '2'\n", quote: :spacey_single, column_separator: /;\s*/)).must_equal [{0 => '1', 1 => '2'}]
     end
   end
 
@@ -745,6 +755,20 @@ describe DSV do
       _(DSV.read(output, headers: true, quote: :single)).must_equal [{'a' => "it's, here", 'b' => "x\ny"}]
     end
 
+    it "reads back what the spacey modes write, a space after each separator" do
+      quoted = [{'a' => 'x, y', 'b' => "it's \"so\""}]
+      {spacey_unquoted: [{'a' => 'x;y', 'b' => '2'}], spacey_double: quoted, spacey_single: quoted}.each do |mode, rows|
+        output = written(headers: true, columns: ['a', 'b'], quote: mode){|csv| csv.rows = rows; csv.write}
+        _(DSV.read(output, headers: true, quote: mode)).must_equal rows
+      end
+    end
+
+    it "raises UnquotedField under :spacey_double on a field which is not quoted, naming the mode" do
+      error = _{DSV.read("\"a\", \"b\"\n\"1\", 2\n", headers: true, quote: :spacey_double)}.must_raise DSV::UnquotedField
+      _(error.mode).must_equal :spacey_double
+      _(error.line).must_equal 2
+    end
+
     it "reads with the quote of a mode set after construction" do
       csv = DSV.new("'a','b'\n")
       csv.quote = :single
@@ -888,6 +912,18 @@ describe DSV do
     it "writes the spacey modes with a space after each separator" do
       _(written(columns: [:a, :b], quote: :spacey_none){|csv| csv.write_row('a' => 1, 'b' => 2)}).must_equal "1, 2\n"
       _(written(columns: [:a, :b], quote: :spacey_double){|csv| csv.write_row('a' => 1, 'b' => 2)}).must_equal "\"1\", \"2\"\n"
+      _(written(columns: [:a, :b], quote: :spacey_single){|csv| csv.write_row('a' => 1, 'b' => 2)}).must_equal "'1', '2'\n"
+    end
+
+    it "writes single-quoted under :single_quoted and :single_quotes, and double-quoted under :unspecified" do
+      _(written(columns: [:a, :b], quote: :single_quoted){|csv| csv.write_row('a' => 1, 'b' => 2)}).must_equal "'1','2'\n"
+      _(written(columns: [:a, :b], quote: :single_quotes){|csv| csv.write_row('a' => 1, 'b' => 2)}).must_equal "'1','2'\n"
+      _(written(columns: [:a, :b], quote: :unspecified){|csv| csv.write_row('a' => 1, 'b' => 2)}).must_equal "\"1\",\"2\"\n"
+    end
+
+    it "writes with the quote of a mode set between writes" do
+      output = written(columns: [:a, :b]){|csv| csv.write_row('a' => 1, 'b' => 2); csv.quote = :unquoted; csv.write_row('a' => 3, 'b' => 4)}
+      _(output).must_equal "\"1\",\"2\"\n3,4\n"
     end
 
     it "refuses to write with a regular expression separator, there being no one string to write between fields" do
